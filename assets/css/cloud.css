@@ -1,0 +1,6 @@
+@charset "UTF-8";
+.cloud-status{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);z-index:2000;background:#fff;border:1px solid #e3e3e3;box-shadow:0 3px 16px #0002;border-radius:12px;padding:10px 14px;font-size:13px;display:flex;gap:8px;align-items:center;max-width:calc(100vw - 24px)}
+.cloud-error{border-color:#b4432f;color:#b4432f;flex-wrap:wrap}
+.cloud-status[hidden]{display:none}
+@media(max-width:600px){.cloud-status{width:calc(100vw - 24px);bottom:8px}.cloud-status span{flex:1 1 100%}}
+@media print{.cloud-status{display:none!important}}

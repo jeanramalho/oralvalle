@@ -1,0 +1,24 @@
+-- Diagnóstico no SQL Editor do Supabase, como administrador do projeto.
+-- Execute antes as migrations 001 e 002. Este arquivo NÃO cria outra clínica.
+
+-- Clínica principal e UUID gerado pela migration.
+select c.id, c.nome, c.revision, principal.admin_email
+from private.main_clinic principal
+join public.clinics c on c.id = principal.clinic_id;
+
+-- Confirmar existência/validação do e-mail Auth e vínculo de Ricardo Silva.
+-- Nenhuma senha, hash ou token é consultado.
+select u.id as auth_user_id, u.email, u.email_confirmed_at,
+  m.clinic_id, m.nome, m.admin, m.active
+from auth.users u
+left join public.clinic_members m
+  on m.user_id = u.id
+  and m.clinic_id = (select clinic_id from private.main_clinic where singleton)
+where lower(u.email) = 'oralvalle.odontologia@gmail.com';
+
+-- Contas com e-mail confirmado ainda aguardando decisão na aplicação.
+select u.email, r.status, r.created_at
+from private.clinic_access_requests r
+join auth.users u on u.id = r.user_id
+where r.status = 'pending'
+order by r.created_at;

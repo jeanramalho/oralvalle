@@ -32,7 +32,7 @@ function render() {
 }
 
 // Este arquivo é carregado por último: todas as telas e ações já estão disponíveis.
-load();
+if (!window.OralCloud?.enabled) load();
 authBoot();
 
 document.addEventListener('toggle', (event) => {
