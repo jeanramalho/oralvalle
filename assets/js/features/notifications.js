@@ -8,9 +8,16 @@ function avsStart(a){const d=String(a.data).split('-'),h=String(a.hora).split(':
 const avsAtivo=a=>!a.st||a.st==='Agendado'||a.st==='Confirmado';
 const isIOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 const isStandalone=()=>!!(navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches));
-function avsAudio(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;avsCtx=avsCtx||new C();if(avsCtx.state==='suspended')avsCtx.resume();return avsCtx}catch(e){return null}}
-const avsUnlock=()=>{const c=avsAudio();if(c&&c.state==='running'){document.removeEventListener('pointerdown',avsUnlock,true);document.removeEventListener('keydown',avsUnlock,true)}};
-document.addEventListener('pointerdown',avsUnlock,true);document.addEventListener('keydown',avsUnlock,true);
+function avsAudio(){return avsCtx&&avsCtx.state==='running'?avsCtx:null}
+const avsUnlock=async event=>{
+  if(!event?.isTrusted||(navigator.userActivation&&!navigator.userActivation.isActive))return;
+  try{
+    const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)return;
+    if(!avsCtx||avsCtx.state==='closed')avsCtx=new Audio();
+    if(avsCtx.state==='suspended')await avsCtx.resume();
+  }catch(error){}
+};
+document.addEventListener('pointerdown',avsUnlock,true);document.addEventListener('pointerup',avsUnlock,true);document.addEventListener('keydown',avsUnlock,true);
 function avsBeep(){const c=avsAudio();if(!c)return;try{[[0,880],[.3,1100],[.6,880]].forEach(([dl,fr])=>{const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=fr;o.connect(g);g.connect(c.destination);const t=c.currentTime+dl;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.45,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.24);o.start(t);o.stop(t+.27)})}catch(e){}}
 async function avsNotify(title,body,tag){
   if(!('Notification' in window)||Notification.permission!=='granted')return false;

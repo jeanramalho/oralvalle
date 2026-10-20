@@ -133,7 +133,9 @@
     OralCloud.clinicId = clinic.clinic_id;
     AUTH = { users: (await OralCloudData.members()).filter(member => member.active), rec: null };
     memberBaseline = copy(AUTH.users);
-    const raw = await OralCloudData.load();
+    let raw;
+    try { raw = await OralCloudData.load(); }
+    catch (error) { error.clinicLoad = true; throw error; }
     // Nunca importar automaticamente os dados locais ao preencher as credenciais.
     db = migrate(raw);
     OralCloudData.prepareDefaults(db);
@@ -184,7 +186,8 @@
     const warning = message ? `<div class="lk-err" role="alert">${esc(message)}</div>` : '';
     const email = '<label for="cloudEmail">E-mail</label><input id="cloudEmail" type="email" autocomplete="username" autocapitalize="none" required>';
     let body;
-    if (mode === 'signup') body = `<h1>Criar conta</h1><p class="lk-t">Cadastre seu acesso. O administrador precisará autorizar sua entrada na clínica.</p>${warning}<label for="cloudName">Nome completo</label><input id="cloudName" autocomplete="name" required>${email}<label for="cloudPassword">Senha (mínimo 6 caracteres)</label><input id="cloudPassword" type="password" autocomplete="new-password" minlength="6" required><label for="cloudRepeat">Repita a senha</label><input id="cloudRepeat" type="password" autocomplete="new-password" minlength="6" required><button type="submit">Cadastrar</button><button type="button" class="lk-link" data-cloud-back>Já tenho conta. Entrar</button>`;
+    if (mode === 'load') body = `<h1>Carregar clínica</h1>${warning}<button type="submit">Tentar carregar novamente</button><button type="button" class="lk-link" data-cloud-back>Voltar ao login</button>`;
+    else if (mode === 'signup') body = `<h1>Criar conta</h1><p class="lk-t">Cadastre seu acesso. O administrador precisará autorizar sua entrada na clínica.</p>${warning}<label for="cloudName">Nome completo</label><input id="cloudName" autocomplete="name" required>${email}<label for="cloudPassword">Senha (mínimo 6 caracteres)</label><input id="cloudPassword" type="password" autocomplete="new-password" minlength="6" required><label for="cloudRepeat">Repita a senha</label><input id="cloudRepeat" type="password" autocomplete="new-password" minlength="6" required><button type="submit">Cadastrar</button><button type="button" class="lk-link" data-cloud-back>Já tenho conta. Entrar</button>`;
     else if (mode === 'recover') body = `<h1>Redefinir senha</h1><p class="lk-t">Enviaremos um link para o e-mail cadastrado no Supabase.</p>${warning}${email}<button type="submit">Enviar link</button><button type="button" class="lk-link" data-cloud-back>Voltar</button>`;
     else if (mode === 'password') body = `<h1>Definir senha</h1>${warning}<label for="cloudPassword">Nova senha</label><input id="cloudPassword" type="password" autocomplete="new-password" minlength="6" required><label for="cloudRepeat">Repita a senha</label><input id="cloudRepeat" type="password" autocomplete="new-password" minlength="6" required><button type="submit">Salvar senha</button>`;
     else body = `<h1>Entrar</h1><p class="lk-t">Entre com seu acesso da clínica no Supabase.</p>${warning}${email}<label for="cloudPassword">Senha</label><input id="cloudPassword" type="password" autocomplete="current-password" required><label class="lk-chk"><input id="cloudKeep" type="checkbox"> Manter conectado neste aparelho</label><button type="submit">Entrar</button><button type="button" class="lk-link" data-cloud-signup>Criar conta</button><button type="button" class="lk-link" data-cloud-forgot>Esqueci a senha</button>`;
@@ -200,7 +203,9 @@
       const button = lock.querySelector('[type="submit"]');
       button.disabled = true;
       try {
-        if (mode === 'signup') {
+        if (mode === 'load') {
+          await openClinic(OralCloud.keep);
+        } else if (mode === 'signup') {
           const nome = $('cloudName').value.trim();
           const password = $('cloudPassword').value;
           const error = pwOk(password, $('cloudRepeat').value);
@@ -223,12 +228,18 @@
           await OralCloud.login($('cloudEmail').value.trim(), $('cloudPassword').value, keep);
           await openClinic(keep);
         }
-      } catch (error) { cloudLock(mode, explain(error)); }
+      } catch (error) { cloudLock(error.clinicLoad ? 'load' : mode === 'load' ? 'login' : mode, explain(error)); }
     };
-    lock.querySelector('input')?.focus();
+    (lock.querySelector('input') || lock.querySelector('[type="submit"]'))?.focus();
   }
 
   function explain(error) {
+    if (error.code === '57014' || /canceling statement due to statement timeout/i.test(error.message || ''))
+      return error.clinicLoad
+        ? 'Seu acesso foi autenticado, mas o banco excedeu o tempo para carregar a clínica. Nenhum dado foi alterado por esta leitura. Tente novamente; se persistir, é necessário verificar o carregamento no Supabase.'
+        : 'O banco excedeu o tempo para concluir a operação. Verifique o Supabase antes de repetir uma gravação.';
+    if (error.clinicLoad && error.status !== 401 && error.status !== 403 && error.code !== '42501' && error.code !== 'PGRST202' && error.status !== 404)
+      return 'Seu acesso foi autenticado, mas não foi possível carregar a clínica. Tente carregar novamente.';
     if (error.code === 'PGRST202' || error.status === 404)
       return 'As migrations ainda não estão disponíveis. Execute o SQL fornecido no painel Supabase e recarregue.';
     return error.message || 'Falha de conexão. Verifique sua internet e tente novamente.';
@@ -241,7 +252,7 @@
       const restored = await OralCloud.restoreSession();
       if (restored?.recovery) cloudLock('password');
       else if (restored) await openClinic(restored.keep);
-    } catch (error) { cloudLock('login', explain(error)); }
+    } catch (error) { cloudLock(error.clinicLoad ? 'load' : 'login', explain(error)); }
   };
 
   window.addEventListener('hashchange', () => {

@@ -5,7 +5,7 @@ O HTML já carrega a configuração pública, o transporte REST, o adaptador de 
 ## Instalação
 
 1. Configure Authentication com login por e-mail, URLs de retorno e confirmação de e-mail. A conta local anterior não é uma conta Supabase; senhas, salts e hashes locais não são importados.
-2. Execute [202610140001_relational_clinics.sql](migrations/202610140001_relational_clinics.sql) **somente se ainda não foi aplicada**. Depois execute [202610140002_main_clinic_access.sql](migrations/202610140002_main_clinic_access.sql). Requer PostgreSQL 15+. A primeira migration cria a estrutura e não deve ser reaplicada; a segunda cria/reutiliza a clínica principal sem apagar dados. O schema `private` **não deve ser exposto** na Data API.
+2. Execute [202610140001_relational_clinics.sql](migrations/202610140001_relational_clinics.sql) **somente se ainda não foi aplicada**. Depois execute [202610140002_main_clinic_access.sql](migrations/202610140002_main_clinic_access.sql) e [202610200001_optimize_clinic_load.sql](migrations/202610200001_optimize_clinic_load.sql). Requer PostgreSQL 15+. A primeira migration cria a estrutura e não deve ser reaplicada; a segunda cria/reutiliza a clínica principal sem apagar dados; a terceira otimiza a leitura sem mudar o formato do retorno. Para uma instalação existente com timeout, siga primeiro o procedimento de diagnóstico abaixo. O schema `private` **não deve ser exposto** na Data API.
 3. Crie a conta **Ricardo Silva — oralvalle.odontologia@gmail.com** na tela de cadastro ou pelo painel Authentication e confirme o e-mail. A segunda migration vincula essa conta à **Oral Valle** como administrador, usando o UUID verdadeiro de `auth.users`. Se já existe e está confirmada, o vínculo é criado ao executar a migration. Se for criada depois, o trigger fará o vínculo quando o e-mail for confirmado. Não há senha criada por SQL ou confirmação artificial de e-mail.
 4. O frontend recebe somente a URL pública e a chave **publishable** do projeto. Nunca publique `service_role`, chave secret, senha de banco ou tokens de outras pessoas. O transportador existente deve enviar o access token do usuário autenticado, não usar a chave publishable como identidade.
 5. Abra a aplicação e entre com o **e-mail e senha do Supabase**, não com o antigo usuário local. Com um único vínculo, a clínica é selecionada automaticamente. Se houver vários, preencha `clinicId` em [config.js](../assets/js/supabase/config.js). Todos os RPCs conferem o vínculo ativo do usuário JWT.
@@ -118,4 +118,41 @@ Radiografias, PDFs e assinaturas continuam como data URLs, mas em **linhas relac
 
 Uma próxima etapa pode mover os binários para Storage com buckets privados, autorização por tenant, URLs assinadas e migração verificável que só remove o payload após confirmar o objeto. Até lá, não substitua data URLs por links sem adaptar os consumidores. Dados pessoais e de saúde exigem administração de acessos, retenção, backups, TLS e avaliação LGPD; RLS por si só não resolve essas obrigações.
 
-Nenhum teste automatizado foi criado/executado. As novas migrations não são executadas pelo frontend: a chave pública não permite DDL. Execute o SQL no painel e confira o vínculo com as consultas de diagnóstico. A validação autenticada completa depende da aplicação dessas migrations, da conta real e da confirmação/configuração de e-mails; criar os arquivos não prova que o banco remoto já foi provisionado.
+## Timeout no carregamento da clinica
+
+O login autentica antes de carregar os dados. Se `clinic_load` falhar, o aplicativo continua bloqueado e oferece uma nova tentativa de leitura, sem exigir outra senha. Nao ha retry automatico de gravacao, troca para modo local ou abertura com banco parcial. O aviso de audio do navegador e independente do timeout SQL.
+
+### Diagnostico antes de alterar producao
+
+1. Garanta backup consistente do banco, incluindo anexos, e verifique a restauracao em ambiente isolado. Preserve tambem trabalho pendente em aparelhos que ainda estejam abertos.
+2. Nos logs Postgres/API, confirme SQLSTATE `57014`, horario, duracao e contexto da falha. No navegador, diferencie as respostas de Auth, `clinic_list`, membros e `clinic_load`. Nunca compartilhe JWTs, senhas ou prontuarios.
+3. Execute [diagnostics/clinic_load.sql](diagnostics/clinic_load.sql) no SQL Editor administrativo. O script e somente leitura e limita cada statement a 10 segundos; se abortar, encerre a transacao com `ROLLBACK` e investigue a consulta que falhou. Pode consumir recursos ao contar arquivos; prefira uma janela tranquila. Ele nao chama `clinic_load` nem retorna conteudo de pacientes. Contagens de `pg_stat_user_tables` sao estimativas; tamanho de `pg_column_size(dados)` nao e tamanho logico descomprimido nem bytes HTTP. Os totais de relacao incluem todas as clinicas, indices e TOAST.
+4. O resultado `previous_clinic_load` e a definicao anterior para rollback: mantenha-o em registro administrativo privado antes da migration. Compare com a versao do repositorio, inclusive proprietario, grants e configuracoes. A configuracao da sessao do SQL Editor nao comprova o timeout efetivo da Data API; confira tambem papel, banco e funcoes.
+5. Durante uma falha, `blocked_by` e eventos de espera ajudam a identificar transacao bloqueadora. Nao remova o lock compartilhado nem encerre sessoes sem avaliar o trabalho em andamento.
+6. Em staging com volume representativo, compare as consultas internas com/sem os binarios e examine `EXPLAIN (ANALYZE, BUFFERS)` das consultas especificas. Um `EXPLAIN` somente da chamada da funcao pode esconder o SQL interno. Nao gere novamente o JSON integral no banco de producao como primeiro diagnostico.
+
+### Aplicacao e rollback
+
+1. Em ambiente isolado, aplique apenas a nova [migration de otimizacao](migrations/202610200001_optimize_clinic_load.sql) sobre a estrutura existente. Ela substitui somente `clinic_load`, mantendo assinatura, grants, dados, autorizacao, revisao e lock. Calcula acesso por slot distinto e agrega `patient_files` por ultimo para evitar copias posteriores desse grande bloco nas concatenacoes das tabelas.
+2. Teste com o volume importado: administrador, usuario restrito, anexos/assinaturas, backup, PDF, edicao de paciente e conflito entre dois usuarios. Meça duracao no banco, bytes de resposta e memoria do navegador, pela Data API com usuario real, nao apenas como `postgres` no SQL Editor.
+3. Depois do aceite e backup verificado, aplique a migration no SQL Editor de producao e publique `index.html` e `assets/` na Vercel. O frontend novo tambem funciona com a funcao antiga: o contrato nao mudou. As migrations nao rodam automaticamente no deploy; a chave publica nao permite DDL.
+4. Para rollback SQL, execute a definicao `CREATE OR REPLACE FUNCTION` capturada antes da atualizacao, dentro de uma transacao administrativa. Nao use `DROP FUNCTION`, nao reaplique a migration inicial e nao restaure dados por cima da producao. Para rollback visual, publique a versao anterior dos assets. Nenhum formato de arquivo foi migrado nesta etapa.
+
+Esta otimizacao nao elimina a leitura integral dos anexos e nao garante resolver um payload que exceda a capacidade do plano. Se persistir, nao apague arquivos nem aumente indiscriminadamente o timeout: a etapa seguinte e Storage privado, com metadados, binarios sob demanda e adaptacao conjunta de leitura, escrita, PDFs, assinaturas e backup/restauracao. Nao omita `patient_files` do RPC para liberar login sem adaptar o baseline de gravacao. Nao crie indices redundantes: as PKs e os indices existentes ja comecam por `clinic_id`.
+
+## Testes locais da recuperacao
+
+A aplicacao permanece estatica, sem build ou dependencias novas no navegador. Os testes em [tests/cloud-recovery.test.cjs](../tests/cloud-recovery.test.cjs) usam `node:test` para audio, login e preservacao de anexos no adaptador:
+
+```sh
+node --test tests/cloud-recovery.test.cjs
+```
+
+O teste SQL e explicitamente marcado como ignorado sem `PGLITE_MODULE`. Para executar tambem o PostgreSQL embarcado, instale PGlite fora do projeto e indique seu modulo (exemplo macOS):
+
+```sh
+npm install --prefix /tmp/oralvalle-sql-validation --no-audit --no-fund @electric-sql/pglite@0.5.10
+PGLITE_MODULE=/tmp/oralvalle-sql-validation/node_modules/@electric-sql/pglite/dist/index.js node --test tests/cloud-recovery.test.cjs
+```
+
+O teste cria um banco efemero com Auth simulado e dados sinteticos, aplica a migration inicial e compara o JSON da funcao original com a nova em diferentes permissoes, mantendo grants e negando acesso sem vinculo. Nao acessa o Supabase remoto e nao substitui testes de concorrencia, JWT/Data API, desempenho real ou restauracao de backup.
