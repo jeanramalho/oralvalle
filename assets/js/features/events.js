@@ -89,6 +89,7 @@ document.addEventListener('change',e=>{
     if(invalid.length){toast('Use imagens ou PDFs de até 1,5 MB cada. Arquivos inválidos: '+invalid.map(f=>f.name).join(', '),5000)}
     const valid=files.filter(f=>!invalid.includes(f));
     if(!valid.length){t.value='';return}
+    if(window.OralCloudFiles){t.disabled=true;OralCloudFiles.upload(p,valid,cat).catch(error=>toast(error.message,5000)).finally(()=>{t.disabled=false;t.value=''});return}
     let done=0,failed=0;
     valid.forEach(file=>{const r=new FileReader();r.onload=()=>{try{(p.arquivos=p.arquivos||[]).push({id:uid(),nome:file.name,tipo:file.type||'application/octet-stream',categoria:cat,data:String(r.result||''),dataEnvio:hojeBR()});save()}catch(err){failed++}done++;if(done===valid.length){render();toast(failed?'Alguns arquivos não puderam ser salvos. Tente arquivos menores.':'Arquivo(s) anexado(s) ao prontuário',3500)}};r.onerror=()=>{failed++;done++;if(done===valid.length){render();toast('Não foi possível ler todos os arquivos')}};r.readAsDataURL(file)});
     return;

@@ -4,6 +4,8 @@ O HTML já carrega a configuração pública, o transporte REST, o adaptador de 
 
 ## Instalação
 
+**Atualizacao de recuperacao:** depois das migrations abaixo, aplique [202610200002_bounded_clinic_reads.sql](migrations/202610200002_bounded_clinic_reads.sql) antes de publicar o frontend atual. Ela adiciona o protocolo 2 de leitura paginada e operacoes de arquivos. Somente a migration de otimizacao `202610200001` nao remove o carregamento integral antigo. Siga a secao "Leitura paginada" antes de alterar uma instalacao em producao.
+
 1. Configure Authentication com login por e-mail, URLs de retorno e confirmação de e-mail. A conta local anterior não é uma conta Supabase; senhas, salts e hashes locais não são importados.
 2. Execute [202610140001_relational_clinics.sql](migrations/202610140001_relational_clinics.sql) **somente se ainda não foi aplicada**. Depois execute [202610140002_main_clinic_access.sql](migrations/202610140002_main_clinic_access.sql) e [202610200001_optimize_clinic_load.sql](migrations/202610200001_optimize_clinic_load.sql). Requer PostgreSQL 15+. A primeira migration cria a estrutura e não deve ser reaplicada; a segunda cria/reutiliza a clínica principal sem apagar dados; a terceira otimiza a leitura sem mudar o formato do retorno. Para uma instalação existente com timeout, siga primeiro o procedimento de diagnóstico abaixo. O schema `private` **não deve ser exposto** na Data API.
 3. Crie a conta **Ricardo Silva — oralvalle.odontologia@gmail.com** na tela de cadastro ou pelo painel Authentication e confirme o e-mail. A segunda migration vincula essa conta à **Oral Valle** como administrador, usando o UUID verdadeiro de `auth.users`. Se já existe e está confirmada, o vínculo é criado ao executar a migration. Se for criada depois, o trigger fará o vínculo quando o e-mail for confirmado. Não há senha criada por SQL ou confirmação artificial de e-mail.
@@ -36,7 +38,7 @@ Para voltar explicitamente ao modo local, altere `enabled: false` no arquivo de 
 
 API global `window.OralCloudData`:
 
-- `await load()` → **apenas o objeto legado `db`**, sem envelope e sem chave de revisão no banco legado. Não executa `migrate`, não troca o `db` global e não grava dados. A revisão e o baseline ficam privados no adaptador.
+- `await load()` → **objeto clinico legado `db`, sem `patient_files`**. Executa start, paginas de tabelas clinicas e verificacao final de revisao; nunca chama `clinic_load` nem busca binarios durante a entrada. Nao executa `migrate`, nao troca `db` global e nao grava dados. Uma falha invalida o baseline; nao e permitido salvar um conjunto parcial. Revisao, baseline e IDs de pacientes ficam privados no adaptador.
 - `await save(snapshot)` → revisão como **string decimal**. Captura uma cópia JSON no momento da chamada, separa entidades, calcula inclusões/alterações e apaga somente linhas presentes no baseline visível. Nunca interpreta linhas ocultas como exclusões. `load` precisa ter sido chamado nessa clínica antes. Sucesso atualiza o baseline; falha não o atualiza. Não faz overwrite/retry automático em conflito.
 - `await members()` → array com `id`/`user_id`, `nome`, `login`, `admin`, `perms`, `active`. Administradores veem todos os vínculos daquela clínica, os demais veem somente o próprio.
 - `await updateMember(userId, patch)` → o mesmo formato de `members()`. `patch` admite somente `perms` e `active`; `perms` substitui o mapa completo, não faz merge. Exige administrador, rejeita edição do próprio vínculo e não aceita promoção, nome, login, senha ou UUID de clínica no patch. Não permite desativar o último administrador ativo. Invalida o baseline: chame `load` novamente.
@@ -131,7 +133,9 @@ O login autentica antes de carregar os dados. Se `clinic_load` falhar, o aplicat
 5. Durante uma falha, `blocked_by` e eventos de espera ajudam a identificar transacao bloqueadora. Nao remova o lock compartilhado nem encerre sessoes sem avaliar o trabalho em andamento.
 6. Em staging com volume representativo, compare as consultas internas com/sem os binarios e examine `EXPLAIN (ANALYZE, BUFFERS)` das consultas especificas. Um `EXPLAIN` somente da chamada da funcao pode esconder o SQL interno. Nao gere novamente o JSON integral no banco de producao como primeiro diagnostico.
 
-### Aplicacao e rollback
+### Otimizacao anterior e rollback
+
+Este procedimento descreve a primeira otimizacao, insuficiente para alguns volumes de anexos. Para a versao atual, utilize a secao "Leitura paginada" ao final deste documento.
 
 1. Em ambiente isolado, aplique apenas a nova [migration de otimizacao](migrations/202610200001_optimize_clinic_load.sql) sobre a estrutura existente. Ela substitui somente `clinic_load`, mantendo assinatura, grants, dados, autorizacao, revisao e lock. Calcula acesso por slot distinto e agrega `patient_files` por ultimo para evitar copias posteriores desse grande bloco nas concatenacoes das tabelas.
 2. Teste com o volume importado: administrador, usuario restrito, anexos/assinaturas, backup, PDF, edicao de paciente e conflito entre dois usuarios. Meça duracao no banco, bytes de resposta e memoria do navegador, pela Data API com usuario real, nao apenas como `postgres` no SQL Editor.
@@ -156,3 +160,57 @@ PGLITE_MODULE=/tmp/oralvalle-sql-validation/node_modules/@electric-sql/pglite/di
 ```
 
 O teste cria um banco efemero com Auth simulado e dados sinteticos, aplica a migration inicial e compara o JSON da funcao original com a nova em diferentes permissoes, mantendo grants e negando acesso sem vinculo. Nao acessa o Supabase remoto e nao substitui testes de concorrencia, JWT/Data API, desempenho real ou restauracao de backup.
+
+## Leitura paginada
+
+### O que muda
+
+A [migration 202610200002](migrations/202610200002_bounded_clinic_reads.sql) e aditiva: mantem o RPC antigo e todos os dados existentes, sem mover/remover anexos, sem aumentar timeout e sem bucket Storage. O frontend atual exige os novos RPCs; uma funcao ausente gera instrucao de atualizacao, nao fallback para a carga monolitica.
+
+| RPC | Contrato |
+| --- | --- |
+| `clinic_load_start(p_clinic)` | Protocolo 2, revisao decimal e mapa de acesso; nenhum registro/binario. |
+| `clinic_load_page(p_clinic,p_revision,p_table,p_after)` | Tabela do catalogo privado, exceto `patient_files`; cursor por ID, ate 100 linhas examinadas e alvo de 512 KiB por pagina. |
+| `clinic_files_page(p_clinic,p_revision,p_patient,p_after)` | Metadados autorizados de um paciente; sem conteudo dos anexos/assinaturas. `p_patient` e o ID relacional, nao somente o ID legado. |
+| `clinic_row_chunk(p_clinic,p_revision,p_table,p_id,p_offset)` | Um registro autorizado em blocos de 65.536 caracteres de JSON; permite dados legados maiores que uma pagina, sem truncamento. |
+| `clinic_file_apply(p_clinic,p_revision,p_patient,p_operation,p_data)` | `append`, `delete` ou grupo `signature`; lock/revisao e validacao atomica pelo `clinic_apply` existente. |
+
+`p_after`/`p_offset` iniciais sao null/0. `next=null` encerra a leitura. Cada chamada confere vinculo, permissoes e revisao sob lock curto compartilhado; alteracoes mantem o lock exclusivo existente. Mudanca de revisao interrompe a montagem e exige nova leitura completa. Nao ha lock mantido entre requisicoes nem liberacao de banco parcial para edicao.
+
+O adaptador monta primeiro todas as tabelas clinicas e verifica a revisao novamente antes de publicar o baseline. Arquivos nao participam do diff clinico: ler/baixar um anexo nao o torna uma edicao, e salvar nome/agenda nao pode excluir arquivos ausentes da memoria. Novos pacientes entram no mapa de IDs apos gravacao confirmada. As operacoes de arquivo esperam as gravacoes clinicas pendentes e atualizam a mesma revisao.
+
+`cloud-files.js` liga a aba de arquivos, uploads, documentos gerados, assinaturas e backup ao adaptador. Metadados do paciente sao consultados ao abrir a area correspondente; o conteudo e buscado somente ao baixar, desenhar assinatura existente, imprimir ou exportar backup. Assinaturas nao podem ser editadas antes da leitura. Falha de arquivo nao e reenviada automaticamente; a barra permite baixar um pacote de **alteracoes pendentes**, com intencoes de arquivo. Esse pacote nao e backup completo e nao pode ser restaurado como tal.
+
+O indice novo `(clinic_id,parent_id,id)` atende a busca paginada por paciente; os indices anteriores por slot/posicao e a PK nao oferecem essa mesma ordenacao. Criacao do indice pode esperar transacoes e bloquear gravacoes durante a migration; aplique em janela planejada.
+
+### Backup manual no plano gratuito
+
+Nao ter backup gerenciado no painel nao impede criar uma copia logica manual. Antes de aplicar em producao, use um cliente `pg_dump` compativel, com a conexao administrativa **direta ou pooler em modo sessao**, nao pooler em modo transacao. Exemplo com placeholders, a executar no seu terminal:
+
+```sh
+pg_dump --host=HOST_DIRETO_OU_POOLER_SESSAO --port=5432 --username=USUARIO_ADMIN --dbname=postgres --format=custom --file=/CAMINHO_PRIVADO/oralvalle.dump --password
+```
+
+A senha e digitada somente no prompt do terminal; nao entra no chat, codigo ou historico do comando. Guarde o dump criptografado, fora deste repositorio e fora do deploy. Verifique exit code, conteudo com `pg_restore --list`, e restaure efetivamente em ambiente isolado compativel, preferencialmente Supabase local. Listar o arquivo, por si so, nao prova restauracao. Confira `public`, `private`, IDs/vinculos Auth, funcoes/grants e quantidade/conteudo dos anexos; roles e schemas gerenciados precisam de tratamento compativel no destino. Nao restaure esse dump por cima da producao para testar.
+
+Se usar Supabase CLI, o `db dump` padrao e apenas esquema, exclui schemas gerenciados e nao inclui dados/custom roles. Configure explicitamente dumps de dados e dependencias Auth necessarias e verifique a restauracao; nao trate um arquivo somente de estrutura como backup. Referencias: [backups](https://supabase.com/docs/guides/platform/backups) e [CLI db dump](https://supabase.com/docs/reference/cli/supabase-db-dump).
+
+Os anexos atuais estao em JSONB no PostgreSQL e fazem parte de um dump de dados com escopo correto. Uma futura migracao para Storage exigira copia dos objetos separadamente.
+
+### Limites deliberados
+
+- Cada novo anexo continua limitado a 1,5 MiB pela interface; o servidor limita o JSON codificado a 2,2 MB. Arquivos legados nao sao apagados nem truncados por excederem esse limite de upload.
+- A leitura de um registro e a exportacao completa no navegador recusam conjuntos com mais de aproximadamente 64 MiB de texto UTF-16 estimado. Nao e uma medicao da memoria total do navegador. Para volumes maiores, utilize o dump administrativo; nao e produzido um backup parcial apresentado como completo.
+- O backup da interface busca todos os arquivos autorizados em paginas/blocos, verifica a revisao e gera o JSON legado completo **sem hidratar o banco de edicao**. Usuarios restritos exportam apenas a visao autorizada; somente o dump administrativo e a copia de recuperacao independente dessas permissoes.
+- Restauracao pela interface exige administrador, le os dados atuais com arquivos e calcula uma unica transacao atomica. Recusa mais de 50.000 mudancas ou cerca de 5 MiB de texto estimado de mudancas, antes de gravar. Restauracoes maiores exigem processo administrativo em janela de manutencao com backup verificado. Importador de grandes volumes com staging/ativacao atomica e exportacao em streaming ainda nao foram implementados; nao divida uma restauracao destrutiva em gravacoes parciais.
+- A exclusao de paciente com arquivos/assinaturas e bloqueada pela interface e continua sujeita a FKs/permissoes no servidor. Arquivar continua disponivel; nao ha exclusao implicita de filhos nao carregados.
+- Nao ha capacidade ilimitada no plano gratuito. Monitore espaco, egress, CPU e latencia; Storage privado permanece uma etapa de capacidade separada, com migracao retomavel e backup dos objetos.
+
+### Publicacao e aceite
+
+1. Primeiro obtenha e teste a copia de seguranca. Confira os diagnosticos de bloqueio/recursos e a definicao das funcoes instaladas; nao reproduza a agregacao integral como primeiro teste.
+2. Em ambiente isolado, aplique as migrations anteriores e depois somente a nova `202610200002_bounded_clinic_reads.sql`. Execute a bateria com `PGLITE_MODULE` descrita acima. Os testes agora exercitam o adaptador real contra PostgreSQL embarcado: entrada sem binarios, pagina/registro grande, append/delete/assinatura, backup/restauracao, revisao, grants e negacao de dados ocultos. Tambem verificam falha de pagina sem baseline utilizavel e ausencia de fallback monolitico.
+3. Depois do aceite, aplique a nova migration no SQL Editor administrativo da producao, sem reaplicar a inicial. Publique juntos `index.html` e `assets/`, incluindo `assets/js/features/cloud-files.js`, na Vercel. Recarregue os clientes antigos. Nao basta publicar os assets sem os RPCs.
+4. Na rede do navegador, confirme `clinic_load_start`/`clinic_load_page`, nenhuma chamada `clinic_load` e nenhum `clinic_row_chunk` de `patient_files` durante o login. A aba de arquivos deve consultar apenas o paciente selecionado; o download/assinatura deve buscar conteudo sob demanda.
+5. Confira com administrador e usuario de visualizacao: cadastro, agenda, uploads, download, assinatura e impressao, receita/atestado salvo, backup/restauracao de amostra e conflito entre dois aparelhos. Meça duracao/bytes com o volume importado e margem abaixo do timeout efetivo. PGlite e navegador com RPC simulado nao reproduzem recursos/quotas da producao.
+6. Rollback inicial pode republicar assets anteriores e deixar os novos RPCs/indice sem uso: nenhum dado foi migrado de formato. Isso nao recupera o desempenho do login antigo; se necessario, mantenha manutencao enquanto investiga. Nao remova dados, indice ou funcoes antigas como tentativa de rollback. Nao existe retry automatico de gravacao ambigua.

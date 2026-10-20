@@ -13,6 +13,7 @@
   let accessRequests = [];
   let accessError = '';
   let accessLoading = false;
+  let pendingFiles = [];
   const copy = value => JSON.parse(JSON.stringify(value));
   const localToast = toast;
   const localPermissionCard = pmCardHtml;
@@ -52,7 +53,10 @@
   }
 
   function downloadBackup() {
-    const url = URL.createObjectURL(new Blob([bkData()], { type: 'application/json' }));
+    const recovery = { app: 'oralvalle-pending-changes', v: 1, exp: new Date().toISOString(),
+      core: OralCloudData.snapshot(db), files: pendingFiles,
+      note: 'Alterações pendentes, não é um backup completo. Não restaurar como backup da clínica.' };
+    const url = URL.createObjectURL(new Blob([JSON.stringify(recovery)], { type: 'application/json' }));
     const link = document.createElement('a');
     link.href = url;
     link.download = 'oralvalle-alteracoes-pendentes-' + tdy() + '.json';
@@ -97,7 +101,7 @@
       localToast('Entre na clínica antes de gravar dados.', 3500);
       return;
     }
-    pending = copy(db);
+    pending = OralCloudData.snapshot(db);
     lastSaved = null;
     updSaveStat();
     if (!failure) status('Gravando alterações no Supabase…');
@@ -124,6 +128,7 @@
 
   async function openClinic(keep) {
     disposed = false;
+    window.OralCloudFiles?.reset();
     const clinics = await OralCloud.request('/rest/v1/rpc/clinic_list', { method: 'POST', body: {} });
     if (!Array.isArray(clinics) || !clinics.length)
       throw new Error('Sua conta ainda não tem acesso à clínica. Confirme seu e-mail e peça ao administrador Ricardo Silva que aprove seu cadastro em Configurações → Acessos.');
@@ -147,6 +152,7 @@
     pending = null;
     failure = null;
     lastSaved = null;
+    pendingFiles = [];
     unlock(member, keep);
     OralCloudData.prepareDefaults(db);
     status('Conectado ao Supabase · ' + clinic.nome);
@@ -241,7 +247,7 @@
     if (error.clinicLoad && error.status !== 401 && error.status !== 403 && error.code !== '42501' && error.code !== 'PGRST202' && error.status !== 404)
       return 'Seu acesso foi autenticado, mas não foi possível carregar a clínica. Tente carregar novamente.';
     if (error.code === 'PGRST202' || error.status === 404)
-      return 'As migrations ainda não estão disponíveis. Execute o SQL fornecido no painel Supabase e recarregue.';
+      return 'A leitura paginada ainda não está disponível. Aplique a migration 202610200002_bounded_clinic_reads.sql no Supabase e recarregue.';
     return error.message || 'Falha de conexão. Verifique sua internet e tente novamente.';
   }
 
@@ -266,6 +272,8 @@
       await flush();
     } catch (_) { localToast('Não foi possível sair: há alterações não gravadas. Resolva o aviso ou baixe um backup.', 5000); return; }
     disposed = true;
+    window.OralCloudFiles?.reset();
+    OralCloudData.reset();
     try { await OralCloud.logout(); } catch (_) {}
     clearTimeout(idleT);
     ME = null; AUTH = { users: [], rec: null };
@@ -383,7 +391,31 @@
   bkHtml = () => localBackupView().replace('guardados neste navegador. Se limpar o navegador ou trocar de aparelho, tudo se perde.', 'compartilhados no Supabase. Faça backup antes de restaurar ou importar dados.');
 
   window.addEventListener('beforeunload', event => {
-    if (pending || running || failure || membersPending) { event.preventDefault(); event.returnValue = ''; }
+    if (pending || running || failure || membersPending || pendingFiles.length) { event.preventDefault(); event.returnValue = ''; }
   });
-  window.OralCloudSync = Object.freeze({ flush, get dirty() { return Boolean(pending || running || failure || membersPending); } });
+  async function fileOperation(patientId, operation, data) {
+    const intent = copy({ patientId, operation, data });
+    pendingFiles.push(intent);
+    membersPending++;
+    memberQueue = memberQueue.catch(() => {}).then(async () => {
+      await flush();
+      if (LOCKED || disposed) throw new Error('Entre na clínica antes de alterar arquivos.');
+      membersRunning = true;
+      $('app').inert = true;
+      try {
+        const revision = await OralCloudData.changeFile(patientId, operation, intent.data);
+        pendingFiles = pendingFiles.filter(value => value !== intent);
+        saved();
+        return revision;
+      } catch (error) {
+        error.needsReload = true;
+        failure = error;
+        status('Arquivo sem confirmação de gravação: ' + explain(error) + ' Baixe as alterações pendentes antes de recarregar.', true);
+        throw error;
+      } finally { membersRunning = false; $('app').inert = false; }
+    }).finally(() => { membersPending--; });
+    return memberQueue;
+  }
+  window.OralCloudSync = Object.freeze({ flush, fileOperation,
+    get dirty() { return Boolean(pending || running || failure || membersPending || pendingFiles.length); } });
 })();

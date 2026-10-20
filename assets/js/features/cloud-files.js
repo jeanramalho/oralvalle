@@ -1,0 +1,245 @@
+(function () {
+  'use strict';
+  if (!window.OralCloud?.enabled) return;
+  let generation = 0;
+  const cache = new Map();
+  const urls = new Set();
+  const nativeFilesTab = tabArquivos;
+  PM_SAFE.add('cloudfileopen');
+  PM_SAFE.add('cloudfilesretry');
+  function entry(patient) {
+    const key = JSON.stringify(patient.id);
+    if (!cache.has(key)) cache.set(key, { rows: null, loading: false, error: '', signatures: new Set() });
+    return cache.get(key);
+  }
+  function redraw(patient, token) {
+    if (token === generation && !LOCKED && cur()?.id === patient.id) render();
+  }
+  async function metadata(patient) {
+    const state = entry(patient);
+    if (state.rows) return state.rows;
+    if (state.promise) return state.promise;
+    const token = generation;
+    state.loading = true;
+    state.promise = OralCloudData.files(patient.id).then(rows => {
+      if (token !== generation) throw new Error('A clínica mudou durante a leitura.');
+      state.rows = rows;
+      state.error = '';
+      return rows;
+    }).catch(error => { state.error = error.message; throw error; })
+      .finally(() => { state.loading = false; state.promise = null; redraw(patient, token); });
+    return state.promise;
+  }
+  function report(error) { toast(error.message || 'Não foi possível concluir a operação.', 5000); }
+  async function append(patient, file) {
+    await OralCloudSync.fileOperation(patient.id, 'append', { file });
+    cache.delete(JSON.stringify(patient.id));
+    if (cur()?.id === patient.id) render();
+  }
+  async function upload(patient, files, category) {
+    for (const file of files) {
+      const data = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('Não foi possível ler ' + file.name));
+        reader.readAsDataURL(file);
+      });
+      await append(patient, { id: uid(), nome: file.name, tipo: file.type,
+        categoria: category, data, dataEnvio: hojeBR() });
+    }
+    toast('Arquivo(s) confirmado(s) no Supabase.');
+  }
+  async function ensureSignature(patient, slot) {
+    const state = entry(patient);
+    if (state.signatures.has(slot)) return;
+    if (state['promise-' + slot]) return state['promise-' + slot];
+    state['loading-' + slot] = true;
+    const token = generation;
+    const slots = slot === 'sign' ? ['sign', 'signDate', 'signTermo'] : ['evolSign', 'evolSignDate'];
+    state['promise-' + slot] = (async () => { try {
+      const rows = await metadata(patient);
+      const values = {};
+      for (const name of slots) {
+        const descriptor = rows.find(row => row.slot === name);
+        values[name] = descriptor ? (await OralCloudData.file(patient.id, descriptor.id)).dados : '';
+      }
+      if (token !== generation) return;
+      Object.assign(patient, values);
+      state.signatures.add(slot);
+      state.error = '';
+    } catch (error) { state.error = error.message; }
+    finally { state['loading-' + slot] = false; state['promise-' + slot] = null; redraw(patient, token); }
+    })();
+    return state['promise-' + slot];
+  }
+  async function signaturesForPrint(patient) {
+    for (const slot of ['sign', 'evolSign']) {
+      await ensureSignature(patient, slot);
+      if (entry(patient).error) throw new Error(entry(patient).error);
+    }
+  }
+  function signatureReady(patient, slot) {
+    const state = entry(patient);
+    if (state.signatures.has(slot)) return true;
+    const canvas = $(slot === 'sign' ? 'sig' : 'evsig');
+    if (canvas) canvas.style.pointerEvents = 'none';
+    const status = $(slot === 'sign' ? 'sigst' : 'evsigst');
+    if (status) {
+      status.textContent = state.error || 'Carregando assinatura...';
+      if (state.error) {
+        const retry = document.createElement('button');
+        retry.type = 'button'; retry.textContent = 'Tentar novamente';
+        retry.onclick = () => { state.error = ''; ensureSignature(patient, slot); };
+        status.appendChild(retry);
+      }
+    }
+    if (!state.error) ensureSignature(patient, slot);
+    return false;
+  }
+  async function signature(patient, slot, values) {
+    await OralCloudSync.fileOperation(patient.id, 'signature', { slot, values });
+    const state = entry(patient);
+    state.rows = null;
+    state.signatures.add(slot);
+    Object.assign(patient, values);
+    if (cur()?.id === patient.id) render();
+  }
+  tabArquivos = function (patient) {
+    const state = entry(patient);
+    if (!state.rows && !state.loading && !state.error) metadata(patient).catch(() => {});
+    const base = nativeFilesTab({ ...patient, arquivos: [] });
+    const list = state.rows?.filter(row => row.slot === 'arquivos' && row.position >= 0) || [];
+    const content = state.error
+      ? `<p role="alert">${esc(state.error)}</p><button data-act="cloudfilesretry">Tentar novamente</button>`
+      : state.loading ? '<p role="status">Carregando arquivos...</p>'
+        : list.map((row, index) => `<article class="ov-file-card"><strong>${esc(row.dados?.nome || 'Arquivo')}</strong>
+          <p>${esc(row.dados?.categoria || '')} ${esc(row.dados?.dataEnvio || '')}</p>
+          <button class="ghost sm" data-act="cloudfileopen" data-index="${index}">Abrir / baixar</button>
+          <button class="danger sm" data-act="cloudfiledelete" data-index="${index}">Excluir</button></article>`).join('') || '<p>Nenhum arquivo anexado.</p>';
+    return base.slice(0, base.indexOf('<h2>Arquivos anexados'))
+      .replace('Para evitar que o navegador fique sem espaço, cada arquivo pode ter até 1,5 MB.', 'Cada novo arquivo pode ter até 1,5 MB.')
+      .replace('Os anexos ficam salvos neste navegador; faça backups regularmente.', 'Os anexos ficam no Supabase; faça backups regularmente.')
+      + `<h2>Arquivos anexados (${list.length})</h2><div class="ov-file-grid">${content}</div>`;
+  };
+  A.cloudfilesretry = () => { const patient = cur(); if (!patient) return; cache.delete(JSON.stringify(patient.id)); render(); };
+  A.cloudfileopen = async (button, data, patient) => {
+    const rows = entry(patient).rows?.filter(row => row.slot === 'arquivos' && row.position >= 0) || [];
+    const descriptor = rows[Number(data.index)];
+    if (!descriptor) return;
+    button.disabled = true;
+    try {
+      const row = await OralCloudData.file(patient.id, descriptor.id);
+      if (typeof row.dados?.data !== 'string' || !/^data:/i.test(row.dados.data))
+        throw new Error('Conteúdo do arquivo inválido. Solicite recuperação administrativa.');
+      const response = await fetch(row.dados.data);
+      const url = URL.createObjectURL(await response.blob());
+      urls.add(url);
+      const link = document.createElement('a');
+      link.href = url; link.download = row.dados.nome || 'arquivo'; link.click();
+      setTimeout(() => { URL.revokeObjectURL(url); urls.delete(url); }, 60000);
+    } catch (error) { report(error); }
+    finally { button.disabled = false; }
+  };
+  A.cloudfiledelete = async (button, data, patient) => {
+    const rows = entry(patient).rows?.filter(row => row.slot === 'arquivos' && row.position >= 0) || [];
+    const row = rows[Number(data.index)];
+    if (!row || !confirm('Excluir este arquivo do prontuário?')) return;
+    button.disabled = true;
+    try {
+      await OralCloudSync.fileOperation(patient.id, 'delete', { row_id: row.id });
+      cache.delete(JSON.stringify(patient.id)); render();
+    } catch (error) { report(error); }
+    finally { button.disabled = false; }
+  };
+  for (const [action, slot] of [['sigclr', 'sign'], ['evsigclr', 'evolSign']]) {
+    A[action] = async (button, data, patient) => {
+      if (!patient || !signatureReady(patient, slot)) return;
+      const names = slot === 'sign' ? ['sign', 'signDate', 'signTermo'] : ['evolSign', 'evolSignDate'];
+      try { await signature(patient, slot, Object.fromEntries(names.map(name => [name, '']))); }
+      catch (error) { report(error); }
+    };
+  }
+  for (const [action, create, category] of [['rxsave', rxDoc, 'Receituário'], ['atsave', atDoc, 'Atestado']]) {
+    A[action] = async (button, data, patient) => {
+      if (!patient) return;
+      button.disabled = true;
+      try {
+        const document = create(patient);
+        if (document) await append(patient, { id: uid(), nome: document.fname, tipo: 'application/pdf', categoria: category,
+          data: document.doc.output('datauristring').replace(/;filename=[^;]*;/, ';'), dataEnvio: hojeBR() });
+      } catch (error) { report(error); }
+      finally { button.disabled = false; }
+    };
+  }
+  for (const action of ['printficha', 'printevol']) {
+    const original = A[action];
+    A[action] = async (button, data, patient) => {
+      if (!patient) return;
+      button.disabled = true;
+      try { await signaturesForPrint(patient); original(button, data, patient); }
+      catch (error) { report(error); }
+      finally { button.disabled = false; }
+    };
+  }
+  let backupText = '';
+  let backingUp = false;
+  async function prepareBackup() {
+    await OralCloudSync.flush();
+    const data = await OralCloudData.exportData(db);
+    return JSON.stringify({ app: 'consultorio', v: 2, exp: new Date().toISOString(), data });
+  }
+  bkHtml = function () {
+    return `<section><h2>Backup e restauração</h2><p>Exportação dos dados autorizados, incluindo anexos. Para uma cópia administrativa completa ou volumes grandes, utilize pg_dump.</p>
+      <button data-act="bksave"${backingUp ? ' disabled' : ''}>${backingUp ? 'Preparando backup...' : 'Baixar backup com anexos'}</button>
+      <button class="ghost" data-act="bktxt"${backingUp ? ' disabled' : ''}>Mostrar texto do backup</button>
+      ${backupText ? `<textarea readonly aria-label="Backup completo">${esc(backupText)}</textarea><button data-act="bkcopy">Copiar backup preparado</button>` : ''}
+      <h2>Restaurar backup</h2><label for="rstf">Arquivo JSON</label><input id="rstf" type="file" accept=".json,application/json">
+      <label for="rst">Texto do backup</label><textarea id="rst">${esc(view.rst || '')}</textarea>
+      <button class="danger" data-act="bkrst">Restaurar dados</button>
+      <h2>Importar pacientes</h2><label for="importPacFile">Arquivo CSV ou JSON</label><input id="importPacFile" type="file" accept=".csv,.txt,.json">${acHtml()}</section>`;
+  };
+  async function backup(showText) {
+    if (backingUp) return;
+    backingUp = true; render();
+    try {
+      const text = await prepareBackup();
+      if (showText) backupText = text;
+      else {
+        const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+        const link = document.createElement('a');
+        link.href = url; link.download = 'oralvalle-backup-' + tdy() + '.json'; link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+      markBk(); toast('Backup com anexos preparado.');
+    } catch (error) { report(error); }
+    finally { backingUp = false; render(); }
+  }
+  A.bksave = () => backup(false);
+  A.bktxt = () => backup(true);
+  A.bkcopy = () => { if (backupText) copy(backupText, 'Backup copiado.'); };
+  restore = async function () {
+    if (!ME?.admin) { toast('Restaurar exige administrador.'); return; }
+    try {
+      const parsed = JSON.parse(view.rst || '');
+      if (parsed.app === 'oralvalle-pending-changes') throw new Error('Este arquivo contém alterações pendentes, não um backup completo.');
+      const data = parsed.app === 'consultorio' ? parsed.data : parsed;
+      if (!Array.isArray(data?.p)) throw new Error('Backup inválido.');
+      if (!confirm('Restaurar substitui os dados da clínica. Confirme que possui um backup completo atual e que não há outros usuários gravando. Continuar?')) return;
+      await OralCloudSync.flush();
+      $('app').inert = true;
+      await OralCloudData.restoreData(migrate(data));
+      location.reload();
+    } catch (error) { report(error); }
+    finally { $('app').inert = false; }
+  };
+  const originalDelete = A.del;
+  A.del = async (button, data, patient) => {
+    try {
+      const rows = await OralCloudData.files(patient.id);
+      if (rows.length) { toast('Paciente possui arquivos ou assinaturas. Mantenha arquivado; a exclusão exige revisão administrativa.', 5000); return; }
+      originalDelete(button, data, patient);
+    } catch (error) { report(error); }
+  };
+  window.OralCloudFiles = Object.freeze({ append, upload, signatureReady, signature,
+    reset() { generation++; cache.clear(); backupText = ''; urls.forEach(url => URL.revokeObjectURL(url)); urls.clear(); } });
+})();

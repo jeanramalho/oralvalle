@@ -17,21 +17,23 @@ function sigHtml(p){
 }
 function initSig(){
   const c=$('sig'),p=cur();if(!c||!p)return;
+  if(window.OralCloudFiles&&!OralCloudFiles.signatureReady(p,'sign'))return;
   const x=c.getContext('2d');let dr=false;x.fillStyle='#fff';x.fillRect(0,0,600,220);x.lineWidth=3;x.lineCap='round';x.lineJoin='round';x.strokeStyle='#3F4650';
   if(p.sign){const im=new Image();im.onload=()=>x.drawImage(im,0,0);im.src=p.sign}
   const pt=e=>{const r=c.getBoundingClientRect();return [(e.clientX-r.left)*600/r.width,(e.clientY-r.top)*220/r.height]};
   c.onpointerdown=e=>{e.preventDefault();dr=true;try{c.setPointerCapture(e.pointerId)}catch(_){}const a=pt(e);x.beginPath();x.moveTo(a[0],a[1]);x.lineTo(a[0]+.1,a[1]);x.stroke()};
   c.onpointermove=e=>{if(!dr)return;const a=pt(e);x.lineTo(a[0],a[1]);x.stroke()};
-  c.onpointerup=c.onpointercancel=()=>{if(!dr)return;dr=false;p.sign=c.toDataURL('image/png');p.signDate=new Date().toLocaleString('pt-BR');p.signTermo=TERMO;save();$('sigst').textContent='Assinatura salva em '+p.signDate+', junto com o texto do termo.'};
+  c.onpointerup=c.onpointercancel=()=>{if(!dr)return;dr=false;const values={sign:c.toDataURL('image/png'),signDate:new Date().toLocaleString('pt-BR'),signTermo:TERMO};if(window.OralCloudFiles){OralCloudFiles.signature(p,'sign',values).catch(error=>toast(error.message,5000));return}Object.assign(p,values);save();$('sigst').textContent='Assinatura salva em '+p.signDate+', junto com o texto do termo.'};
 }
 function initEvolSig(){
   const c=$('evsig'),p=cur();if(!c||!p)return;
+  if(window.OralCloudFiles&&!OralCloudFiles.signatureReady(p,'evolSign'))return;
   const x=c.getContext('2d');let dr=false;x.fillStyle='#fff';x.fillRect(0,0,600,180);x.lineWidth=3;x.lineCap='round';x.lineJoin='round';x.strokeStyle='#3F4650';
   if(p.evolSign){const im=new Image();im.onload=()=>x.drawImage(im,0,0);im.src=p.evolSign}
   const pt=e=>{const r=c.getBoundingClientRect();return [(e.clientX-r.left)*600/r.width,(e.clientY-r.top)*180/r.height]};
   c.onpointerdown=e=>{e.preventDefault();dr=true;try{c.setPointerCapture(e.pointerId)}catch(_){}const a=pt(e);x.beginPath();x.moveTo(a[0],a[1]);x.lineTo(a[0]+.1,a[1]);x.stroke()};
   c.onpointermove=e=>{if(!dr)return;e.preventDefault();const a=pt(e);x.lineTo(a[0],a[1]);x.stroke()};
-  c.onpointerup=c.onpointercancel=()=>{if(!dr)return;dr=false;p.evolSign=c.toDataURL('image/png');p.evolSignDate=new Date().toLocaleString('pt-BR');save();const st=$('evsigst');if(st)st.textContent='Assinatura salva em '+p.evolSignDate};
+  c.onpointerup=c.onpointercancel=()=>{if(!dr)return;dr=false;const values={evolSign:c.toDataURL('image/png'),evolSignDate:new Date().toLocaleString('pt-BR')};if(window.OralCloudFiles){OralCloudFiles.signature(p,'evolSign',values).catch(error=>toast(error.message,5000));return}Object.assign(p,values);save();const st=$('evsigst');if(st)st.textContent='Assinatura salva em '+p.evolSignDate};
 }
 function ologHtml(p){
   const l=(p.olog||[]).slice(-8).reverse();

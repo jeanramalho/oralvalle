@@ -133,7 +133,9 @@ test('the adapter preserves attachments during no-op saves and patient edits', a
     OralCloud: {
       enabled: true, clinicId: 'clinic',
       request: async (path, options) => {
-        if (path.endsWith('clinic_load')) return payload;
+        assert.equal(path.endsWith('/clinic_load'), false);
+        if (path.endsWith('clinic_load_start')) return { protocol: 2, revision: '42', access: payload.access };
+        if (path.endsWith('clinic_load_page')) return { revision: '42', rows: payload.tables[options.body.p_table] || [], next: null };
         changes.push(options.body);
         return { revision: '43' };
       },
@@ -148,10 +150,39 @@ test('the adapter preserves attachments during no-op saves and patient edits', a
   await adapter.save(database);
   assert.equal(changes[1].p_changes.length, 1);
   assert.equal(changes[1].p_changes[0].table, 'patients');
-  assert.equal(database.p[0].arquivos[0].data, 'data:application/pdf;base64,AAAA');
+  assert.equal(database.p[0].arquivos, undefined);
 });
 
-test('clinic_load preserves the original result and authorization', {
+test('failed or inconsistent pages invalidate the writable baseline without monolithic fallback', async () => {
+  let broken = false;
+  let inconsistent = false;
+  const calls = [];
+  const context = vm.createContext({ window: { OralCloud: {
+    enabled: true, clinicId: 'clinic',
+    request: async (path, options) => {
+      const name = path.split('/').pop();
+      calls.push(name);
+      assert.notEqual(name, 'clinic_load');
+      if (name === 'clinic_load_start') return { protocol: 2, revision: '7', access: { patients: { read: true } } };
+      if (name === 'clinic_load_page') {
+        if (broken && options.body.p_table === 'patients') throw Object.assign(new Error('Timeout'), { code: '57014' });
+        return { revision: inconsistent ? '8' : '7', rows: [], next: null };
+      }
+      return { revision: '7' };
+    },
+  } } });
+  vm.runInContext(source('assets/js/supabase/data.js'), context);
+  const adapter = context.window.OralCloudData;
+  await adapter.load();
+  broken = true;
+  await assert.rejects(adapter.load(), error => error.code === '57014');
+  await assert.rejects(adapter.save({ p: [] }), error => error.code === 'LOAD_REQUIRED');
+  broken = false; inconsistent = true;
+  await assert.rejects(adapter.load(), error => error.code === 'INVALID_RESPONSE');
+  assert.equal(calls.includes('clinic_apply'), false);
+});
+
+test('bounded protocol preserves data, authorization, file operations and export', {
   skip: !process.env.PGLITE_MODULE && 'Set PGLITE_MODULE to an isolated @electric-sql/pglite installation',
 }, async () => {
   const { PGlite } = await import(process.env.PGLITE_MODULE);
@@ -212,11 +243,95 @@ test('clinic_load preserves the original result and authorization', {
     await database.exec(source('supabase/diagnostics/clinic_load.sql'));
     await database.exec(source('supabase/migrations/202610200001_optimize_clinic_load.sql'));
     await compare();
+    await database.exec(source('supabase/migrations/202610200002_bounded_clinic_reads.sql'));
+    const clinic = '00000000-0000-0000-0000-000000000010';
+    const start = (await database.query('select public.clinic_load_start($1) as payload', [clinic])).rows[0].payload;
+    assert.equal(start.protocol, 2);
+    assert.equal(start.revision, '42');
+    assert.equal(start.tables, undefined);
+    const page = (await database.query("select public.clinic_load_page($1,42,'patients',null) as payload", [clinic])).rows[0].payload;
+    assert.equal(page.rows[0].id, 'patient');
+    await assert.rejects(database.query("select public.clinic_load_page($1,42,'patient_files',null)", [clinic]), error => error.code === '22023');
+    await assert.rejects(database.query("select public.clinic_load_page($1,41,'patients',null)", [clinic]), error => error.code === '40001');
+    const grants = await database.query("select has_function_privilege('anon','public.clinic_load_start(uuid)','execute') as anonymous, has_function_privilege('authenticated','public.clinic_load_start(uuid)','execute') as member");
+    assert.equal(grants.rows[0].anonymous, false);
+    assert.equal(grants.rows[0].member, true);
+    await database.exec('update public.clinic_members set admin=true');
+    const parent = JSON.stringify([null, 'p', ['id', 1]]);
+    await database.exec('begin');
+    await database.query('update public.patient_files set parent_id=$1', [parent]);
+    await database.query("update public.patients set id=$1 where id='patient'", [parent]);
+    const storedFiles = (await database.query('select id,slot,position,dados from public.patient_files')).rows;
+    for (const row of storedFiles) {
+      const id = row.slot === 'arquivos' ? JSON.stringify([parent, row.slot, ['id', row.dados.id]]) : JSON.stringify([parent, row.slot]);
+      await database.query('update public.patient_files set id=$1 where id=$2', [id, row.id]);
+    }
+    await database.exec('commit');
+    await database.query("insert into public.patients(clinic_id,id,slot,position,kind,dados) values($1,$2,'p',-1,'array','null')", [clinic, JSON.stringify([null, 'p'])]);
+    await database.query("insert into public.patient_files(clinic_id,id,parent_id,slot,position,kind,dados) values($1,$2,$3,'arquivos',-1,'array','null')", [clinic, JSON.stringify([parent, 'arquivos']), parent]);
+    await database.query("insert into public.clinic_settings(clinic_id,id,slot,position,kind,dados) values($1,$2,'large-imported-setting',0,'value',$3::jsonb)",
+      [clinic, JSON.stringify([null, 'large-imported-setting']), JSON.stringify({ data: 'Z'.repeat(600000) })]);
+    const network = [];
+    const context = vm.createContext({ window: { OralCloud: {
+      enabled: true, clinicId: clinic,
+      request: async (path, options) => {
+        const name = path.split('/').pop();
+        assert.notEqual(name, 'clinic_load');
+        network.push({ name, body: options.body });
+        const fields = Object.entries(options.body);
+        const parameters = fields.map(([, value]) => value && typeof value === 'object' ? JSON.stringify(value) : value);
+        const argumentsSql = fields.map(([key], index) => `${key} => $${index + 1}`).join(',');
+        return (await database.query(`select public.${name}(${argumentsSql}) as payload`, parameters)).rows[0].payload;
+      },
+    } } });
+    vm.runInContext(source('assets/js/supabase/data.js'), context);
+    const adapter = context.window.OralCloudData;
+    const clinical = await adapter.load();
+    assert.equal(clinical.p.length, 1);
+    assert.equal(clinical.p[0].arquivos, undefined);
+    assert.equal(network.some(call => call.name === 'clinic_files_page'), false);
+    assert.equal(network.filter(call => call.name === 'clinic_row_chunk').every(call => call.body.p_table !== 'patient_files'), true);
+    assert.equal(clinical['large-imported-setting'].data.length, 600000);
+    await adapter.save(clinical);
+    const descriptors = await adapter.files(1);
+    assert.equal(descriptors.length, 103);
+    assert.equal(descriptors.filter(row => row.slot === 'arquivos' && row.position >= 0).every(row => !('data' in row.dados)), true);
+    const fileDescriptor = descriptors.find(row => row.slot === 'arquivos' && row.position >= 0);
+    const actualFile = await adapter.file(1, fileDescriptor.id);
+    assert.match(actualFile.dados.data, /^data:application\/pdf;base64,/);
+    clinical.p[0].sign = 'data:image/png;base64,READ_ONLY_CACHE';
+    clinical.p[0].arquivos = [{ id: 0, data: actualFile.dados.data }];
+    await adapter.save(clinical);
+    assert.equal(network.findLast(call => call.name === 'clinic_apply').body.p_changes.length, 0);
+    delete clinical.p[0].arquivos;
+    await adapter.changeFile(1, 'append', { file: { id: 1234, nome: 'New.pdf', tipo: 'application/pdf', data: 'data:application/pdf;base64,CCCC' } });
+    await adapter.changeFile(1, 'signature', { slot: 'sign', values: { sign: 'data:image/png;base64,DDDD', signDate: '2026-10-20', signTermo: 'Verified term' } });
+    const exported = await adapter.exportData(clinical);
+    assert.equal(exported.p[0].arquivos.length, 101);
+    assert.equal(exported.p[0].sign, 'data:image/png;base64,DDDD');
+    assert.equal(exported.p[0].signTermo, 'Verified term');
+    assert.equal(clinical.p[0].arquivos, undefined);
+    const newDescriptor = (await adapter.files(1)).find(row => row.dados?.id === 1234);
+    await adapter.changeFile(1, 'delete', { row_id: newDescriptor.id });
+    assert.equal((await adapter.exportData(clinical)).p[0].arquivos.length, 100);
+    const backup = await adapter.exportData(clinical);
+    await adapter.restoreData(backup);
+    const reloaded = await adapter.load();
+    assert.equal((await adapter.exportData(reloaded)).p[0].arquivos.length, 100);
+    assert.equal((await adapter.exportData(reloaded)).p[0].signTermo, 'Verified term');
+    const allGrants = await database.query("select proname,has_function_privilege('anon',oid,'execute') as anonymous from pg_proc where proname in ('clinic_load_start','clinic_load_page','clinic_files_page','clinic_row_chunk','clinic_file_apply')");
+    assert.equal(allGrants.rows.every(row => !row.anonymous), true);
+    await database.exec('update public.clinics set revision=revision+1');
+    await assert.rejects(adapter.files(1), error => error.code === '40001');
+    await assert.rejects(database.query("select public.clinic_load_page($1,42,'unknown_table',null)", [clinic]), error => ['40001', '22023'].includes(error.code));
     const shell = await database.query(`select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',false)`);
     assert.equal(shell.rows.length, 1);
-    await database.query('update public.clinic_members set perms=$1::jsonb', [JSON.stringify({ ag: 'view' })]);
+    await database.query('update public.clinic_members set admin=false,perms=$1::jsonb', [JSON.stringify({ ag: 'view' })]);
+    const currentRevision = (await database.query('select revision::text from public.clinics where id=$1', [clinic])).rows[0].revision;
+    await assert.rejects(database.query("select public.clinic_row_chunk($1,$2,'patient_files',$3,0)", [clinic,currentRevision,fileDescriptor.id]), error => error.code === '42501');
+    await assert.rejects(database.query("select public.clinic_load_page($1,$2,'unknown_table',null)", [clinic,currentRevision]), error => error.code === '22023');
     const restricted = (await database.query("select public.clinic_load('00000000-0000-0000-0000-000000000010') as payload")).rows[0].payload;
-    assert.deepEqual(restricted.tables.patients[0].dados, { id: 1, nome: 'Synthetic' });
+    assert.deepEqual(restricted.tables.patients.find(row => row.kind === 'object').dados, { id: 1, nome: 'Synthetic' });
     assert.deepEqual(restricted.tables.patient_files, []);
     await assert.rejects(database.query("select public.clinic_load('00000000-0000-0000-0000-000000000020')"), error => error.code === '42501');
     await database.exec('update public.clinic_members set active=false');

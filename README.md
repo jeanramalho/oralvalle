@@ -25,7 +25,7 @@ As coleções são separadas em tabelas com relacionamentos, atributos flexívei
 
 Para usar o comportamento local anterior, defina `enabled: false` explicitamente na configuração. Nunca há troca automática para o modo local em caso de erro de conexão.
 
-Em caso de timeout depois de autenticar, a tela oferece nova tentativa de leitura sem abrir dados parciais. A [migration de otimizacao](supabase/migrations/202610200001_optimize_clinic_load.sql) reduz verificacoes repetidas de permissao, mas ainda carrega os anexos integralmente. Antes de aplica-la a uma instalacao existente, siga o [diagnostico, validacao e rollback](supabase/README.md#timeout-no-carregamento-da-clinica). Publicar na Vercel nao executa migrations no Supabase.
+O frontend atual exige a [migration de leitura paginada](supabase/migrations/202610200002_bounded_clinic_reads.sql), alem das anteriores. O login nao chama mais `clinic_load` nem baixa anexos: dados clinicos sao lidos por paginas com revisao consistente, e arquivos/assinaturas ficam sob demanda. A primeira otimizacao isolada nao resolve todos os volumes. Antes de publicar, siga [backup manual gratuito, limites, validacao e publicacao](supabase/README.md#leitura-paginada). Publicar na Vercel nao executa migrations no Supabase. Volumes grandes de backup/restauracao exigem o caminho administrativo documentado, sem exportacao parcial silenciosa.
 
 ## Modo local
 
