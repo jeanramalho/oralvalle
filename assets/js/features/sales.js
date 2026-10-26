@@ -37,6 +37,10 @@ function vdHtml(){
   }
   h+=`<div class="row" style="margin-bottom:10px"><button class="sm${sv==='dia'?'':' ghost'}" data-act="svw" data-t="dia">Hoje</button><button class="sm${sv==='mes'?'':' ghost'}" data-act="svw" data-t="mes">Mês</button><button class="sm${sv==='rec'?'':' ghost'}" data-act="svw" data-t="rec">A receber</button></div>`;
   const l=(sv==='dia'?dia:sv==='mes'?mes:db.vd.filter(v=>saldoV(v)>0)).slice().reverse();
-  return h+(l.length?l.map(vdCard).join(''):'<div class="empty">'+(sv==='rec'?'Nenhum valor a receber.':'Nenhuma venda '+(sv==='dia'?'hoje.':'neste mês.'))+'</div>');
+  const pageSize=50,pages=Math.max(1,Math.ceil(l.length/pageSize));
+  view.vPage=Math.min(Math.max(0,Number(view.vPage)||0),pages-1);
+  const visible=l.slice(view.vPage*pageSize,(view.vPage+1)*pageSize);
+  const pager=l.length>pageSize?`<div class="row" style="justify-content:space-between;margin-top:12px"><span class="note" style="margin:0">Página ${view.vPage+1} de ${pages} · ${l.length} lançamentos</span><span class="row" style="flex:none;gap:6px"><button class="ghost sm" data-act="vPage" data-p="${view.vPage-1}"${view.vPage===0?' disabled':''}>Anterior</button><button class="ghost sm" data-act="vPage" data-p="${view.vPage+1}"${view.vPage>=pages-1?' disabled':''}>Próxima</button></span></div>`:'';
+  return h+(visible.length?visible.map(vdCard).join(''):'<div class="empty">'+(sv==='rec'?'Nenhum valor a receber.':'Nenhuma venda '+(sv==='dia'?'hoje.':'neste mês.'))+'</div>')+pager;
 }
 

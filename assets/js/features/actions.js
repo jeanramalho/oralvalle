@@ -1,15 +1,17 @@
 /* ===== ações ===== */
 const A={
   logout:()=>doLogout(),
+  pPage:(b,d)=>{view.pPage=Math.max(0,Number(d.p)||0);render();},
+  vPage:(b,d)=>{view.vPage=Math.max(0,Number(d.p)||0);render();},
   agfalta:(b,d)=>{const a=db.ag.find(x=>x.id===d.id);if(!a)return;a.st='Faltou';save();render();toast('Falta registrada')},
   agcancel:(b,d)=>{const a=db.ag.find(x=>x.id===d.id);if(!a)return;a.st='Cancelado';save();render();toast('Agendamento cancelado')},
   agreativ:(b,d)=>{const a=db.ag.find(x=>x.id===d.id);if(!a)return;const t={...a,st:'Agendado'};if(confl(t)){toast('Esse horário já está ocupado por outro atendimento.',3500);return}a.st='Agendado';save();render();toast('Agendamento reativado')},
-  rxpdf:(b,d,p)=>{if(!p)return;try{const r=rxDoc(p);if(!r)return;r.doc.save(r.fname);toast('Receituário gerado',2200)}catch(e){console.error(e);toast('Não foi possível gerar o PDF',3000)}},
+  rxpdf:async (b,d,p)=>{if(!p)return;try{const r=await rxDoc(p);if(!r)return;r.doc.save(r.fname);toast('Receituário gerado',2200)}catch(e){console.error(e);toast('Não foi possível gerar o PDF',3000)}},
   rxprint:(b,d,p)=>{if(!p)return;try{const r=rxDoc(p);if(!r)return;const u=r.doc.output('bloburl'),w=window.open(u,'_blank');if(!w){r.doc.save(r.fname);toast('Pop-up bloqueado: o PDF foi baixado para você imprimir',3500)}}catch(e){console.error(e);toast('Não foi possível gerar o PDF',3000)}},
   rxsave:(b,d,p)=>{if(!p)return;try{const r=rxDoc(p);if(!r)return;const data=r.doc.output('datauristring').replace(/;filename=[^;]*;/,';');(p.arquivos=p.arquivos||[]).push({id:uid(),nome:r.fname,tipo:'application/pdf',categoria:'Receituário',data,dataEnvio:hojeBR()});save();render();toast('Receituário salvo no prontuário',3000)}catch(e){console.error(e);toast('Não foi possível salvar o receituário',3000)}},
   rxmodel:(b,d,p)=>{const st=view.rx;if(!st||st.model==='livre'&&!String(st.texto).trim())return;(db.rxm=db.rxm||{})[st.model]=st.texto;save();render();toast('Modelo salvo: será usado nos próximos receituários',3000)},
   cfgtab:(b,d)=>{view.cfgTab=d.t;render()},
-  atpdf:(b,d,p)=>{if(!p)return;try{const r=atDoc(p);if(!r)return;r.doc.save(r.fname);toast('Atestado gerado',2200)}catch(e){console.error(e);toast('Não foi possível gerar o PDF',3000)}},
+  atpdf:async (b,d,p)=>{if(!p)return;try{const r=await atDoc(p);if(!r)return;r.doc.save(r.fname);toast('Atestado gerado',2200)}catch(e){console.error(e);toast('Não foi possível gerar o PDF',3000)}},
   atprint:(b,d,p)=>{if(!p)return;try{const r=atDoc(p);if(!r)return;const u=r.doc.output('bloburl'),w=window.open(u,'_blank');if(!w){r.doc.save(r.fname);toast('Pop-up bloqueado: o PDF foi baixado para você imprimir',3500)}}catch(e){console.error(e);toast('Não foi possível gerar o PDF',3000)}},
   atsave:(b,d,p)=>{if(!p)return;try{const r=atDoc(p);if(!r)return;const data=r.doc.output('datauristring').replace(/;filename=[^;]*;/,';');(p.arquivos=p.arquivos||[]).push({id:uid(),nome:r.fname,tipo:'application/pdf',categoria:'Atestado',data,dataEnvio:hojeBR()});save();render();toast('Atestado salvo no prontuário',3000)}catch(e){console.error(e);toast('Não foi possível salvar o atestado',3000)}},
   atreset:(b,d,p)=>{if(!view.at)return;view.at.edited=false;render();toast('Texto padrão restaurado',2200)},
@@ -54,7 +56,7 @@ const A={
   },
   togglelem:(b,d)=>{const x=(db.lem||[]).find(y=>y.id===d.id);if(!x)return;x.feito=!x.feito;delArm=null;save();render()},
   rmlem:(b,d)=>arm(d.id,()=>{db.lem=(db.lem||[]).filter(x=>x.id!==d.id);save();render();toast('Lembrete excluído')}),
-  svw:(b,d)=>{view.sv=d.t;render()},
+  svw:(b,d)=>{view.sv=d.t;view.vPage=0;render()},
   cmdent:(b,d)=>{view.cmDent=d.id;render();topo()},
   cmback:()=>{view.cmDent='';render();},
   agf:(b,d)=>{view.ag=d.t;render()},
@@ -69,7 +71,7 @@ const A={
     const r=pvCheck(n,cpfTxt,tel),bl=pvBloqueios(r,cpfTxt);
     if(bl.length){pvRender();toast(bl[0][0]+(bl[0][1]?': '+bl[0][1].nome:''),4200);return}
     db.p.push({id:uid(),nome:n,tel:pvFmtTel(tel),nasc:'',cpf:pvFmtCpf(cpfTxt),obs:'',arq:false,anam:{c:{},med:'',queixa:'',ultima:''},orcs:[],trat:[],olog:[],dplan:[],evol:[]});save();q='';view.novoPac=false;render();toast('Paciente cadastrado')},
-  open:(b,d)=>{view.id=d.id;view.tab='dados';view.trSel=[];view.trTd={};view.trSh={};view.trUni=null;view.trBasket=[];view.trForm=false;view.trDraft=null;view.trFlt='';delArm=null;render();topo()},
+  open:async (b,d)=>{const patient=db.p.find(x=>String(x.id)===String(d.id));if(!patient)return;if(window.OralCloud?.enabled&&window.OralCloudData?.loadPatient&&!OralCloudData.patientLoaded(patient.id)){b.disabled=true;b.setAttribute('aria-busy','true');try{const details=await OralCloudData.loadPatient(patient.id);if(details)Object.assign(patient,details);OralCloudData.prepareDefaults(db)}catch(error){b.disabled=false;b.removeAttribute('aria-busy');toast('Não foi possível carregar o prontuário: '+(error.message||'erro de conexão'),5000);return}}view.id=d.id;view.tab='dados';view.trSel=[];view.trTd={};view.trSh={};view.trUni=null;view.trBasket=[];view.trForm=false;view.trDraft=null;view.trFlt='';delArm=null;render();topo()},
   back:()=>{view.id=null;delArm=null;render()},
   tab:(b,d)=>{view.tab=d.t;delArm=null;render()},
   rmArquivo:(b,d,p)=>{if(!p)return;p.arquivos=(p.arquivos||[]).filter(x=>x.id!==d.id);save();render();toast('Arquivo removido do prontuário')},

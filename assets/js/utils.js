@@ -93,3 +93,22 @@ function pvRender(){
 function selOpts(arr,v){return arr.map(a=>`<option value="${a[0]}"${a[0]===v?' selected':''}>${a[1]}</option>`).join('')}
 function arm(id,fn){if(delArm===id){delArm=null;fn()}else{delArm=id;render()}}
 
+
+
+// Carrega a biblioteca de PDF somente quando o usuário solicita um documento.
+// Ela tem centenas de KB e não é necessária para abrir a agenda ou o prontuário.
+let __ovPdfPromise = null;
+function ensureJsPDF(){
+  if(window.jspdf && window.jspdf.jsPDF) return Promise.resolve(true);
+  if(!__ovPdfPromise){
+    __ovPdfPromise = new Promise(resolve => {
+      const script = document.createElement('script');
+      script.src = './assets/vendor/jspdf.umd.min.js';
+      script.async = true;
+      script.onload = () => resolve(!!(window.jspdf && window.jspdf.jsPDF));
+      script.onerror = () => { __ovPdfPromise = null; resolve(false); };
+      document.head.appendChild(script);
+    });
+  }
+  return __ovPdfPromise;
+}

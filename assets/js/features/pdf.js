@@ -39,8 +39,8 @@ function pdfOdo(doc,sel,dec,x0,y0,W){
   });
   return H;
 }
-function pdfOrc(p,o){
-  if(!(window.jspdf&&window.jspdf.jsPDF)){toast('Gerador de PDF indisponível. Use Copiar texto.',3000);return}
+async function pdfOrc(p,o){
+  if(!(await ensureJsPDF())){toast('Não foi possível carregar o gerador de PDF. Verifique a conexão e tente novamente.',3500);return}
   try{
   const {jsPDF}=window.jspdf,doc=new jsPDF({unit:'mm',format:'a4'}),cl=Object.assign({},CL_DEF,db.cl||{});
   const S=v=>String(v==null?'':v).replace(/[−–—]/g,'-').replace(/[^\u0000-\u00FF]/g,'?');

@@ -19,8 +19,8 @@ function atHtml(p){
   ${st.edited?'<button class="ghost sm" data-act="atreset" style="margin-top:8px">Voltar ao texto padrão</button>':''}
   <div class="row" style="margin-top:12px;flex-wrap:wrap"><button class="sm" data-act="atpdf">Baixar PDF</button><button class="ghost sm" data-act="atprint">Abrir para imprimir</button><button class="ghost sm" data-act="atsave">Salvar no prontuário</button></div></section>`;
 }
-function atDoc(p){
-  if(!(window.jspdf&&window.jspdf.jsPDF)){toast('Gerador de PDF indisponível.',3000);return null}
+async function atDoc(p){
+  if(!(await ensureJsPDF())){toast('Não foi possível carregar o gerador de PDF. Verifique a conexão e tente novamente.',3500);return null}
   const st=atState(p),cl=Object.assign({},CL_DEF,db.cl||{}),dd=db.dt.find(d=>d.id===st.dt);
   const {jsPDF}=window.jspdf,doc=new jsPDF({unit:'mm',format:'a4'});
   const S=v=>String(v==null?'':v).replace(/[−–—]/g,'-').replace(/[^\u0000-\u00FF]/g,'?');

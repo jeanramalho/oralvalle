@@ -148,7 +148,9 @@
     if (!member) throw new Error('Vínculo de usuário não disponível.');
     accessRequests = [];
     accessError = '';
-    if (member.admin) await refreshAccessRequests();
+    // Access requests are only needed when the admin opens the access settings.
+    // Do not make the first screen wait for this secondary request.
+    if (member.admin) refreshAccessRequests();
     pending = null;
     failure = null;
     lastSaved = null;

@@ -121,7 +121,11 @@ function homePac(){
     return match&&pend;
   }).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
   const novo=view.novoPac?`<div class="card ov-patient-form"><h2>Adicionar novo paciente</h2><label for="nn">Nome completo</label><input id="nn" autocomplete="off" placeholder="Digite o nome para buscar ou cadastrar"><div class="row" style="align-items:flex-start"><div style="min-width:0"><label for="nc">CPF (opcional)</label><input id="nc" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" maxlength="14"></div><div style="min-width:0"><label for="nt">Telefone</label><input id="nt" type="tel" inputmode="tel" autocomplete="off" placeholder="(00) 00000-0000" maxlength="15"></div></div><div id="pvBox"></div><div class="row" style="margin-top:12px"><button id="pvAdd" data-act="add" style="flex:1" disabled>Cadastrar paciente</button><button class="ghost" data-act="cancelNovoPac" style="flex:1">Cancelar</button></div></div>`:'';
-  const rows=filtered.length?filtered.map(p=>`<button class="ov-patient-row" data-act="open" data-id="${p.id}"><span><span class="ov-patient-row-name">${esc(p.nome)}</span><small>${esc(pvFmtTel(p.tel)||'Sem telefone')}</small></span><span class="ov-patient-arrow">›</span></button>`).join(''):`<div class="ov-patient-empty">${active.length?'Nenhum paciente encontrado.':'Nenhum paciente cadastrado ainda.'}</div>`;
+  const pageSize=50, pages=Math.max(1,Math.ceil(filtered.length/pageSize));
+  view.pPage=Math.min(Math.max(0,Number(view.pPage)||0),pages-1);
+  const pageRows=filtered.slice(view.pPage*pageSize,(view.pPage+1)*pageSize);
+  const rows=pageRows.length?pageRows.map(p=>`<button class="ov-patient-row" data-act="open" data-id="${p.id}"><span><span class="ov-patient-row-name">${esc(p.nome)}</span><small>${esc(pvFmtTel(p.tel)||'Sem telefone')}</small></span><span class="ov-patient-arrow">›</span></button>`).join(''):`<div class="ov-patient-empty">${active.length?'Nenhum paciente encontrado.':'Nenhum paciente cadastrado ainda.'}</div>`;
+  const pager=filtered.length>pageSize?`<div class="row ov-patient-pager" style="justify-content:space-between;margin-top:12px"><span class="note" style="margin:0">Página ${view.pPage+1} de ${pages} · ${filtered.length} pacientes</span><span class="row" style="flex:none;gap:6px"><button class="ghost sm" data-act="pPage" data-p="${view.pPage-1}"${view.pPage===0?' disabled':''}>Anterior</button><button class="ghost sm" data-act="pPage" data-p="${view.pPage+1}"${view.pPage>=pages-1?' disabled':''}>Próxima</button></span></div>`:'';
   return `<div class="ov-patients-page">
     <div class="ov-page-head"><div><h1>Pacientes</h1><p class="sub">Home</p></div></div>
     ${novo}
@@ -133,7 +137,7 @@ function homePac(){
       <div class="ov-patient-search"><input id="q" type="search" placeholder="Pesquisar pelo nome" value="${esc(q)}" aria-label="Pesquisar pelo nome"></div>
       <div class="ov-patient-filter"><span>Filtrar:</span><label><input id="pendOnly" type="checkbox" ${view.pendOnly?'checked':''}> Pacientes com pagamento pendente</label></div>
     </section>
-    <div class="ov-patient-list" id="list">${rows}</div>
+    <div class="ov-patient-list" id="list">${rows}</div>${pager}
   </div>`;
 }
 

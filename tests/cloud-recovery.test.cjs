@@ -342,3 +342,31 @@ test('bounded protocol preserves data, authorization, file operations and export
     await database.close();
   }
 });
+
+test('clinic loading reads independent tables concurrently with a safe limit', async () => {
+  let active = 0;
+  let maxActive = 0;
+  const context = vm.createContext({ window: { OralCloud: {
+    enabled: true, clinicId: 'clinic',
+    request: async (path, options) => {
+      const name = path.split('/').pop();
+      if (name === 'clinic_load_start') {
+        return { protocol: 2, revision: 'parallel-1', access: new Proxy({}, {
+          get: () => ({ read: true }),
+        }) };
+      }
+      if (name === 'clinic_load_page') {
+        active++;
+        maxActive = Math.max(maxActive, active);
+        await new Promise(resolve => setTimeout(resolve, 4));
+        active--;
+        return { revision: 'parallel-1', rows: [], next: null };
+      }
+      return { revision: 'parallel-1' };
+    },
+  } } });
+  vm.runInContext(source('assets/js/supabase/data.js'), context);
+  await context.window.OralCloudData.load();
+  assert.ok(maxActive > 1, 'table reads should overlap');
+  assert.ok(maxActive <= 4, 'the adapter must not exceed four simultaneous table reads');
+});

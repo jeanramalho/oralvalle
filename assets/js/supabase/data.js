@@ -17,6 +17,11 @@
   };
   const tables = [...new Set(['clinic_settings', 'document_models', ...Object.values(roots),
     ...Object.values(children).flatMap(fields => Object.values(fields).map(x => x[0]))])];
+  // Histórico e estruturas clínicas de cada paciente são lidos ao abrir o prontuário.
+  // Os dados permanecem no banco e nunca são considerados apagados só por não estarem em memória.
+  const deferredPatientTables = new Set(['patient_anamneses', 'patient_conditions', 'patient_odontograms',
+    'odontogram_history', 'patient_evolutions', 'dental_plans', 'budgets', 'budget_items',
+    'treatments', 'treatment_materials']);
   let state = null;
   let pending = Promise.resolve();
   const fileSlots = Object.keys(children.patients).filter(slot => children.patients[slot][0] === 'patient_files');
@@ -179,6 +184,22 @@
     } while (cursor !== null);
     return rows;
   }
+  // Read independent tables concurrently, but cap in-flight RPCs to avoid
+  // flooding Supabase on slower connections or larger clinics.
+  async function mapWithConcurrency(items, limit, worker) {
+    const results = new Array(items.length);
+    let next = 0;
+    async function runWorker() {
+      while (true) {
+        const index = next++;
+        if (index >= items.length) return;
+        results[index] = await worker(items[index], index);
+      }
+    }
+    await Promise.all(Array.from({ length: Math.min(limit, items.length) }, runWorker));
+    return results;
+  }
+
   async function load() {
     const clinic = cloud().clinicId;
     return enqueue(async () => {
@@ -189,11 +210,14 @@
       if (payload?.protocol !== 2 || !object(payload.access) || typeof payload.revision !== 'string')
         throw fail('INVALID_RESPONSE', 'Protocolo de leitura indisponível. Aplique a migration de leitura paginada.');
       payload.tables = {};
-      for (const table of tables.filter(name => name !== 'patient_files')) {
-        if (!payload.access[table]?.read) { payload.tables[table] = []; continue; }
-        payload.tables[table] = await pages('clinic_load_page', { p_clinic: clinic,
-          p_revision: payload.revision, p_table: table }, payload.revision, table);
-      }
+      const readableTables = tables.filter(name => name !== 'patient_files' && !deferredPatientTables.has(name));
+      await mapWithConcurrency(readableTables, 4, async table => {
+        const rows = payload.access[table]?.read
+          ? await pages('clinic_load_page', { p_clinic: clinic,
+              p_revision: payload.revision, p_table: table }, payload.revision, table)
+          : [];
+        payload.tables[table] = rows;
+      });
       const final = await rpc('clinic_load_start', { p_clinic: clinic });
       if (final.revision !== payload.revision) throw fail('40001', 'A clínica mudou durante a leitura. Tente carregar novamente.');
       if (cloud().clinicId !== clinic) throw fail('CLINIC_CHANGED', 'A clínica mudou durante a leitura.');
@@ -204,10 +228,85 @@
       // Detached JSON is essential: migrate mutates cl/hc/anam maps in place.
       const patients = new Map((payload.tables.patients || []).filter(row => row.kind === 'object')
         .map(row => [JSON.stringify(row.dados.id), row.id]));
-      state = { clinic, revision: payload.revision, baseline: flatten(snapshot(data)), access: payload.access, patients };
+      state = { clinic, revision: payload.revision, baseline: flatten(snapshot(data)), access: payload.access,
+        patients, loadedPatientRoots: new Set() };
       return data;
     });
   }
+  function rowOwners(rows, currentState) {
+    const byId = new Map();
+    rows.forEach(value => byId.set(value.id, value));
+    const rootIds = new Set(currentState.patients.values());
+    const cache = new Map();
+    function owner(value) {
+      if (cache.has(value.id)) return cache.get(value.id);
+      let id = value.id, parent = value.row.parent_id;
+      if (rootIds.has(id)) { cache.set(value.id, id); return id; }
+      const seen = new Set([id]);
+      while (parent && !seen.has(parent)) {
+        if (rootIds.has(parent)) { cache.set(value.id, parent); return parent; }
+        seen.add(parent);
+        const ancestor = byId.get(parent);
+        parent = ancestor ? ancestor.row.parent_id : null;
+      }
+      cache.set(value.id, null);
+      return null;
+    }
+    return owner;
+  }
+  function deferredRowAllowed(value, ownerOf, currentState) {
+    if (!deferredPatientTables.has(value.table)) return true;
+    const owner = ownerOf(value);
+    return !!owner && currentState.loadedPatientRoots.has(owner);
+  }
+
+  function patientLoaded(patientId) {
+    if (!state) return false;
+    const rootId = state.patients.get(JSON.stringify(patientId));
+    return !!rootId && state.loadedPatientRoots.has(rootId);
+  }
+
+  async function loadPatient(patientId) {
+    const clinic = cloud().clinicId;
+    return enqueue(async () => {
+      const current = loaded(clinic);
+      const rootId = current.patients.get(JSON.stringify(patientId));
+      if (!rootId) throw fail('INVALID_PATIENT', 'Salve o paciente antes de abrir o prontuário completo.');
+      if (current.loadedPatientRoots.has(rootId)) {
+        const payload = { tables: Object.fromEntries(tables.map(table => [table, []])) };
+        const baselineRows = [...current.baseline.values()];
+        const ownerOf = rowOwners(baselineRows, current);
+        current.baseline.forEach(value => {
+          if (value.table === 'patients' && value.id === rootId || deferredPatientTables.has(value.table) && ownerOf(value) === rootId) {
+            (payload.tables[value.table] ||= []).push({ id: value.id, ...value.row });
+          }
+        });
+        return inflate(payload).p?.[0] || null;
+      }
+      const response = await rpc('clinic_patient_details', { p_clinic: clinic, p_revision: current.revision, p_patient: rootId });
+      loaded(clinic);
+      if (!response || response.revision !== current.revision || !object(response.tables))
+        throw fail('INVALID_RESPONSE', 'Resposta do prontuário inválida.');
+      const payload = { tables: Object.fromEntries(tables.map(table => [table, []])) };
+      const root = [...current.baseline.values()].find(value => value.table === 'patients' && value.id === rootId);
+      if (!root) throw fail('INVALID_PATIENT', 'O cadastro do paciente não está disponível.');
+      payload.tables.patients.push({ id: root.id, ...root.row });
+      Object.entries(response.tables).forEach(([table, list]) => {
+        if (!tables.includes(table) || !Array.isArray(list)) return;
+        payload.tables[table] = list.map(row => ({ ...row }));
+      });
+      const patient = inflate(payload).p?.[0];
+      if (!patient) throw fail('INVALID_RESPONSE', 'Não foi possível reconstruir o prontuário.');
+      // Registra o baseline apenas para este paciente. Outros prontuários continuam fora da memória.
+      const patientRows = flatten(snapshot({ p: [patient] }));
+      patientRows.forEach((value, key) => {
+        if (value.table !== 'patients' && deferredPatientTables.has(value.table)) current.baseline.set(key, value);
+      });
+      current.loadedPatientRoots.add(rootId);
+      return patient;
+    });
+  }
+
   async function save(snapshot) {
     // Capture synchronously: subsequent edits to the caller's db must not alter this save.
     const captured = global.OralCloudData.snapshot(snapshot);
@@ -217,6 +316,8 @@
       if (!state || state.clinic !== clinic || c.clinicId !== clinic)
         throw fail('LOAD_REQUIRED', 'Carregue esta clínica antes de salvar.');
       const current = flatten(captured), changes = [];
+      const currentRows = [...current.values()];
+      const ownerOf = rowOwners(currentRows, state);
       function changed(value, deletion) {
         const access = state.access[value.table];
         // No hidden baseline rows exist here. Server also checks per-slot permissions.
@@ -229,6 +330,7 @@
         changes.push(deletion ? { table: value.table, id: value.id, delete: true } : value);
       }
       current.forEach((value, key) => {
+        if (!deferredRowAllowed(value, ownerOf, state)) return;
         const before = state.baseline.get(key);
         if (!before || canonical(before.row) !== canonical(value.row)) changed(value, false);
       });
@@ -241,7 +343,15 @@
       } });
       if (!result || typeof result.revision !== 'string') throw fail('INVALID_RESPONSE', 'Revisão inválida.');
       if (cloud().clinicId !== clinic) { state = null; throw fail('CLINIC_CHANGED', 'A clínica mudou durante a gravação.'); }
-      state = { ...state, revision: result.revision, baseline: current };
+      // Mantém o baseline parcial: registros clínicos de pacientes ainda não abertos não são apagados.
+      const baseline = new Map(state.baseline);
+      const baselineOwnerOf = rowOwners([...state.baseline.values()], state);
+      baseline.forEach((value, key) => {
+        if (current.has(key)) return;
+        if (!deferredPatientTables.has(value.table) || deferredRowAllowed(value, baselineOwnerOf, state)) baseline.delete(key);
+      });
+      current.forEach((value, key) => { if (deferredRowAllowed(value, ownerOf, state) || !deferredPatientTables.has(value.table)) baseline.set(key, value); });
+      state = { ...state, revision: result.revision, baseline };
       state.patients = new Map([...current.values()].filter(value => value.table === 'patients' && value.row.kind === 'object')
         .map(value => [JSON.stringify(value.row.dados.id), state.patients.get(JSON.stringify(value.row.dados.id)) || value.id]));
       return result.revision;
@@ -356,6 +466,45 @@
       } finally { state = null; }
     });
   }
+  // Leitura filtrada/paginada no servidor. As telas podem solicitar apenas o
+  // conjunto necessário, sem baixar a tabela inteira. O cursor é opaco e está
+  // vinculado à revisão do banco para impedir mistura de versões diferentes.
+  async function queryPage(options = {}) {
+    const clinic = cloud().clinicId;
+    return enqueue(async () => {
+      const current = loaded(clinic);
+      const table = String(options.table || '');
+      if (!tables.includes(table) || table === 'patient_files')
+        throw fail('INVALID_QUERY_TABLE', 'Tabela não permitida para consulta paginada.');
+      if (!current.access[table]?.read)
+        return { rows: [], next: null, revision: current.revision };
+      const result = await rpc('clinic_query_page', {
+        p_clinic: clinic,
+        p_revision: current.revision,
+        p_table: table,
+        p_after: options.after || null,
+        p_query: options.query || null,
+        p_from: options.from || null,
+        p_to: options.to || null,
+        p_parent: options.parent || null,
+        p_limit: Math.min(100, Math.max(1, Number(options.limit) || 50))
+      });
+      loaded(clinic);
+      if (!result || result.revision !== current.revision || !Array.isArray(result.rows) ||
+          (result.next !== null && typeof result.next !== 'string'))
+        throw fail('INVALID_RESPONSE', 'Resposta de consulta paginada inválida.');
+      return { rows: result.rows, next: result.next, revision: result.revision };
+    });
+  }
+  async function searchPatients(query, options = {}) {
+    return queryPage({ ...options, table: 'patients', query, limit: options.limit || 50 });
+  }
+  async function appointmentsForRange(from, to, options = {}) {
+    return queryPage({ ...options, table: 'appointments', from, to, limit: options.limit || 100 });
+  }
+  async function salesForPeriod(from, to, options = {}) {
+    return queryPage({ ...options, table: 'sales', from, to, limit: options.limit || 100 });
+  }
   function reset() { state = null; }
   async function members() {
     const c = cloud(), clinic = c.clinicId;
@@ -402,6 +551,7 @@
       return result;
     });
   }
-  global.OralCloudData = Object.freeze({ load, save, prepareDefaults, members, updateMember, pendingUsers, decideUser,
-    snapshot, files, file, changeFile, exportData, restoreData, reset });
+  global.OralCloudData = Object.freeze({ load, loadPatient, patientLoaded, save, prepareDefaults, members, updateMember, pendingUsers, decideUser,
+    snapshot, files, file, changeFile, exportData, restoreData, queryPage, searchPatients,
+    appointmentsForRange, salesForPeriod, reset });
 })(window);

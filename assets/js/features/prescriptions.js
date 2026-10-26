@@ -70,8 +70,8 @@ function rxHtml(p){
   <div class="row" style="margin-top:12px;flex-wrap:wrap"><button class="sm" data-act="rxpdf">Baixar PDF</button><button class="ghost sm" data-act="rxprint">Abrir para imprimir</button><button class="ghost sm" data-act="rxsave">Salvar no prontuário</button></div>
   <div class="row" style="margin-top:8px;flex-wrap:wrap"><button class="ghost sm" data-act="rxmodel">Salvar como meu modelo</button>${custom?'<button class="ghost sm" data-act="rxreset">Voltar ao modelo original</button>':''}</div></section>`;
 }
-function rxDoc(p){
-  if(!(window.jspdf&&window.jspdf.jsPDF)){toast('Gerador de PDF indisponível.',3000);return null}
+async function rxDoc(p){
+  if(!(await ensureJsPDF())){toast('Não foi possível carregar o gerador de PDF. Verifique a conexão e tente novamente.',3500);return null}
   const st=rxState(p),cl=Object.assign({},CL_DEF,db.cl||{}),dd=db.dt.find(d=>d.id===st.dt);
   const {jsPDF}=window.jspdf,doc=new jsPDF({unit:'mm',format:'a4'});
   const S=v=>String(v==null?'':v).replace(/[−–—]/g,'-').replace(/[^\u0000-\u00FF]/g,'?');

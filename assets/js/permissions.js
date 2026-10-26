@@ -10,7 +10,7 @@ const PM_TABS=['dados','anam','odo','orc','trat','pag','agd','arquivos'];
 const PM_ORDER=['ag','pac','lem','dt','cm','vd','pf','hc','pr','mt','bk'];
 const PM_LV={none:0,view:1,edit:2};
 const PM_LAB={none:'Oculto',view:'Só ver',edit:'Ver e alterar'};
-const PM_SAFE=new Set(['actab','logout','nav','svw','otoggle','retall','lemtab','lemgo','cmdent','cmback','agf','agdate','agtoday','arqt','dent','open','back','tab','copy','owa','print','pdf','printevol','printficha','rxpdf','rxprint','atpdf','atprint','atreset','prprint','prshare','bktxt','bkcopy','bksave','pfOpen','prsearch','avsok','avsgo','avsperm','avstest','savebtn','acpw']);
+const PM_SAFE=new Set(['actab','logout','nav','svw','pPage','vPage','otoggle','retall','lemtab','lemgo','cmdent','cmback','agf','agdate','agtoday','arqt','dent','open','back','tab','copy','owa','print','pdf','printevol','printficha','rxpdf','rxprint','atpdf','atprint','atreset','prprint','prshare','bktxt','bkcopy','bksave','pfOpen','prsearch','avsok','avsgo','avsperm','avstest','savebtn','acpw']);
 const PM_FREE_IDS=new Set(['q','pfQ','pendOnly','cmm']);
 const pmKeys=()=>PM_MODS.flatMap(g=>g[1].map(x=>x[0]));
 function pmUser(){return ME?(AUTH.users.find(x=>x.id===ME.id)||ME):null}
