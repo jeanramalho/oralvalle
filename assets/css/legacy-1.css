@@ -83,7 +83,7 @@ button.sm{min-height:36px;padding:6px 12px;font-size:14px}
 .empty{text-align:center;color:var(--mut);padding:28px 8px}
 .pf-filters{display:grid;grid-template-columns:1.2fr 1fr 1fr 1.6fr;gap:12px;align-items:end;border-radius:18px;padding:14px 16px}
 .pf-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:6px 0 14px}.pf-sum{font-size:14px;color:var(--mut);font-weight:600}
-.pf-list{display:grid;gap:12px;max-width:760px}
+.pf-list{display:grid;gap:12px;width:100%;max-width:none;min-width:0}.pf-list .pf-card{box-sizing:border-box}
 .pf-card{display:block;width:100%;text-align:left;background:#fff;color:#222;border:1px solid #eee;border-radius:12px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.06);min-height:0}
 .pf-card:hover{border-color:#ffb56b;background:#fffaf4}
 .pf-top{display:flex;align-items:center;gap:12px;padding-bottom:10px;border-bottom:1px solid #eee}
