@@ -1,5 +1,7 @@
 /* ===== LOGIN / ACESSO ===== */
 let LOCKED=true,ME=null,idleT=null,AUTH={users:[],rec:null};
+// Exposição somente de leitura do usuário atual para módulos de interface.
+window.OralCurrentUser = () => ME;
 const AK='consultorio_auth',SK='consultorio_sess',FK='consultorio_lkfail';
 function aLoad(){try{const a=JSON.parse(localStorage.getItem(AK));if(a&&Array.isArray(a.users))return a}catch(e){}return{users:[],rec:null}}
 function aSave(){try{localStorage.setItem(AK,JSON.stringify(AUTH));return true}catch(e){toast('Não foi possível salvar o acesso neste navegador',3500);return false}}
