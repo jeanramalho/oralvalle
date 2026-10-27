@@ -57,3 +57,19 @@ if (window.claude && claude.use) {
 		if (dl && view.h === 'bk' && !view.id) render();
 	}).catch(() => {});
 }
+// Navegação móvel: usa delegação para sobreviver aos renders da aplicação.
+document.addEventListener('click', function(e) {
+  const toggle=e.target.closest('.ov-mobile-menu');
+  const nav=document.getElementById('oral-mobile-nav');
+  if(toggle && nav){
+    const opened=nav.classList.toggle('is-open');
+    toggle.setAttribute('aria-expanded', String(opened));
+    toggle.innerHTML=opened?'✕ <span>Fechar</span>':'☰ <span>Menu</span>';
+    return;
+  }
+  if(nav && nav.classList.contains('is-open') && (e.target.closest('.ov-mobile-nav .ov-nav-btn') || !e.target.closest('.ov-mobile-nav'))){
+    nav.classList.remove('is-open');
+    const btn=document.querySelector('.ov-mobile-menu');
+    if(btn){btn.setAttribute('aria-expanded','false');btn.innerHTML='☰ <span>Menu</span>';}
+  }
+});
