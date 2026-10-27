@@ -20,8 +20,11 @@
   // Histórico e estruturas clínicas de cada paciente são lidos ao abrir o prontuário.
   // Os dados permanecem no banco e nunca são considerados apagados só por não estarem em memória.
   const deferredPatientTables = new Set(['patient_anamneses', 'patient_conditions', 'patient_odontograms',
-    'odontogram_history', 'patient_evolutions', 'dental_plans', 'budgets', 'budget_items',
+    'odontogram_history', 'patient_evolutions', 'dental_plans',
     'treatments', 'treatment_materials']);
+  // Propostas/orçamentos alimentam telas que listam todos os pacientes (ex.: Propostas).
+  // São pequenas (~2 MB no total) e por isso voltam a ser lidas na abertura do sistema.
+  const eagerPatientTables = new Set(['budgets', 'budget_items']);
   let state = null;
   let pending = Promise.resolve();
   const fileSlots = Object.keys(children.patients).filter(slot => children.patients[slot][0] === 'patient_files');
@@ -284,7 +287,7 @@
         const baselineRows = [...current.baseline.values()];
         const ownerOf = rowOwners(baselineRows, current);
         current.baseline.forEach(value => {
-          if (value.table === 'patients' && value.id === rootId || deferredPatientTables.has(value.table) && ownerOf(value) === rootId) {
+          if (value.table === 'patients' && value.id === rootId || (deferredPatientTables.has(value.table) || eagerPatientTables.has(value.table)) && ownerOf(value) === rootId) {
             (payload.tables[value.table] ||= []).push({ id: value.id, ...value.row });
           }
         });
