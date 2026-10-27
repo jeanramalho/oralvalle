@@ -55,14 +55,3 @@
 .ag-block .ag-confirm{background:transparent!important;color:var(--ac,#f28c28)!important;border:1px solid currentColor}
 .ag-block .ag-appointment.is-confirmed .ag-status{color:var(--ac,#f28c28)}
 @media(max-width:480px){.ag-block .ag-appointment{padding:6px!important}.ag-block .ag-l1{gap:3px 5px}.ag-block .ag-actions button{font-size:10px}}
-
-/* Ajuste solicitado: cartões mais slim, sem esconder informações. */
-.ag-block .ag-appointment,.ag-block .ag-appointment.is-confirmed{padding:3px 7px!important;gap:2px!important;border-radius:6px!important}
-.ag-block .ag-appointment-main{gap:2px 6px!important;line-height:1.15!important;font-size:12px!important}
-.ag-block .ag-l1{gap:2px 5px!important;line-height:1.15!important}
-.ag-block .ag-patient-link{line-height:1.15!important;font-size:12px!important}
-.ag-block .ag-meta{font-size:10px!important;line-height:1.15!important}
-.ag-block .ag-actions,.ag-narrow .ag-actions{gap:3px!important;margin-top:1px!important}
-.ag-block .ag-actions button,.ag-narrow .ag-actions button{min-height:19px!important;padding:2px 5px!important;font-size:10px!important;line-height:1.1!important}
-.ag-block .ag-tipo{font-size:9px!important;line-height:12px!important;padding:0 4px!important}
-@media(max-width:480px){.ag-block .ag-appointment{padding:3px 5px!important}}
