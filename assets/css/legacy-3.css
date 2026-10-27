@@ -195,3 +195,16 @@
 }
 .ag-block .ag-appointment.ag-compact.ag-compact-red .ag-compact-dot{background:#ed5961;}
 .ag-block .ag-appointment.ag-compact.ag-compact-green .ag-compact-dot{background:#38bd77;}
+
+/* Agenda: somente a bolinha indica o status; cartão neutro, sem tarja colorida. */
+.ag-block .ag-appointment.ag-compact.ag-compact-red,
+.ag-block .ag-appointment.ag-compact.ag-compact-green{
+  background:transparent!important;
+  border:1px solid #3a4142!important;
+  color:#f2f2f2!important;
+  box-shadow:none!important;
+}
+.ag-block .ag-appointment.ag-compact.ag-compact-red .ag-patient,
+.ag-block .ag-appointment.ag-compact.ag-compact-green .ag-patient{
+  color:#f2f2f2!important;
+}
