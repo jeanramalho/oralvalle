@@ -226,6 +226,8 @@
     lastSaved = null;
     pendingFiles = [];
     unlock(member, keep);
+    // Restore navigation only after authentication and clinic permissions are loaded.
+    if (typeof ovRestoreNavigation === "function") { ovRestoreNavigation(); render(); }
     OralCloudData.prepareDefaults(db);
     status('Conectado ao Supabase · ' + clinic.nome);
     startSync(clinic.clinic_id);
@@ -328,13 +330,21 @@
   authBoot = async function () {
     db = migrate({});
     // Não exibir o formulário de login enquanto uma sessão salva é validada.
-    cloudLock(location.hash === '#cadastro' ? 'signup' : 'checking');
+    if (location.hash === '#cadastro') cloudLock('signup');
+    else {
+      // Neutral loading surface: never expose clinical content before authentication.
+      LOCKED = true;
+      $('app').style.display = 'none';
+      const oldLock = $('lock'); if (oldLock) oldLock.remove();
+      document.body.classList.add('ov-session-check');
+    }
     try {
       const restored = await OralCloud.restoreSession();
       if (restored?.recovery) cloudLock('password');
       else if (restored) await openClinic(restored.keep);
       else if (location.hash !== '#cadastro') cloudLock('login');
     } catch (error) { cloudLock(error.clinicLoad ? 'load' : 'login', explain(error)); }
+    finally { document.body.classList.remove('ov-session-check'); }
   };
 
   window.addEventListener('hashchange', () => {
@@ -356,6 +366,7 @@
     clearTimeout(idleT);
     ME = null; AUTH = { users: [], rec: null };
     accessRequests = []; accessError = '';
+    try { sessionStorage.removeItem('oralvalle:navigation:v1'); } catch (_) {}
     db = migrate({}); view.id = null; view.h = 'pac'; delArm = null;
     $('cloudStatus')?.remove();
     cloudLock('login', message || '');
