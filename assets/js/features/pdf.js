@@ -118,7 +118,9 @@ function applyTheme(){
   const c=(db.cl&&db.cl.corTema)||'#ff7a00';
   const shade=(hex,amt)=>{hex=String(hex||'#ff7a00').replace('#','');if(hex.length!==6)return '#ff920f';const n=parseInt(hex,16);let r=Math.max(0,Math.min(255,(n>>16)+amt)),g=Math.max(0,Math.min(255,((n>>8)&255)+amt)),b=Math.max(0,Math.min(255,(n&255)+amt));return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('')};
   document.documentElement.style.setProperty('--ac',c);document.documentElement.style.setProperty('--ov-orange',c);document.documentElement.style.setProperty('--ov-orange-2',shade(c,18));document.documentElement.style.setProperty('--ov-orange-3',shade(c,38));
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content',c);
+  // A barra de titulo do app instalado deve ter exatamente a mesma cor do cabecalho.
+  // Nao usar corTema aqui: ela pode ser diferente do laranja fixo do cabecalho.
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content','#c56800');
 }
 function cfgHtml(){
   const cl=Object.assign({},CL_DEF,db.cl||{});
