@@ -112,30 +112,31 @@ function listHtml(){
   return l.map(p=>`<button class="pt" data-act="open" data-id="${p.id}"><span>${esc(p.nome)}<small>${esc(pvFmtTel(p.tel)||'Sem telefone')}</small></span><span class="badge">${p.orcs.length} orç.</span></button>`).join('');
 }
 function homePac(){
-  const active=db.p.filter(p=>!p.arq);
+  const archivedMode=Boolean(view.arq);
+  const active=db.p.filter(p=>Boolean(p.arq)===archivedMode);
   const pending=(db.vd||[]).filter(v=>saldoV(v)>0.005);
   const pendingIds=new Set(pending.map(v=>v.pid));
   const filtered=active.filter(p=>{
     const match=p.nome.toLowerCase().includes(String(q||'').toLowerCase().trim());
-    const pend=!view.pendOnly||pendingIds.has(p.id);
+    const pend=archivedMode||!view.pendOnly||pendingIds.has(p.id);
     return match&&pend;
   }).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
   const novo=view.novoPac?`<div class="card ov-patient-form"><h2>Adicionar novo paciente</h2><label for="nn">Nome completo</label><input id="nn" autocomplete="off" placeholder="Digite o nome para buscar ou cadastrar"><div class="row" style="align-items:flex-start"><div style="min-width:0"><label for="nc">CPF (opcional)</label><input id="nc" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" maxlength="14"></div><div style="min-width:0"><label for="nt">Telefone</label><input id="nt" type="tel" inputmode="tel" autocomplete="off" placeholder="(00) 00000-0000" maxlength="15"></div></div><div id="pvBox"></div><div class="row" style="margin-top:12px"><button id="pvAdd" data-act="add" style="flex:1" disabled>Cadastrar paciente</button><button class="ghost" data-act="cancelNovoPac" style="flex:1">Cancelar</button></div></div>`:'';
   const pageSize=50, pages=Math.max(1,Math.ceil(filtered.length/pageSize));
   view.pPage=Math.min(Math.max(0,Number(view.pPage)||0),pages-1);
   const pageRows=filtered.slice(view.pPage*pageSize,(view.pPage+1)*pageSize);
-  const rows=pageRows.length?pageRows.map(p=>`<button class="ov-patient-row" data-act="open" data-id="${p.id}"><span><span class="ov-patient-row-name">${esc(p.nome)}</span><small>${esc(pvFmtTel(p.tel)||'Sem telefone')}</small></span><span class="ov-patient-arrow">›</span></button>`).join(''):`<div class="ov-patient-empty">${active.length?'Nenhum paciente encontrado.':'Nenhum paciente cadastrado ainda.'}</div>`;
+  const rows=pageRows.length?pageRows.map(p=>`<button class="ov-patient-row" data-act="open" data-id="${p.id}"><span><span class="ov-patient-row-name">${esc(p.nome)}</span><small>${esc(pvFmtTel(p.tel)||'Sem telefone')}</small></span><span class="ov-patient-arrow">›</span></button>`).join(''):`<div class="ov-patient-empty">${active.length?'Nenhum paciente encontrado.':(archivedMode?'Nenhum paciente arquivado.':'Nenhum paciente cadastrado ainda.')}</div>`;
   const pager=filtered.length>pageSize?`<div class="row ov-patient-pager" style="justify-content:space-between;margin-top:12px"><span class="note" style="margin:0">Página ${view.pPage+1} de ${pages} · ${filtered.length} pacientes</span><span class="row" style="flex:none;gap:6px"><button class="ghost sm" data-act="pPage" data-p="${view.pPage-1}"${view.pPage===0?' disabled':''}>Anterior</button><button class="ghost sm" data-act="pPage" data-p="${view.pPage+1}"${view.pPage>=pages-1?' disabled':''}>Próxima</button></span></div>`:'';
   return `<div class="ov-patients-page">
     <div class="ov-page-head"><div><h1>Pacientes</h1><p class="sub">Home</p></div></div>
     ${novo}
     <section class="ov-patients-panel">
       <div class="ov-patients-head">
-        <div class="ov-patients-count">${active.length} ${active.length===1?'paciente':'pacientes'}</div>
-        <div class="ov-patients-actions"><button class="ov-patients-settings" aria-label="Configurações">⚙</button><button class="ov-new-patient" data-act="novoPac">Novo Paciente <b>+</b></button></div>
+        <div class="ov-patients-count">${active.length} ${active.length===1?'paciente':'pacientes'}${archivedMode?' arquivados':''}</div>
+        <div class="ov-patients-actions"><button type="button" class="ov-archived-patients" data-act="arqt" aria-pressed="${archivedMode}" title="${archivedMode?'Voltar aos pacientes ativos':'Ver pacientes arquivados'}">${archivedMode?'← Pacientes ativos':'▤ Arquivados'}</button><button class="ov-new-patient" data-act="novoPac">Novo Paciente <b>+</b></button></div>
       </div>
       <div class="ov-patient-search"><input id="q" type="search" placeholder="Pesquisar pelo nome" value="${esc(q)}" aria-label="Pesquisar pelo nome"></div>
-      <div class="ov-patient-filter"><span>Filtrar:</span><label><input id="pendOnly" type="checkbox" ${view.pendOnly?'checked':''}> Pacientes com pagamento pendente</label></div>
+      <div class="ov-patient-filter" ${archivedMode?'style="display:none"':''}><span>Filtrar:</span><label><input id="pendOnly" type="checkbox" ${view.pendOnly?'checked':''}> Pacientes com pagamento pendente</label></div>
     </section>
     <div class="ov-patient-list" id="list">${rows}</div>${pager}
   </div>`;

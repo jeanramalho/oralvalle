@@ -73,7 +73,7 @@ const A={
   agf:(b,d)=>{view.ag=d.t;render()},
   agdate:(b,d)=>{const e=$('agDate');if(e&&e.value){const x=new Date(e.value+'T12:00:00');x.setDate(x.getDate()+num(d.d));view.agDate=x.toISOString().slice(0,10);render()}},
   agtoday:()=>{view.agDate=tdy();render()},
-  arqt:()=>{view.arq=!view.arq;q='';render()},
+  arqt:()=>{view.arq=!view.arq;view.pPage=0;view.pendOnly=false;q='';render()},
   novoPac:()=>{view.novoPac=true;render();setTimeout(()=>$('nn')?.focus(),50)},
   cancelNovoPac:()=>{view.novoPac=false;render()},
   dent:(b,d)=>{view.dent=d.t;render()},
