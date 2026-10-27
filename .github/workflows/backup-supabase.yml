@@ -1,0 +1,50 @@
+name: Backup criptografado do Supabase
+
+on:
+  schedule:
+    - cron: '0 5 * * *' # 02:00 em Brasilia (UTC-3)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup-supabase
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Verificar configuracao
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_BACKUP_DATABASE_URL }}
+          AGE_RECIPIENT: ${{ secrets.BACKUP_AGE_RECIPIENT }}
+        run: |
+          test -n "$DATABASE_URL" || { echo 'Falta SUPABASE_BACKUP_DATABASE_URL'; exit 1; }
+          test -n "$AGE_RECIPIENT" || { echo 'Falta BACKUP_AGE_RECIPIENT'; exit 1; }
+          case "$AGE_RECIPIENT" in age1*) ;; *) echo 'BACKUP_AGE_RECIPIENT invalido'; exit 1 ;; esac
+      - name: Instalar ferramentas
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17 age
+      - name: Exportar e criptografar banco
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_BACKUP_DATABASE_URL }}
+          AGE_RECIPIENT: ${{ secrets.BACKUP_AGE_RECIPIENT }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p "$RUNNER_TEMP/backup"
+          OUT="$RUNNER_TEMP/backup/oralvalle-$(date -u +%Y%m%dT%H%M%SZ).dump.age"
+          pg_dump --dbname="$DATABASE_URL" --format=custom --no-owner --no-acl | age -r "$AGE_RECIPIENT" -o "$OUT"
+          test -s "$OUT"
+          echo "BACKUP_FILE=$OUT" >> "$GITHUB_ENV"
+      - name: Guardar backup criptografado por 30 dias
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-backup-${{ github.run_id }}
+          path: ${{ env.BACKUP_FILE }}
+          retention-days: 30
+          if-no-files-found: error
