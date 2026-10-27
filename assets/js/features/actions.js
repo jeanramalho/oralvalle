@@ -7,13 +7,13 @@ const A={
     const conflicts=chairs.some(c=>agRentalOverlaps(date,c,mins(start),mins(end))||db.ag.some(a=>a.data===date&&String(a.cadeira||'1')===c&&!['Cancelado','Faltou'].includes(a.st)&&mins(a.hora)<mins(end)&&mins(start)<mins(a.hora)+(a.dur||30)));
     if(conflicts){toast('Já existe aluguel ou atendimento nesse período. Ajuste os horários antes de bloquear.',4500);return}
     if(!confirm('Bloquear '+(chair==='ambos'?'os dois consultórios':'o consultório '+chair)+' em '+date.split('-').reverse().join('/')+' das '+start+' às '+end+'?'))return;
-    db.alugueis=db.alugueis||[];chairs.forEach(c=>db.alugueis.push({id:uid(),data:date,cadeira:c,inicio:start,fim:end}));
+    chairs.forEach(c=>db.ag.push({id:uid(),tipoRegistro:'aluguel',data:date,cadeira:c,hora:start,dur:mins(end)-mins(start),st:'Bloqueado',proc:'Aluguel de consultório'}));
     save();render();toast('Horários bloqueados para aluguel.');
   },
   agrentremove:(b,d)=>{
-    const r=(db.alugueis||[]).find(x=>String(x.id)===String(d.id));if(!r)return;
+    const r=agRentals(view.agDate||tdy()).find(x=>String(x.id)===String(d.id));if(!r)return;
     if(!confirm('Liberar o Consultório '+r.cadeira+' em '+r.data.split('-').reverse().join('/')+' das '+r.inicio+' às '+r.fim+'?'))return;
-    db.alugueis=db.alugueis.filter(x=>String(x.id)!==String(d.id));save();render();toast('Horário liberado.');
+    if(r.cloud)db.ag=db.ag.filter(x=>String(x.id)!==String(d.id));else db.alugueis=db.alugueis.filter(x=>String(x.id)!==String(d.id));save();render();toast('Horário liberado.');
   },
   ovFinDetail:(b,d)=>ovFinDetail(d.t),
   ovFinPdf:()=>ovFinPdf(),

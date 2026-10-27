@@ -1,10 +1,15 @@
 /* ===== agenda ===== */
-function agRental(date, chair){
-  return (db.alugueis||[]).find(x=>x.data===date&&String(x.cadeira)===String(chair));
+// Bloqueios são gravados em appointments (db.ag), igual às consultas.
+// O formato antigo em db.alugueis permanece visível para compatibilidade.
+function agRentals(date, chair){
+  const fromAgenda=(db.ag||[]).filter(a=>a.tipoRegistro==='aluguel'&&a.data===date&&(!chair||String(a.cadeira)===String(chair)))
+    .map(a=>({id:a.id,data:a.data,cadeira:a.cadeira,inicio:a.hora,fim:hm(mins(a.hora)+Number(a.dur||0)),cloud:true}));
+  const legacy=(db.alugueis||[]).filter(a=>a.data===date&&(!chair||String(a.cadeira)===String(chair)));
+  return fromAgenda.concat(legacy);
 }
+function agRental(date,chair){return agRentals(date,chair)[0]}
 function agRentalOverlaps(date,chair,start,end){
-  const r=agRental(date,chair);
-  return !!(r&&mins(r.inicio)<end&&start<mins(r.fim));
+  return agRentals(date,chair).some(r=>mins(r.inicio)<end&&start<mins(r.fim));
 }
 function confl(n){
   if(agRentalOverlaps(n.data,n.cadeira,mins(n.hora),mins(n.hora)+Number(n.dur||30)))return {aluguel:true};
@@ -74,8 +79,8 @@ function agHtml(){
   const date=view.agDate||today, dent=view.agDent||'todos';
   const agDef=agDefaults(date);
   const form=pts.length?`<div class="card ag-new-form"><h2>Nova consulta</h2><div class="row"><div style="flex:2;position:relative"><label for="apn">Paciente</label><input id="apn" type="search" autocomplete="off" autocapitalize="words" placeholder="Digite o nome do paciente"><input type="hidden" id="ap" value=""><div id="apsug" class="ag-sug" hidden></div></div><div><label for="adn">Dentista</label><select id="adn">${dentOpts(defDt(),'Dentista a definir')}</select></div></div><div class="row"><div><label for="ad">Data</label><input id="ad" type="date" value="${date}"></div><div><label for="ah">Hora</label><input id="ah" type="time" value="${agDef.hora}"></div><div><label for="adu">Duração (min)</label><input id="adu" inputmode="numeric" value="30"></div><div><label for="acadeira">Consultório</label><select id="acadeira"><option value="1"${agDef.cad==='1'?' selected':''}>Consultório 1</option><option value="2"${agDef.cad==='2'?' selected':''}>Consultório 2</option></select></div></div><div class="row"><div><label for="apr">Procedimento</label><input id="apr" list="prl" placeholder="Ex.: limpeza, canal" autocomplete="off">${prList()}</div><div><label for="atp">Tipo de consulta</label><input id="atp" list="atpl" placeholder="Primeira consulta, Retorno..." autocomplete="off" maxlength="40"><datalist id="atpl"><option value="Primeira consulta"><option value="Retorno"><option value="Avaliação"><option value="Manutenção"><option value="Urgência"></datalist></div></div><div style="margin-top:12px"><button data-act="addag" style="width:100%">Agendar consulta</button></div></div>`:'<div class="empty">Cadastre um paciente para agendar consultas.</div>';
-  const list=db.ag.filter(a=>a.data===date&&(dent==='todos'||a.dt===dent)).slice().sort((a,b)=>mins(a.hora)-mins(b.hora));
-  const rentals=(db.alugueis||[]).filter(r=>r.data===date);
+  const list=db.ag.filter(a=>a.tipoRegistro!=='aluguel'&&a.data===date&&(dent==='todos'||a.dt===dent)).slice().sort((a,b)=>mins(a.hora)-mins(b.hora));
+  const rentals=agRentals(date);
   const rentalPanel=`<div class="card ag-rental-panel"><div class="ag-rental-head"><strong>Aluguel de consultório</strong><span class="note">Bloqueie os horários para não receber agendamentos.</span></div><div class="row" style="align-items:end"><div><label for="agRentChair">Consultório</label><select id="agRentChair"><option value="1">Consultório 1</option><option value="2">Consultório 2</option><option value="ambos">Ambos</option></select></div><div><label for="agRentStart">Início</label><input type="time" id="agRentStart" value="07:00"></div><div><label for="agRentEnd">Fim</label><input type="time" id="agRentEnd" value="20:00"></div><div><button type="button" data-act="agrentadd">Bloquear por aluguel</button></div></div>${rentals.length?`<div class="ag-rental-list">${rentals.map(r=>`<div class="ag-rental-item"><span>🔒 Consultório ${esc(r.cadeira)} · ${esc(r.inicio)}–${esc(r.fim)}</span><button type="button" class="ghost sm" data-act="agrentremove" data-id="${esc(r.id)}">Liberar</button></div>`).join('')}</div>`:''}</div>`;
   const dateNav=retBanner()+`<div class="card ag-date-panel" style="margin-bottom:12px"><div class="row" style="align-items:center;justify-content:space-between;flex-wrap:wrap"><div><strong>Agenda do dia</strong><div class="note" style="margin:2px 0 0">${fd(date)}</div></div><div class="row" style="margin:0;align-items:center"><button class="ghost sm" data-act="agdate" data-d="-1">‹</button><input id="agDate" type="date" value="${date}" style="width:auto;min-width:145px"><button class="ghost sm" data-act="agdate" data-d="1">›</button><button class="sm" data-act="agtoday">Hoje</button></div></div><div class="row" style="margin-top:12px;align-items:center"><div><label for="agDent">Dentista</label><select id="agDent"><option value="todos">Todos os dentistas</option>${dts.map(d=>`<option value="${d.id}"${dent===d.id?' selected':''}>${esc(d.nome)}</option>`).join('')}</select></div><div class="note ag-help" style="margin:0">Dois consultórios: cada atendimento ocupa um consultório e o dentista não pode ter dois horários sobrepostos.</div></div></div>`;
   const SLOT0=7*60,SLOT1=20*60,STEP=30;
