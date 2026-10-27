@@ -20,27 +20,21 @@
     <link rel="stylesheet" href="./assets/css/legacy-3.css" />
     <link rel="stylesheet" href="./assets/css/cloud.css" />
     <style>
-      #ov-startup-shell{position:fixed;inset:0;z-index:9000;background:#1c1f20;color:#fff;font-family:Figtree,Arial,sans-serif;overflow:hidden}
-      #ov-startup-shell[hidden]{display:none}
-      .ov-startup-header{height:78px;background:#c96a00;display:flex;align-items:center;gap:14px;padding:0 30px}
-      .ov-startup-header strong{font-size:23px}.ov-startup-header small{font-size:13px;opacity:.9}
-      .ov-startup-layout{display:flex;height:calc(100% - 78px)}.ov-startup-sidebar{width:260px;flex-shrink:0;border-right:1px solid #383d3f;padding:24px 18px}
-      .ov-startup-sidebar span{display:block;height:15px;width:80%;margin:18px 0;background:#303537;border-radius:5px}
-      .ov-startup-sidebar span:nth-child(2n){width:64%}.ov-startup-content{padding:28px;flex:1;min-width:0}
-      .ov-startup-title{height:28px;width:200px;background:#34393b;border-radius:6px;margin-bottom:25px}
-      .ov-startup-panel{border:1px solid #353b3d;border-radius:12px;padding:24px;margin-bottom:18px;max-width:1050px}
-      .ov-startup-panel div{height:22px;border-radius:5px;background:#2b3032;margin:12px 0;width:85%}
-      .ov-startup-panel div:nth-child(2){width:65%}.ov-startup-panel div:nth-child(3){width:74%}
-      @media(max-width:700px){.ov-startup-header{height:72px;padding:0 18px}.ov-startup-header strong{font-size:19px}.ov-startup-header small{display:none}.ov-startup-layout{height:calc(100% - 72px)}.ov-startup-sidebar{display:none}.ov-startup-content{padding:20px}}
+      /* Tela de carregamento Oral Valle: sem dados de pacientes antes do login. */
+      #ov-startup-shell{position:fixed;inset:0;z-index:9000;background:#fafafa;color:#747c85;font-family:Figtree,Arial,sans-serif;display:flex;align-items:center;justify-content:center}
+      #ov-startup-shell[hidden]{display:none!important}
+      .ov-splash-logo{width:110px;height:110px;object-fit:contain;animation:ov-splash-breathe 1.8s ease-in-out infinite;filter:drop-shadow(0 4px 12px rgba(230,113,0,.13))}
+      .ov-splash-caption{position:absolute;bottom:max(20px,env(safe-area-inset-bottom));right:24px;left:24px;text-align:right;font-size:12px;letter-spacing:.01em}
+      @keyframes ov-splash-breathe{0%,100%{opacity:.7;transform:scale(.97)}50%{opacity:1;transform:scale(1.03)}}
+      @media(prefers-reduced-motion:reduce){.ov-splash-logo{animation:none}}
+      @media(max-width:600px){.ov-splash-logo{width:88px;height:88px}.ov-splash-caption{text-align:center;font-size:11px}}
     </style>
   </head>
   <body>
-    <!-- Interface visual neutra durante a autenticação: nenhum dado clínico é exibido antes da autorização. -->
-    <div id="ov-startup-shell" aria-label="Abrindo Oral Valle">
-      <header class="ov-startup-header"><strong>◡ &nbsp; ORALVALLE</strong><small>Clínica Odontológica</small></header>
-      <div class="ov-startup-layout"><aside class="ov-startup-sidebar" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></aside>
-        <section class="ov-startup-content" aria-hidden="true"><div class="ov-startup-title"></div><div class="ov-startup-panel"><div></div><div></div><div></div></div><div class="ov-startup-panel"><div></div><div></div></div></section>
-      </div>
+    <!-- Tela neutra de abertura: somente a marca, sem informações clínicas. -->
+    <div id="ov-startup-shell" role="status" aria-live="polite" aria-label="Carregando Oral Valle">
+      <img class="ov-splash-logo" src="./assets/img/oralvalle-splash.svg" alt="Oral Valle" />
+      <span class="ov-splash-caption" id="ov-splash-message">Carregando seu sistema...</span>
     </div>
     <main id="app"></main>
     <div id="printarea"></div>
