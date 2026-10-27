@@ -89,27 +89,29 @@ function pmHtml(x){
 }
 function mtCard(m){
   const use=mtUsage(m.id).length;
-  const fi=(k,l,ex)=>`<div><label style="margin-top:6px">${l}</label><input data-mt="${m.id}" data-f="${k}" ${ex||''} value="${esc(m[k])}"></div>`;
-  return `<article class="card"><div class="ag"><strong>${esc(m.nome||'Material')}</strong><span class="badge" data-mtc="${m.id}">${brl4(mtUnit(m))} / ${esc(m.un)}</span></div>
+  const lotes=Array.isArray(m.lotes)?m.lotes:[];
+  const total=lotes.reduce((n,l)=>n+(l.ret?0:Math.max(0,num(l.qtd))),0);
+  const fi=(k,l,ex)=>`<div><label style="margin-top:6px">${l}</label><input data-mt="${m.id}" data-f="${k}" ${ex||''} value="${esc(m[k]||'')}"></div>`;
+  return `<article class="card ov-mt-card"><div class="ag"><strong>${esc(m.nome||'Material')}</strong><span class="badge" data-mtc="${m.id}">${brl4(mtUnit(m))} / ${esc(m.un)}</span></div>
   <div class="note" style="margin:2px 0 4px">${use?'Usado em '+use+' procedimento(s)':'Ainda não usado em procedimentos'}</div>
-  <div style="margin:4px 0 6px"><span class="val-tag ${mtStatus(m).k}" data-mtv="${m.id}">${mtStatus(m).k==='sem'?'Sem validade cadastrada':mtStatus(m).txt+(m.val&&!m.ret?' · '+fd(m.val):'')}</span></div>
-  <details><summary>Editar</summary>
-    ${fi('nome','Nome')}
-    <div class="row" style="align-items:flex-start">${fi('preco','Preço da embalagem (R$)','inputmode="decimal"')}${fi('qtd','Quantidade na embalagem','inputmode="decimal"')}<div><label style="margin-top:6px">Unidade</label><select data-mt="${m.id}" data-f="un">${UNS.map(u=>`<option${m.un===u?' selected':''}>${u}</option>`).join('')}</select></div></div>
-    <div class="row" style="align-items:flex-start"><div><label style="margin-top:6px">Data de vencimento</label><input type="date" data-mt="${m.id}" data-f="val" value="${esc(m.val||'')}"></div></div>
-    <div style="margin-top:10px;display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap">${m.ret?`<button class="ghost sm" type="button" data-act="repmt" data-id="${m.id}">Voltar ao estoque</button>`:(m.val&&mtStatus(m).k!=='ok'?`<button class="ghost sm" type="button" data-act="retmt" data-id="${m.id}">Retirei do estoque</button>`:'')}<button class="danger sm" type="button" data-act="rmmt" data-id="${m.id}">${delArm===m.id?'Confirmar exclusão':'Excluir material'}</button></div>
+  <div class="ov-mt-stock"><strong>Em estoque: ${total.toLocaleString('pt-BR')} ${esc(m.un)}</strong><span>${lotes.length} lote(s) cadastrado(s)</span></div>
+  <div class="ov-mt-table-wrap"><table class="ov-mt-table"><thead><tr><th>Lote</th><th>Quantidade em estoque</th><th>Validade</th><th>Situação</th><th>Ação</th></tr></thead><tbody>${lotes.length?lotes.map((l,i)=>{const st=mtStatus({val:l.val,ret:l.ret});return `<tr><td>${i+1}</td><td><input type="number" min="0" step="any" aria-label="Quantidade do lote ${i+1}" data-mtl="${m.id}" data-lid="${l.id}" data-lf="qtd" value="${esc(l.qtd)}"></td><td><input type="date" aria-label="Validade do lote ${i+1}" data-mtl="${m.id}" data-lid="${l.id}" data-lf="val" value="${esc(l.val||'')}"></td><td><span class="val-tag ${st.k}">${st.txt}</span></td><td><button type="button" class="ghost sm" data-act="togglemtlot" data-id="${m.id}" data-r="${l.id}">${l.ret?'Reativar':'Retirar'}</button></td></tr>`}).join(''):'<tr><td colspan="5" class="note">Nenhum lote cadastrado. Adicione abaixo a quantidade e a validade de cada lote.</td></tr>'}</tbody></table></div>
+  <div class="ov-mt-newlot"><label>Quantidade do novo lote<input type="number" min="0.01" step="any" data-newlot-q="${m.id}" placeholder="Ex.: 50"></label><label>Validade do novo lote<input type="date" data-newlot-v="${m.id}"></label><button type="button" class="ghost sm" data-act="addmtlot" data-id="${m.id}">+ Adicionar lote</button></div>
+  <details><summary>Editar material e preço</summary>${fi('nome','Nome')}
+    <div class="row" style="align-items:flex-start">${fi('preco','Preço da embalagem (R$)','inputmode="decimal"')}${fi('qtd','Quantidade por embalagem','inputmode="decimal"')}<div><label style="margin-top:6px">Unidade</label><select data-mt="${m.id}" data-f="un">${UNS.map(u=>`<option${m.un===u?' selected':''}>${u}</option>`).join('')}</select></div></div>
+    <p class="note">Quantidade por embalagem serve para calcular o custo unitário. O estoque é controlado separadamente por lotes.</p>
+    <div style="margin-top:10px;display:flex;justify-content:flex-end"><button class="danger sm" type="button" data-act="rmmt" data-id="${m.id}">${delArm===m.id?'Confirmar exclusão':'Excluir material'}</button></div>
   </details></article>`;
 }
 function mtHtml(){
   const query=String(view.mtq||'').toLowerCase().trim();
   const list=db.mt.filter(m=>!query||String(m.nome).toLowerCase().includes(query)).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
-  return `<h1>Tabela de Materiais</h1><p class="sub">Cadastre o preço de cada material. Depois, em Procedimentos, escolha quais materiais cada procedimento usa e o custo é calculado sozinho.</p>
+  return `<h1>Tabela de Materiais</h1><p class="sub">Controle a quantidade disponível por lote e registre quantas unidades possuem cada data de vencimento. O preço por embalagem continua sendo usado no cálculo dos procedimentos.</p>
   <div class="card"><h2>Novo material</h2>
     <label for="mtn">Nome</label><input id="mtn" placeholder="Ex.: Luva de procedimento">
-    <div class="row" style="align-items:flex-start"><div><label for="mtp">Preço da embalagem (R$)</label><input id="mtp" inputmode="decimal" placeholder="Ex.: 40,00"></div><div><label for="mtq">Quantidade na embalagem</label><input id="mtq" inputmode="decimal" placeholder="Ex.: 100"></div><div><label for="mtu">Unidade</label><select id="mtu">${UNS.map(u=>`<option>${u}</option>`).join('')}</select></div></div>
-    <label for="mtv">Data de vencimento</label><input id="mtv" type="date">
-    <p class="note" style="margin:4px 0 0">Opcional. Quando faltarem ${MT_ALERTA_DIAS} dias ou menos para vencer, um alerta aparece em todas as telas do sistema.</p>
-    <p class="note" style="margin:6px 0 0">Exemplo: caixa de luvas por R$ 40,00 com 100 unidades → R$ 0,40 por unidade.</p>
+    <div class="row" style="align-items:flex-start"><div><label for="mtp">Preço da embalagem (R$)</label><input id="mtp" inputmode="decimal" placeholder="Ex.: 40,00"></div><div><label for="mtq">Quantidade por embalagem</label><input id="mtq" inputmode="decimal" placeholder="Ex.: 100"></div><div><label for="mtu">Unidade</label><select id="mtu">${UNS.map(u=>`<option>${u}</option>`).join('')}</select></div></div>
+    <div class="row" style="align-items:flex-start"><div><label for="mts">Quantidade inicial em estoque</label><input id="mts" type="number" min="0" step="any" placeholder="Ex.: 200"></div><div><label for="mtv">Validade do primeiro lote</label><input id="mtv" type="date"></div></div>
+    <p class="note">Para mais de uma validade, cadastre o material e depois use “Adicionar lote”. Os alertas de vencimento consideram cada lote.</p>
     <div style="margin-top:12px"><button data-act="addmt" style="width:100%">Adicionar material</button></div></div>
   ${db.mt.length?`<input id="mtq-search" type="search" placeholder="Buscar material" value="${esc(view.mtq||'')}" style="margin-bottom:12px">`:''}
   <h2>Meus materiais (${db.mt.length})</h2>

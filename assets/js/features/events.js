@@ -43,6 +43,7 @@ if(t.dataset&&t.dataset.cl!==undefined){db.cl=db.cl||{};db.cl[t.dataset.cl]=t.va
   if(t.dataset.ag){const a=db.ag.find(y=>y.id===t.dataset.ag);a.st=t.value;save();render();return}
   if(t.dataset.d){const dd=db.dt.find(y=>y.id===t.dataset.d),f=t.dataset.f;dd[f]=(f==='pct')?t.value.replace(',','.'):t.value;save();return}
   if(t.id==='mtq-search'){view.mtq=t.value;render();setTimeout(()=>{const e=$('mtq-search');if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length)}},0);return}
+  if(t.dataset.mtl){const m=db.mt.find(y=>y.id===t.dataset.mtl),l=m?.lotes?.find(x=>x.id===t.dataset.lid);if(!l)return;if(t.dataset.lf==='qtd'){const n=Number(t.value);if(!Number.isFinite(n)||n<0){toast('Quantidade inválida');return}l.qtd=String(n)}else l.val=t.value;save();render();return}
   if(t.dataset.mt){const m=db.mt.find(y=>y.id===t.dataset.mt),f=t.dataset.f;if(!m)return;m[f]=(f==='nome'||f==='un'||f==='val')?t.value:t.value.replace(',','.');
     if(f==='val'){m.ret=false;const tg=document.querySelector(`[data-mtv="${m.id}"]`),stt=mtStatus(m);if(tg){tg.className='val-tag '+stt.k;tg.textContent=stt.k==='sem'?'Sem validade cadastrada':stt.txt+(m.val?' · '+fd(m.val):'')}const al=$('valAlert');if(al)al.innerHTML=valAlertHtml();save();return}
     db.pr.forEach(x=>{if((x.mats||[]).some(r=>r.mid===m.id)){syncMat(x)}});
