@@ -27,13 +27,13 @@ function vdHtml(){
   const pts=db.p.filter(p=>!p.arq||p.id===pre.pid),dts=db.dt.filter(d=>d.ativo!==false||d.id===pre.dt);
   if(!pts.length||!dts.length)h+='<div class="empty">Cadastre ao menos um paciente e um dentista ativo para lançar vendas.</div>';
   else{
-    const dsel=pre.dt||defDt(),val=pre.valor?String(pre.valor):'',cr=(dsel&&val)?comCalc(dsel,pre.proc||'',num(val),pre.qtd).rep:0;
-    h+=`<div class="card"><h2>Dar baixa no atendimento</h2>${pre.ag||pre.oid?'<p class="note" style="margin:0 0 4px">Dados preenchidos a partir da '+(pre.ag?'agenda':'aprovação do orçamento')+'. Confira antes de lançar.</p>':''}<label for="vp">Paciente</label><select id="vp">${pts.map(p=>`<option value="${p.id}"${p.id===pre.pid?' selected':''}>${esc(p.nome)}</option>`).join('')}</select><label for="vdn">Dentista que executou</label><select id="vdn">${dentOpts(dsel)}</select><label for="vpr">Procedimento</label><input id="vpr" list="prl" placeholder="Escolha ou digite" value="${esc(pre.proc||'')}" autocomplete="off">${prList()}
+    const dsel=pre.dt||'',val=pre.valor?String(pre.valor):'',cr=(dsel&&val)?comCalc(dsel,pre.proc||'',num(val),pre.qtd).rep:0;
+    h+=`<div class="card"><h2>Dar baixa no atendimento</h2>${pre.ag||pre.oid?'<p class="note" style="margin:0 0 4px">Dados preenchidos a partir da '+(pre.ag?'agenda':'aprovação do orçamento')+'. Confira antes de lançar.</p>':''}<label for="vp">Paciente</label><select id="vp" onchange="var b=document.querySelector('[data-act=addvd]');if(b)b.disabled=!this.value"><option value="">Selecione o paciente</option>${pts.map(p=>`<option value="${p.id}"${p.id===pre.pid?' selected':''}>${esc(p.nome)}</option>`).join('')}</select><label for="vdn">Dentista que executou</label><select id="vdn">${dentOpts(dsel,'Selecione o dentista')}</select><label for="vpr">Procedimento</label><input id="vpr" list="prl" placeholder="Escolha ou digite" value="${esc(pre.proc||'')}" autocomplete="off">${prList()}
     <div class="row"><div><label for="vv">Valor (R$)</label><input id="vv" inputmode="decimal" value="${esc(val)}"></div><div><label for="vr">Comissão (R$)</label><input id="vr" inputmode="decimal" value="${cr?cr.toFixed(2):''}"></div></div>
     <p class="note" style="margin:6px 0 0">A comissão percentual é calculada somente após descontar hora clínica, materiais e laboratório. Você pode ajustar o valor.</p>
     <div class="row"><div><label for="vrc">Recebido agora (R$)</label><input id="vrc" inputmode="decimal" value="${val}"></div><div><label for="vfm">Forma</label><select id="vfm">${FORMAS.map(f=>`<option>${f}</option>`).join('')}</select></div></div>
     <p class="note" style="margin:6px 0 0">Se o paciente ainda não pagou, coloque 0. A comissão só fica liberada conforme o paciente paga.</p>
-    <label for="vdt">Data</label><input id="vdt" type="date" value="${t}"><div style="margin-top:12px"><button data-act="addvd" style="width:100%">Dar baixa e lançar venda</button></div></div>`;
+    <label for="vdt">Data</label><input id="vdt" type="date" value="${t}"><div style="margin-top:12px"><button data-act="addvd" style="width:100%"${pre.pid?'':' disabled'}>Dar baixa e lançar venda</button></div></div>`;
   }
   h+=`<div class="row" style="margin-bottom:10px"><button class="sm${sv==='dia'?'':' ghost'}" data-act="svw" data-t="dia">Hoje</button><button class="sm${sv==='mes'?'':' ghost'}" data-act="svw" data-t="mes">Mês</button><button class="sm${sv==='rec'?'':' ghost'}" data-act="svw" data-t="rec">A receber</button></div>`;
   const l=(sv==='dia'?dia:sv==='mes'?mes:db.vd.filter(v=>saldoV(v)>0)).slice().reverse();
@@ -43,4 +43,3 @@ function vdHtml(){
   const pager=l.length>pageSize?`<div class="row" style="justify-content:space-between;margin-top:12px"><span class="note" style="margin:0">Página ${view.vPage+1} de ${pages} · ${l.length} lançamentos</span><span class="row" style="flex:none;gap:6px"><button class="ghost sm" data-act="vPage" data-p="${view.vPage-1}"${view.vPage===0?' disabled':''}>Anterior</button><button class="ghost sm" data-act="vPage" data-p="${view.vPage+1}"${view.vPage>=pages-1?' disabled':''}>Próxima</button></span></div>`:'';
   return h+(visible.length?visible.map(vdCard).join(''):'<div class="empty">'+(sv==='rec'?'Nenhum valor a receber.':'Nenhuma venda '+(sv==='dia'?'hoje.':'neste mês.'))+'</div>')+pager;
 }
-
