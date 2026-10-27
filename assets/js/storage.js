@@ -3,7 +3,7 @@ function defPr(){return [['Avaliação / consulta',30],['Limpeza (profilaxia)',4
 function migrate(d){
   if(!d||typeof d!=='object')d={};
   if(!Array.isArray(d.p))d.p=[];
-  ['ag','dt','vd','cp','lem'].forEach(k=>{if(!Array.isArray(d[k]))d[k]=[]});
+  ['ag','dt','vd','cp','lem','alugueis'].forEach(k=>{if(!Array.isArray(d[k]))d[k]=[]});
   d.lem.forEach(x=>{if(!x.id)x.id=uid();if(x.titulo===undefined)x.titulo='';if(x.data===undefined)x.data='';if(x.hora===undefined)x.hora='';if(x.tipo===undefined)x.tipo='Geral';if(x.obs===undefined)x.obs='';if(x.feito===undefined)x.feito=false});
   if(!Array.isArray(d.pr))d.pr=defPr();
   if(!Array.isArray(d.mt))d.mt=[];
