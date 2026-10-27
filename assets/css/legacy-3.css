@@ -161,3 +161,19 @@
     min-height:44px;
   }
 }
+
+/* Agenda: baixas em uma única linha, sem horário ou texto adicional. */
+.ag-block .ag-appointment.ag-compact{
+ display:flex!important;align-items:center!important;justify-content:flex-start!important;
+ height:100%!important;min-height:0!important;max-height:100%!important;
+ padding:3px 9px!important;gap:0!important;overflow:hidden!important;
+ border-radius:6px!important;grid-template-rows:none!important;
+}
+.ag-block .ag-appointment.ag-compact .ag-patient{
+ flex:1 1 auto!important;min-width:0!important;white-space:nowrap!important;
+ overflow:hidden!important;text-overflow:ellipsis!important;font-size:12px!important;
+ line-height:20px!important;color:inherit!important;
+}
+.ag-block .ag-appointment.ag-compact.ag-compact-red{background:#4b1d20!important;border:1px solid #d85a62!important;color:#ffe0e0!important}
+.ag-block .ag-appointment.ag-compact.ag-compact-green{background:#163c2a!important;border:1px solid #349967!important;color:#d7ffea!important}
+.ag-block .ag-appointment.ag-compact .ag-patient-link:hover{color:inherit!important;text-decoration:underline}
