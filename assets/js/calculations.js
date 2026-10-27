@@ -87,7 +87,7 @@ function mtStatus(m){
   return {k:'ok',txt:'Válido até '+fd(m.val),d};
 }
 function mtAlertas(){
-  return (db.mt||[]).filter(m=>{const k=mtStatus(m).k;return k==='venc'||k==='perto'}).sort((a,b)=>mtDias(a)-mtDias(b));
+  return (db.mt||[]).flatMap(m=>Array.isArray(m.lotes)&&m.lotes.length?m.lotes.filter(l=>!l.ret&&num(l.qtd)>0).map(l=>({...m,val:l.val,ret:false,_lote:l.id,_qtd:l.qtd})):(!Array.isArray(m.lotes)&&m.val?[m]:[])).filter(m=>{const k=mtStatus(m).k;return k==='venc'||k==='perto'}).sort((a,b)=>mtDias(a)-mtDias(b));
 }
 function valAlertHtml(){
   if(!pmSee('mt'))return '';
@@ -96,7 +96,7 @@ function valAlertHtml(){
   const venc=l.filter(m=>mtStatus(m).k==='venc').length;
   const tit=venc?(venc+' material'+(venc===1?' vencido':'is vencidos')+(l.length>venc?' e '+(l.length-venc)+' próximo'+(l.length-venc===1?'':'s')+' do vencimento':'')):(l.length+' material'+(l.length===1?' próximo':'is próximos')+' do vencimento');
   return `<div class="val-alert${venc?' venc':''}" role="alert"><div class="val-alert-head"><strong>⚠ ${tit} — retirar do estoque</strong><button class="ghost sm" type="button" data-act="nav" data-t="mt">Ver Tabela de Materiais</button></div>
-  <div class="val-alert-list">${l.map(m=>{const st=mtStatus(m);return `<div class="val-alert-item"><span><strong>${esc(m.nome||'Material')}</strong><small>${st.txt} · validade ${fd(m.val)}</small></span><button class="danger sm" type="button" data-act="retmt" data-id="${m.id}">Retirei do estoque</button></div>`}).join('')}</div></div>`;
+  <div class="val-alert-list">${l.map(m=>{const st=mtStatus(m);return `<div class="val-alert-item"><span><strong>${esc(m.nome||'Material')}</strong><small>${st.txt} · ${m._qtd?m._qtd+' '+m.un+' · ':''}validade ${fd(m.val)}</small></span><button class="danger sm" type="button" data-act="retmt" data-id="${m.id}">Retirei do estoque</button></div>`}).join('')}</div></div>`;
 }
 
 const UNS=['un','ml','g','par','cm','caixa','tubo','seringa'];
