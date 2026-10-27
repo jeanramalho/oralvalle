@@ -177,7 +177,7 @@ document.addEventListener('change',e=>{const t=e.target;
       im.onload=()=>{try{
         const M=500,k=Math.min(1,M/Math.max(im.width,im.height)),w=Math.max(1,Math.round(im.width*k)),h=Math.max(1,Math.round(im.height*k));
         const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);
-        db.cl=db.cl||{};db.cl.semLogo=false;if(isIcon){db.cl.icone=c.toDataURL('image/png');db.cl.iconeW=w;db.cl.iconeH=h}else{db.cl.logo=c.toDataURL('image/png');db.cl.logoW=w;db.cl.logoH=h}save();render();toast(isIcon?'Ícone do topo atualizado':'Logo dos documentos atualizada',2500)
+        db.cl=db.cl||{};db.cl.semLogo=false;if(isIcon){db.cl.icone=c.toDataURL('image/png');db.cl.iconeW=w;db.cl.iconeH=h}else{db.cl.logo=c.toDataURL('image/png');db.cl.logoW=w;db.cl.logoH=h}save();render();toast(isIcon?'Ícone alterado — aguarde a confirmação do Supabase':'Logo alterada — aguarde a confirmação do Supabase antes de atualizar a página',4500)
       }catch(err){console.error(err);toast('Não foi possível usar essa imagem',3000)}};
       im.onerror=()=>toast('Não foi possível abrir a imagem',3000);im.src=String(r.result)};
     r.onerror=()=>toast('Não foi possível ler o arquivo',3000);r.readAsDataURL(f);t.value='';

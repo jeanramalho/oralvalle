@@ -69,7 +69,7 @@ function printOrc(p,o){
   background:transparent;
 }
 </style>
-  <div class="pr"><div class="pr-head"><img src="${clLogoSrc()}" alt="Logo da clínica"><div class="pr-info"><strong>${esc(cl.nome)}</strong>${cl.end?`<div>${esc(cl.end)}</div>`:''}${(cl.email||cl.tel)?`<div>${[cl.email,cl.tel].filter(Boolean).map(esc).join(' / ')}</div>`:''}${cl.cnpj?`<div>${esc(cl.cnpj)}</div>`:''}</div></div>
+  <div class="pr"><div class="pr-head">${cl.semLogo?'':`<img src="${clLogoSrc()}" alt="Logo da clínica">`}<div class="pr-info"><strong>${esc(cl.nome)}</strong>${cl.end?`<div>${esc(cl.end)}</div>`:''}${(cl.email||cl.tel)?`<div>${[cl.email,cl.tel].filter(Boolean).map(esc).join(' / ')}</div>`:''}${cl.cnpj?`<div>${esc(cl.cnpj)}</div>`:''}</div></div>
   <h1 class="pr-title">Proposta Financeira</h1>
   <div class="pr-pac"><div class="pr-box" style="flex:1"><small>Nome do Paciente</small><b>${esc(p.nome)}</b></div><div class="pr-box"><small>Telefone</small><b>${esc(p.tel||'—')}</b></div></div>
   <h2 class="pr-h">Odontograma</h2><div class="pr-odos">${prOdo(sel,false)}${hasDec?prOdo(sel,true):''}</div>
@@ -84,5 +84,15 @@ function printOrc(p,o){
   setTimeout(end,60000);
   let opened=false;const bp=()=>{opened=true;window.removeEventListener('beforeprint',bp)};window.addEventListener('beforeprint',bp);
   setTimeout(()=>{window.removeEventListener('beforeprint',bp);if(!opened)toast('A janela de impressão não abriu neste navegador. Use o botão Baixar PDF.',5000)},900);
-  try{window.print()}catch(e){end();toast('Impressão indisponível aqui. Use o botão Baixar PDF.',4000)}
+  // Aguarda a imagem do cabeçalho antes de abrir a prévia de impressão.
+  // Evita que a impressão seja renderizada sem a logo durante o carregamento.
+  const printReady=()=>{try{window.print()}catch(e){end();toast('Impressão indisponível aqui. Use o botão Baixar PDF.',4000)}};
+  const logo=pa.querySelector('.pr-head img');
+  if(logo && !logo.complete){
+    let done=false;
+    const ready=()=>{if(done)return;done=true;printReady()};
+    logo.addEventListener('load',ready,{once:true});
+    logo.addEventListener('error',ready,{once:true});
+    setTimeout(ready,1500);
+  }else{printReady()}
 }
