@@ -227,3 +227,23 @@
 .dt-new-toggle span{transition:transform .15s ease}
 .dt-new-collapsible[open]>.dt-new-toggle span{transform:rotate(180deg)}
 .dt-new-collapsible>.dt-novo{margin-top:12px}
+
+/* Correção: nomes legíveis na agenda clara do celular. Mantém apenas a bolinha colorida. */
+@media (max-width:760px){
+  .ag-block .ag-appointment.ag-compact,
+  .ag-block .ag-appointment.ag-compact.ag-compact-red,
+  .ag-block .ag-appointment.ag-compact.ag-compact-green{
+    background:transparent!important;
+    border:1px solid #a8adb3!important;
+    color:#25303b!important;
+  }
+  .ag-block .ag-appointment.ag-compact .ag-patient,
+  .ag-block .ag-appointment.ag-compact .ag-patient-link,
+  .ag-block .ag-appointment.ag-compact.ag-compact-red .ag-patient,
+  .ag-block .ag-appointment.ag-compact.ag-compact-green .ag-patient{
+    color:#25303b!important;
+    -webkit-text-fill-color:#25303b!important;
+    opacity:1!important;
+    text-shadow:none!important;
+  }
+}
