@@ -247,3 +247,12 @@
     text-shadow:none!important;
   }
 }
+
+/* Comorbidades adicionais da anamnese */
+.ov-anam-custom{margin:16px 0 20px;padding:14px;border:1px solid var(--line);border-radius:12px}
+.ov-anam-extra-list{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.ov-anam-extra{display:inline-flex;align-items:center;gap:9px;border:1px solid var(--ac);border-radius:999px;padding:6px 9px 6px 13px;background:var(--card);color:inherit;max-width:100%;overflow-wrap:anywhere}
+.ov-anam-extra-remove{border:0;border-radius:50%;width:25px;height:25px;padding:0;line-height:1;background:transparent;color:var(--ac);font-size:19px;cursor:pointer}
+.ov-anam-extra-add{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ov-anam-extra-add input{flex:1 1 230px;min-width:0;margin:0}
+.ov-anam-extra-add button{flex:0 0 auto}
