@@ -257,6 +257,7 @@
   }
 
   function cloudLock(mode, message = '') {
+    document.getElementById('ov-startup-shell')?.remove();
     LOCKED = true;
     clearTimeout(idleT);
     $('app').innerHTML = '';
@@ -337,6 +338,7 @@
       $('app').style.display = 'none';
       const oldLock = $('lock'); if (oldLock) oldLock.remove();
       document.body.classList.add('ov-session-check');
+      document.getElementById('ov-startup-shell')?.removeAttribute('hidden');
     }
     try {
       const restored = await OralCloud.restoreSession();
@@ -344,7 +346,7 @@
       else if (restored) await openClinic(restored.keep);
       else if (location.hash !== '#cadastro') cloudLock('login');
     } catch (error) { cloudLock(error.clinicLoad ? 'load' : 'login', explain(error)); }
-    finally { document.body.classList.remove('ov-session-check'); }
+    finally { document.body.classList.remove('ov-session-check'); document.getElementById('ov-startup-shell')?.remove(); }
   };
 
   window.addEventListener('hashchange', () => {
