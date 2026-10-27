@@ -208,3 +208,13 @@
 .ag-block .ag-appointment.ag-compact.ag-compact-green .ag-patient{
   color:#f2f2f2!important;
 }
+
+/* Dentistas: resumo compacto, detalhes sob demanda */
+.dt-collapsible > summary.dt-head { cursor:pointer; list-style:none; padding:12px 14px; margin:0; border-bottom:0; }
+.dt-collapsible > summary.dt-head::-webkit-details-marker { display:none; }
+.dt-collapsible > summary.dt-head:focus-visible { outline:2px solid var(--ac); outline-offset:-2px; }
+.dt-collapsible[open] > summary.dt-head { border-bottom:1.5px solid var(--ln); margin-bottom:10px; }
+.dt-collapsible .dt-chevron { font-size:20px; color:var(--ac); transition:transform .15s; margin-left:4px; }
+.dt-collapsible[open] .dt-chevron { transform:rotate(180deg); }
+.dt-collapsible > :not(summary) { margin-left:14px; margin-right:14px; }
+.dt-collapsible > :last-child { margin-bottom:14px; }
