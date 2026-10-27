@@ -21,7 +21,7 @@
   let syncRevision = null;
   let syncClinic = null;
   let syncNotice = false;
-  const SYNC_INTERVAL_MS = 6000;
+  const SYNC_INTERVAL_MS = 3000;
   const editing = () => {
     const el = document.activeElement;
     return !!(el && (el.matches?.('input, textarea, select, [contenteditable="true"]')));
@@ -42,8 +42,9 @@
         method: 'POST', body: { p_clinic: clinicId }
       });
       if (clinicId !== OralCloud.clinicId || LOCKED || disposed || typeof meta?.revision !== 'string') return;
-      if (syncRevision === null) { syncRevision = meta.revision; return; }
-      if (meta.revision === syncRevision) return;
+      // A primeira verificação também compara com o banco: uma alteração pode
+      // ocorrer entre a abertura da clínica e o início do monitoramento.
+      if (syncRevision !== null && meta.revision === syncRevision) return;
       // Preserve drafts, pending writes, and lazily loaded clinical records.
       // A patient record is never silently replaced while open.
       if (pending || running || failure || membersRunning || membersPending || editing() || view.id) {
@@ -72,6 +73,7 @@
     // Primeira leitura curta define a revisão após o carregamento inicial.
     syncTimer = setInterval(syncTick, SYNC_INTERVAL_MS);
     document.addEventListener('visibilitychange', onSyncVisible);
+    window.addEventListener('online', onSyncVisible);
   }
   function onSyncVisible() { if (!document.hidden) syncTick(); }
 
@@ -196,6 +198,7 @@
     disposed = false;
     stopSync();
     document.removeEventListener('visibilitychange', onSyncVisible);
+    window.removeEventListener('online', onSyncVisible);
     window.OralCloudFiles?.reset();
     const clinics = await OralCloud.request('/rest/v1/rpc/clinic_list', { method: 'POST', body: {} });
     if (!Array.isArray(clinics) || !clinics.length)
@@ -368,6 +371,7 @@
     disposed = true;
     stopSync();
     document.removeEventListener('visibilitychange', onSyncVisible);
+    window.removeEventListener('online', onSyncVisible);
     window.OralCloudFiles?.reset();
     OralCloudData.reset();
     try { await OralCloud.logout(); } catch (_) {}
