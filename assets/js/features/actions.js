@@ -258,3 +258,22 @@ const A={
   bkrst:()=>restore()
 };
 
+
+// Condições adicionais informadas livremente na anamnese do paciente.
+A.addcomorb=(b,d,p)=>{
+  if(!p)return;
+  const field=document.getElementById('ov-new-comorb');
+  const name=String(field?.value||'').trim().replace(/\s+/g,' ');
+  if(!name){toast('Digite a condição de saúde.');field?.focus();return}
+  if(name.length>120){toast('Use até 120 caracteres.');return}
+  p.anam=p.anam||{c:{},med:'',queixa:'',ultima:''};p.anam.c=p.anam.c||{};
+  const existing=Object.keys(p.anam.c).find(x=>x.toLocaleLowerCase('pt-BR')===name.toLocaleLowerCase('pt-BR'));
+  if(existing){p.anam.c[existing]=true;toast('Condição já cadastrada.');}
+  else p.anam.c[name]=true;
+  save();render();toastSaved('✓ Condição salva');
+};
+A.rmcomorb=(b,d,p)=>{
+  if(!p||!d.name||CHECKS.includes(d.name))return;
+  if(p.anam?.c)delete p.anam.c[d.name];
+  save();render();toastSaved('✓ Condição removida');
+};

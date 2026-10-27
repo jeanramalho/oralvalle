@@ -8,8 +8,12 @@ function tabDados(p){
   ${p.arq?`<p class="note" style="margin-top:16px">O prontuário normalmente precisa ser guardado por muitos anos (confira o prazo exigido pelo seu conselho). Prefira manter arquivado. A exclusão não é permitida se houver vendas ou consultas ligadas ao paciente.</p><button class="danger" data-act="del" style="width:100%">${aviso}</button>`:''}`;
 }
 function tabAnam(p){
-  const a=p.anam;
-  return '<h2>Histórico de saúde</h2>'+CHECKS.map(c=>{const on=a.c[c];return `<label class="chk${on?' on':''}"><input type="checkbox" data-c="${esc(c)}"${on?' checked':''}>${esc(c)}</label>`}).join('')+
+  const a=p.anam||(p.anam={c:{},med:'',queixa:'',ultima:''});a.c=a.c||{};
+  const extras=Object.keys(a.c).filter(c=>!CHECKS.includes(c)&&a.c[c]);
+  const checks=CHECKS.map(c=>{const on=a.c[c];return `<label class="chk${on?' on':''}"><input type="checkbox" data-c="${esc(c)}"${on?' checked':''}>${esc(c)}</label>`}).join('');
+  const custom=extras.map(c=>`<span class="ov-anam-extra"><span>${esc(c)}</span><button type="button" class="ov-anam-extra-remove" data-act="rmcomorb" data-name="${esc(c)}" aria-label="Remover ${esc(c)}" title="Remover condição">×</button></span>`).join('');
+  return '<h2>Histórico de saúde</h2>'+checks+
+  `<div class="ov-anam-custom"><label style="display:block">Outras comorbidades e condições de saúde</label><div class="ov-anam-extra-list">${custom||'<span class="note">Nenhuma condição adicional cadastrada.</span>'}</div><div class="ov-anam-extra-add"><input id="ov-new-comorb" maxlength="120" autocomplete="off" placeholder="Ex.: Asma, epilepsia, hipotireoidismo" aria-label="Nova comorbidade"><button type="button" data-act="addcomorb">+ Adicionar</button></div><p class="note" style="margin:6px 0">Cada condição adicionada aparece como um balão junto ao histórico de saúde e fica salva na anamnese.</p></div>`+
   `<label>Medicamentos em uso</label><textarea data-a="med">${esc(a.med)}</textarea><label>Queixa principal</label><textarea data-a="queixa">${esc(a.queixa)}</textarea><label>Última consulta ao dentista</label><input data-a="ultima" value="${esc(a.ultima)}">`+sigHtml(p);
 }
 function sigHtml(p){
