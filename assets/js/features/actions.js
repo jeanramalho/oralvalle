@@ -5,6 +5,14 @@ const A={
   logout:()=>doLogout(),
   pPage:(b,d)=>{view.pPage=Math.max(0,Number(d.p)||0);render();},
   vPage:(b,d)=>{view.vPage=Math.max(0,Number(d.p)||0);render();},
+  agencerrar:(b,d)=>{
+    const a=db.ag.find(x=>String(x.id)===String(d.id));if(!a)return;
+    const resposta=prompt('Dar baixa no agendamento:\n1 - Compareceu (verde)\n2 - Faltou (vermelho)\n3 - Desmarcou (vermelho)\n\nDigite 1, 2 ou 3:');
+    if(resposta===null)return;
+    const status={'1':'Compareceu','2':'Faltou','3':'Cancelado'}[resposta.trim()];
+    if(!status){toast('Escolha 1, 2 ou 3 para dar baixa.',3000);return;}
+    a.st=status;save();render();toast(status==='Cancelado'?'Consulta desmarcada':status==='Faltou'?'Falta registrada':'Comparecimento registrado');
+  },
   agfalta:(b,d)=>{const a=db.ag.find(x=>x.id===d.id);if(!a)return;a.st='Faltou';save();render();toast('Falta registrada')},
   agcancel:(b,d)=>{const a=db.ag.find(x=>x.id===d.id);if(!a)return;a.st='Cancelado';save();render();toast('Agendamento cancelado')},
   agreativ:(b,d)=>{const a=db.ag.find(x=>x.id===d.id);if(!a)return;const t={...a,st:'Agendado'};if(confl(t)){toast('Esse horário já está ocupado por outro atendimento.',3500);return}a.st='Agendado';save();render();toast('Agendamento reativado')},

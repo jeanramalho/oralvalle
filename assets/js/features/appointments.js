@@ -69,9 +69,16 @@ function agHtml(){
   const list=db.ag.filter(a=>a.data===date&&(dent==='todos'||a.dt===dent)).slice().sort((a,b)=>mins(a.hora)-mins(b.hora));
   const dateNav=retBanner()+`<div class="card ag-date-panel" style="margin-bottom:12px"><div class="row" style="align-items:center;justify-content:space-between;flex-wrap:wrap"><div><strong>Agenda do dia</strong><div class="note" style="margin:2px 0 0">${fd(date)}</div></div><div class="row" style="margin:0;align-items:center"><button class="ghost sm" data-act="agdate" data-d="-1">‹</button><input id="agDate" type="date" value="${date}" style="width:auto;min-width:145px"><button class="ghost sm" data-act="agdate" data-d="1">›</button><button class="sm" data-act="agtoday">Hoje</button></div></div><div class="row" style="margin-top:12px;align-items:center"><div><label for="agDent">Dentista</label><select id="agDent"><option value="todos">Todos os dentistas</option>${dts.map(d=>`<option value="${d.id}"${dent===d.id?' selected':''}>${esc(d.nome)}</option>`).join('')}</select></div><div class="note ag-help" style="margin:0">Dois consultórios: cada atendimento ocupa um consultório e o dentista não pode ter dois horários sobrepostos.</div></div></div>`;
   const SLOT0=7*60,SLOT1=20*60,STEP=30;
-  const apCard=a=>{const finished=['Cancelado','Faltou'].includes(a.st),attended=Boolean(a.vid),ended=a.data<today||(a.data===today&&mins(a.hora)+(a.dur||30)<=new Date().getHours()*60+new Date().getMinutes());
-    if(finished||attended||ended){const label=finished?(a.st==='Faltou'?'Faltou':'Desmarcou'):attended?'Atendido':'Horário encerrado';const cls=finished?'ag-compact-red':attended?'ag-compact-green':'ag-compact-neutral';return `<div class="ag-appointment ag-compact ${cls}"><span class="ag-compact-time">${esc(a.hora)}</span>${agPatient(a)}<span class="ag-compact-status">${label}</span></div>`;}
-    const ok=!['Cancelado','Faltou'].includes(a.st),confirmed=a.st==='Confirmado'||a.st==='Compareceu';const sub=[dName(a.dt),a.proc].filter(Boolean).join(' · ');return `<div class="ag-appointment ${confirmed?'is-confirmed':''}"><div class="ag-appointment-main"><div class="ag-l1"><strong>${esc(a.hora)}–${hm(mins(a.hora)+(a.dur||30))}</strong><span>·</span>${agPatient(a)}${a.tipo?`<span class="ag-tipo t1">${esc(a.tipo)}</span>`:''}</div><span class="ag-status">${esc(a.st||'Agendado')}</span></div><div class="ag-meta ag-l2">${a.tipo?`<span class="ag-tipo t2">${esc(a.tipo)}</span> `:''}${esc(sub)}</div><div class="ag-actions">${!confirmed&&ok?`<button class="sm ag-confirm" data-act="agstatus" data-id="${a.id}">Confirmar</button>`:''}${a.st==='Confirmado'?`<button class="sm ag-confirm" data-act="agstatus" data-id="${a.id}"><span class="lg">Marcar compareceu</span><span class="sh">Compareceu</span></button>`:''}${a.vid?'<span class="badge stt-ok">Baixa feita</span>':(ok?`<button class="ghost sm" data-act="agbaixa" data-id="${a.id}"><span class="lg">Dar baixa</span><span class="sh">Baixa</span></button>`:'')}${ok&&!a.vid&&a.st!=='Compareceu'?`<button class="ghost sm" data-act="agfalta" data-id="${a.id}">Faltou</button>`:''}<button class="danger sm" data-act="rmag" data-id="${a.id}" title="Remover" aria-label="Remover">✕</button></div></div>`};
+  const agClosed=a=>['Faltou','Cancelado','Compareceu'].includes(a.st)||Boolean(a.vid);
+  const apCard=a=>{
+    if(agClosed(a)){
+      const cls=['Faltou','Cancelado'].includes(a.st)?'ag-compact-red':'ag-compact-green';
+      const label=a.st==='Faltou'?'Faltou':a.st==='Cancelado'?'Desmarcou':'Compareceu';
+      return `<div class="ag-appointment ag-compact ${cls}" title="${label}: ${esc(pName(a.pid))}">${agPatient(a)}</div>`;
+    }
+    const confirmed=a.st==='Confirmado';const sub=[dName(a.dt),a.proc].filter(Boolean).join(' · ');
+    return `<div class="ag-appointment ${confirmed?'is-confirmed':''}"><div class="ag-appointment-main"><div class="ag-l1"><strong>${esc(a.hora)}–${hm(mins(a.hora)+(a.dur||30))}</strong><span>·</span>${agPatient(a)}${a.tipo?`<span class="ag-tipo t1">${esc(a.tipo)}</span>`:''}</div><span class="ag-status">${esc(a.st||'Agendado')}</span></div><div class="ag-meta ag-l2">${a.tipo?`<span class="ag-tipo t2">${esc(a.tipo)}</span> `:''}${esc(sub)}</div><div class="ag-actions">${!confirmed?`<button class="sm ag-confirm" data-act="agstatus" data-id="${a.id}">Confirmar</button>`:''}<button class="ghost sm" data-act="agencerrar" data-id="${a.id}">Dar baixa</button><button class="danger sm" data-act="rmag" data-id="${a.id}" title="Remover" aria-label="Remover">✕</button></div></div>`;
+  };
   const ROW=96;
   const chairCard=(chair,label)=>{
     const rows=list.filter(a=>String(a.cadeira||'1')===chair);
@@ -81,14 +88,14 @@ function agHtml(){
     const grid=[];
     const FREE=22,occ=m=>rows.some(a=>{const s0=mins(a.hora),e0=s0+(a.dur||30);return s0<m+STEP&&e0>m});
     const tops=[],hs=[];let acc=0;
-    for(let m=T0;m<T1;m+=STEP){const o=occ(m),h=o?ROW:FREE;tops.push(acc);hs.push(h);acc+=h;
+    for(let m=T0;m<T1;m+=STEP){const o=occ(m),active=rows.some(a=>!agClosed(a)&&mins(a.hora)<m+STEP&&mins(a.hora)+(a.dur||30)>m),h=o?(active?ROW:34):FREE;tops.push(acc);hs.push(h);acc+=h;
       grid.push(o?`<div class="slot has" style="height:${h}px"><div class="slot-h">${hm(m)}</div><div class="slot-b"></div></div>`:`<div class="slot thin" style="height:${h}px"><div class="slot-h">${hm(m)}</div><div class="slot-b"><button type="button" class="slot-free" data-act="agslot" data-h="${hm(m)}" data-c="${chair}">Livre</button></div></div>`)}
     const yOf=t=>{let k=Math.floor((t-T0)/STEP);k=Math.max(0,Math.min(hs.length-1,k));return tops[k]+((t-(T0+k*STEP))/STEP)*hs[k]};
     /* consultas lado a lado quando houver encaixe no mesmo horário */
     const items=[];let lanesEnd=[],cl=[],clEnd=0;
     const flush=()=>{cl.forEach(x=>{x.n=lanesEnd.length});items.push(...cl);cl=[];lanesEnd=[]};
     rows.forEach(a=>{const s0=mins(a.hora),s=Math.floor(s0/STEP)*STEP,e=Math.max(s0+(a.dur||30),s+STEP);if(cl.length&&s>=clEnd)flush();let l=lanesEnd.findIndex(x=>x<=s);if(l<0){l=lanesEnd.length;lanesEnd.push(e)}else lanesEnd[l]=e;clEnd=cl.length?Math.max(clEnd,e):e;cl.push({a,s,e,l})});flush();
-    const blocks=items.map(x=>`<div class="ag-block${x.n>1?' ag-narrow':''}" style="top:${yOf(x.s)+1}px;height:${Math.max(ROW-2,yOf(x.e)-yOf(x.s)-2)}px;left:${x.l/x.n*100}%;width:${100/x.n}%">${apCard(x.a)}</div>`).join('');
+    const blocks=items.map(x=>`<div class="ag-block${x.n>1?' ag-narrow':''}" style="top:${yOf(x.s)+1}px;height:${agClosed(x.a)?Math.max(30,yOf(x.e)-yOf(x.s)-2):Math.max(ROW-2,yOf(x.e)-yOf(x.s)-2)}px;left:${x.l/x.n*100}%;width:${100/x.n}%">${apCard(x.a)}</div>`).join('');
     return `<section class="card" style="margin:0"><div class="ag"><span><strong>${label}</strong></span><span class="badge">${rows.length} atendimento${rows.length===1?'':'s'}</span></div><div class="slots ag-tgrid">${grid.join('')}<div class="ag-layer">${blocks}</div></div></section>`};
   return avsCardHtml()+dateNav+form+`<div class="ov-agenda-chairs">${chairCard('1','Consultório 1')}${chairCard('2','Consultório 2')}</div>`;
 }
