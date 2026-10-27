@@ -114,3 +114,21 @@
 @media (max-width:760px){
  .ov-shell > .ov-sidebar{display:none!important}
 }
+
+/* Ajuste fino: controles inteiramente dentro dos 96px do agendamento. */
+.ag-block .ag-appointment,.ag-block .ag-appointment.is-confirmed{
+  height:100%!important;min-height:0!important;max-height:100%!important;
+  box-sizing:border-box!important;overflow:hidden!important;
+  display:grid!important;grid-template-rows:minmax(0,auto) minmax(0,1fr) 20px!important;
+  align-content:stretch!important;gap:2px!important;padding:4px 7px!important;
+}
+.ag-block .ag-appointment-main{min-width:0;min-height:0;display:flex!important;flex-wrap:nowrap!important;align-items:center!important;gap:5px!important}
+.ag-block .ag-l1{flex:1 1 auto!important;min-width:0!important;flex-wrap:nowrap!important;white-space:nowrap!important;overflow:hidden!important}
+.ag-block .ag-l1 .ag-patient{flex:1 1 auto!important;min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+.ag-block .ag-status{flex:0 0 auto;max-width:30%;white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis}
+.ag-block .ag-meta{min-height:0;align-self:center;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+.ag-block .ag-actions,.ag-narrow .ag-actions{display:flex!important;flex-wrap:nowrap!important;align-items:center!important;min-width:0!important;min-height:20px!important;height:20px!important;gap:4px!important;margin:0!important;overflow:hidden!important}
+.ag-block .ag-actions button,.ag-narrow .ag-actions button{flex:0 1 auto!important;min-width:0!important;height:19px!important;min-height:19px!important;padding:1px 5px!important;font-size:10px!important;line-height:1!important;white-space:nowrap!important;border-radius:5px!important}
+.ag-block .ag-actions button.danger{flex:0 0 20px!important;width:20px!important;margin-left:auto!important;padding:0!important}
+.ag-block .ag-actions .badge{font-size:10px;white-space:nowrap;min-width:0}
+@media(max-width:480px){.ag-block .ag-appointment{padding:3px 4px!important}.ag-block .ag-actions{gap:2px!important}.ag-block .ag-actions button{padding:1px 3px!important;font-size:9px!important}}
