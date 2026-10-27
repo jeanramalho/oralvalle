@@ -629,3 +629,6 @@ input[type=date],input[type=time]{min-height:44px;-webkit-min-logical-width:0}
 .ag-compact-green{background:#163c2a!important;border:1px solid #349967!important;color:#d7ffea!important}
 .ag-compact-neutral{background:#30343a!important;border:1px solid #777!important;color:#eee!important}
 .ag-compact .ag-patient-link{color:inherit!important}
+
+/* Propostas: separação entre não aprovadas e aprovadas */
+.pf-view-tabs{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 14px}.pf-view-tab{border:1px solid var(--ln);border-radius:12px;background:transparent;color:var(--mut);padding:11px 16px;font-weight:700;cursor:pointer;min-height:44px}.pf-view-tab.on{border-color:#ed7900;background:rgba(237,121,0,.16);color:#ff9b40}.pf-view-tab:hover{border-color:#ed7900}.pf-view-tab:focus-visible{outline:2px solid #ff9b40;outline-offset:3px}
