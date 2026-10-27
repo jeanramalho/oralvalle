@@ -15,3 +15,9 @@
 .ag-tgrid .slot.thin .slot-b{display:flex;align-items:center}
 .ag-tgrid .slot.thin .slot-free{min-height:0!important;height:20px;padding:0 6px!important;font-size:11px;line-height:20px;width:auto;border-radius:6px;color:#a0a7ae}
 .ag-tgrid .slot.thin .slot-free:hover{color:var(--ac)}
+
+/* Botão de pacientes arquivados ao lado de Novo Paciente */
+.ov-archived-patients{min-height:44px;padding:0 14px;border:1px solid var(--line,#454545);border-radius:22px;background:transparent;color:inherit;cursor:pointer;white-space:nowrap;font-size:14px}
+.ov-archived-patients[aria-pressed="true"]{border-color:#e97800;color:#e97800}
+.ov-archived-patients:hover{border-color:#e97800}
+@media(max-width:600px){.ov-patients-head{flex-wrap:wrap}.ov-patients-actions{gap:6px;flex-wrap:wrap}.ov-archived-patients{padding:0 10px;font-size:12px}}
