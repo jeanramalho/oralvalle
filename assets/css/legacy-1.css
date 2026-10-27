@@ -619,3 +619,13 @@ input[type=date],input[type=time]{min-height:44px;-webkit-min-logical-width:0}
 .ov-mt-newlot{display:flex;align-items:end;flex-wrap:wrap;gap:12px;margin:14px 0}
 .ov-mt-newlot label{flex:1 1 175px;min-width:0}
 .ov-mt-newlot button{min-height:40px}
+
+/* Agenda: atendimentos concluídos e ausências em uma linha compacta */
+.ag-appointment.ag-compact{display:flex;align-items:center;gap:8px;min-height:34px;height:auto;padding:5px 8px;overflow:hidden;border-radius:7px;font-size:12px;line-height:1.3;box-sizing:border-box}
+.ag-compact .ag-patient{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
+.ag-compact-time{font-weight:700;flex:none}
+.ag-compact-status{font-weight:700;flex:none;white-space:nowrap}
+.ag-compact-red{background:#4b1d20!important;border:1px solid #d85a62!important;color:#ffe0e0!important}
+.ag-compact-green{background:#163c2a!important;border:1px solid #349967!important;color:#d7ffea!important}
+.ag-compact-neutral{background:#30343a!important;border:1px solid #777!important;color:#eee!important}
+.ag-compact .ag-patient-link{color:inherit!important}
