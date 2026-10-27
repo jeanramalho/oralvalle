@@ -14,6 +14,66 @@
   let accessError = '';
   let accessLoading = false;
   let pendingFiles = [];
+  // Sincronização entre abas e aparelhos: consulta apenas a revisão, sem baixar
+  // os dados completos a cada ciclo. Nunca substitui um formulário em edição.
+  let syncTimer = null;
+  let syncBusy = false;
+  let syncRevision = null;
+  let syncClinic = null;
+  let syncNotice = false;
+  const SYNC_INTERVAL_MS = 6000;
+  const editing = () => {
+    const el = document.activeElement;
+    return !!(el && (el.matches?.('input, textarea, select, [contenteditable="true"]')));
+  };
+  function stopSync() {
+    clearInterval(syncTimer);
+    syncTimer = null;
+    syncRevision = null;
+    syncClinic = null;
+    syncNotice = false;
+  }
+  async function syncTick() {
+    if (syncBusy || disposed || LOCKED || !OralCloud.clinicId || document.hidden) return;
+    syncBusy = true;
+    const clinicId = OralCloud.clinicId;
+    try {
+      const meta = await OralCloud.request('/rest/v1/rpc/clinic_load_start', {
+        method: 'POST', body: { p_clinic: clinicId }
+      });
+      if (clinicId !== OralCloud.clinicId || LOCKED || disposed || typeof meta?.revision !== 'string') return;
+      if (syncRevision === null) { syncRevision = meta.revision; return; }
+      if (meta.revision === syncRevision) return;
+      // Preserve drafts, pending writes, and lazily loaded clinical records.
+      // A patient record is never silently replaced while open.
+      if (pending || running || failure || membersRunning || membersPending || editing() || view.id) {
+        if (!syncNotice) {
+          syncNotice = true;
+          localToast('Há novidades de outro aparelho. Conclua a edição ou feche o prontuário para sincronizar.', 4500);
+        }
+        return;
+      }
+      const raw = await OralCloudData.load();
+      if (clinicId !== OralCloud.clinicId || LOCKED || disposed) return;
+      db = migrate(raw);
+      OralCloudData.prepareDefaults(db);
+      syncRevision = meta.revision;
+      syncNotice = false;
+      render();
+    } catch (error) {
+      // A conexão pode oscilar: manter a tela e os dados atuais intactos.
+      console.warn('[Oral Valle] Sincronização adiada:', error);
+    } finally { syncBusy = false; }
+  }
+  function startSync(clinicId) {
+    stopSync();
+    syncClinic = clinicId;
+    // Primeira leitura curta define a revisão após o carregamento inicial.
+    syncTimer = setInterval(syncTick, SYNC_INTERVAL_MS);
+    document.addEventListener('visibilitychange', onSyncVisible);
+  }
+  function onSyncVisible() { if (!document.hidden) syncTick(); }
+
   const copy = value => JSON.parse(JSON.stringify(value));
   const localToast = toast;
   const localPermissionCard = pmCardHtml;
@@ -128,6 +188,8 @@
 
   async function openClinic(keep) {
     disposed = false;
+    stopSync();
+    document.removeEventListener('visibilitychange', onSyncVisible);
     window.OralCloudFiles?.reset();
     const clinics = await OralCloud.request('/rest/v1/rpc/clinic_list', { method: 'POST', body: {} });
     if (!Array.isArray(clinics) || !clinics.length)
@@ -166,6 +228,7 @@
     unlock(member, keep);
     OralCloudData.prepareDefaults(db);
     status('Conectado ao Supabase · ' + clinic.nome);
+    startSync(clinic.clinic_id);
   }
 
   async function refreshAccessRequests() {
@@ -285,6 +348,8 @@
       await flush();
     } catch (_) { localToast('Não foi possível sair: há alterações não gravadas. Resolva o aviso ou baixe um backup.', 5000); return; }
     disposed = true;
+    stopSync();
+    document.removeEventListener('visibilitychange', onSyncVisible);
     window.OralCloudFiles?.reset();
     OralCloudData.reset();
     try { await OralCloud.logout(); } catch (_) {}
