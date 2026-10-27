@@ -19,10 +19,10 @@ jobs:
     steps:
       - name: Verificar configuracao
         env:
-          DATABASE_URL: ${{ secrets.SUPABASE_BACKUP_DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
           AGE_RECIPIENT: ${{ secrets.BACKUP_AGE_RECIPIENT }}
         run: |
-          test -n "$DATABASE_URL" || { echo 'Falta SUPABASE_BACKUP_DATABASE_URL'; exit 1; }
+          test -n "$DATABASE_URL" || { echo 'Falta SUPABASE_DB_URL'; exit 1; }
           test -n "$AGE_RECIPIENT" || { echo 'Falta BACKUP_AGE_RECIPIENT'; exit 1; }
           case "$AGE_RECIPIENT" in age1*) ;; *) echo 'BACKUP_AGE_RECIPIENT invalido'; exit 1 ;; esac
       - name: Instalar ferramentas
@@ -31,7 +31,7 @@ jobs:
           sudo apt-get install -y -qq postgresql-client-17 age
       - name: Exportar e criptografar banco
         env:
-          DATABASE_URL: ${{ secrets.SUPABASE_BACKUP_DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
           AGE_RECIPIENT: ${{ secrets.BACKUP_AGE_RECIPIENT }}
         run: |
           set -euo pipefail
