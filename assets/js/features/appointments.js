@@ -1,5 +1,13 @@
 /* ===== agenda ===== */
+function agRental(date, chair){
+  return (db.alugueis||[]).find(x=>x.data===date&&String(x.cadeira)===String(chair));
+}
+function agRentalOverlaps(date,chair,start,end){
+  const r=agRental(date,chair);
+  return !!(r&&mins(r.inicio)<end&&start<mins(r.fim));
+}
 function confl(n){
+  if(agRentalOverlaps(n.data,n.cadeira,mins(n.hora),mins(n.hora)+Number(n.dur||30)))return {aluguel:true};
   return db.ag.find(a=>a.id!==n.id&&a.data===n.data&&['Cancelado','Faltou'].indexOf(a.st)<0&&((a.cadeira||'1')===String(n.cadeira||'1')||(a.dt&&n.dt&&a.dt===n.dt))&&mins(a.hora)<mins(n.hora)+n.dur&&mins(n.hora)<mins(a.hora)+(a.dur||30));
 }
 function agDefaults(date){
@@ -7,7 +15,7 @@ function agDefaults(date){
   let m=isToday?Math.ceil((now.getHours()*60+now.getMinutes())/30)*30:8*60;
   if(m>23*60+30)m=23*60+30;
   const hora=hm(m);
-  const busy=c=>db.ag.some(a=>a.data===date&&['Cancelado','Faltou'].indexOf(a.st)<0&&String(a.cadeira||'1')===c&&mins(a.hora)<m+30&&m<mins(a.hora)+(a.dur||30));
+  const busy=c=>agRentalOverlaps(date,c,m,m+30)||db.ag.some(a=>a.data===date&&['Cancelado','Faltou'].indexOf(a.st)<0&&String(a.cadeira||'1')===c&&mins(a.hora)<m+30&&m<mins(a.hora)+(a.dur||30));
   return {hora,cad:busy('1')&&!busy('2')?'2':'1'};
 }
 const agNorm=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
@@ -67,6 +75,8 @@ function agHtml(){
   const agDef=agDefaults(date);
   const form=pts.length?`<div class="card ag-new-form"><h2>Nova consulta</h2><div class="row"><div style="flex:2;position:relative"><label for="apn">Paciente</label><input id="apn" type="search" autocomplete="off" autocapitalize="words" placeholder="Digite o nome do paciente"><input type="hidden" id="ap" value=""><div id="apsug" class="ag-sug" hidden></div></div><div><label for="adn">Dentista</label><select id="adn">${dentOpts(defDt(),'Dentista a definir')}</select></div></div><div class="row"><div><label for="ad">Data</label><input id="ad" type="date" value="${date}"></div><div><label for="ah">Hora</label><input id="ah" type="time" value="${agDef.hora}"></div><div><label for="adu">Duração (min)</label><input id="adu" inputmode="numeric" value="30"></div><div><label for="acadeira">Consultório</label><select id="acadeira"><option value="1"${agDef.cad==='1'?' selected':''}>Consultório 1</option><option value="2"${agDef.cad==='2'?' selected':''}>Consultório 2</option></select></div></div><div class="row"><div><label for="apr">Procedimento</label><input id="apr" list="prl" placeholder="Ex.: limpeza, canal" autocomplete="off">${prList()}</div><div><label for="atp">Tipo de consulta</label><input id="atp" list="atpl" placeholder="Primeira consulta, Retorno..." autocomplete="off" maxlength="40"><datalist id="atpl"><option value="Primeira consulta"><option value="Retorno"><option value="Avaliação"><option value="Manutenção"><option value="Urgência"></datalist></div></div><div style="margin-top:12px"><button data-act="addag" style="width:100%">Agendar consulta</button></div></div>`:'<div class="empty">Cadastre um paciente para agendar consultas.</div>';
   const list=db.ag.filter(a=>a.data===date&&(dent==='todos'||a.dt===dent)).slice().sort((a,b)=>mins(a.hora)-mins(b.hora));
+  const rentals=(db.alugueis||[]).filter(r=>r.data===date);
+  const rentalPanel=`<div class="card ag-rental-panel"><div class="ag-rental-head"><strong>Aluguel de consultório</strong><span class="note">Bloqueie os horários para não receber agendamentos.</span></div><div class="row" style="align-items:end"><div><label for="agRentChair">Consultório</label><select id="agRentChair"><option value="1">Consultório 1</option><option value="2">Consultório 2</option><option value="ambos">Ambos</option></select></div><div><label for="agRentStart">Início</label><input type="time" id="agRentStart" value="07:00"></div><div><label for="agRentEnd">Fim</label><input type="time" id="agRentEnd" value="20:00"></div><div><button type="button" data-act="agrentadd">Bloquear por aluguel</button></div></div>${rentals.length?`<div class="ag-rental-list">${rentals.map(r=>`<div class="ag-rental-item"><span>🔒 Consultório ${esc(r.cadeira)} · ${esc(r.inicio)}–${esc(r.fim)}</span><button type="button" class="ghost sm" data-act="agrentremove" data-id="${esc(r.id)}">Liberar</button></div>`).join('')}</div>`:''}</div>`;
   const dateNav=retBanner()+`<div class="card ag-date-panel" style="margin-bottom:12px"><div class="row" style="align-items:center;justify-content:space-between;flex-wrap:wrap"><div><strong>Agenda do dia</strong><div class="note" style="margin:2px 0 0">${fd(date)}</div></div><div class="row" style="margin:0;align-items:center"><button class="ghost sm" data-act="agdate" data-d="-1">‹</button><input id="agDate" type="date" value="${date}" style="width:auto;min-width:145px"><button class="ghost sm" data-act="agdate" data-d="1">›</button><button class="sm" data-act="agtoday">Hoje</button></div></div><div class="row" style="margin-top:12px;align-items:center"><div><label for="agDent">Dentista</label><select id="agDent"><option value="todos">Todos os dentistas</option>${dts.map(d=>`<option value="${d.id}"${dent===d.id?' selected':''}>${esc(d.nome)}</option>`).join('')}</select></div><div class="note ag-help" style="margin:0">Dois consultórios: cada atendimento ocupa um consultório e o dentista não pode ter dois horários sobrepostos.</div></div></div>`;
   const SLOT0=7*60,SLOT1=20*60,STEP=30;
   const agClosed=a=>['Faltou','Cancelado','Compareceu'].includes(a.st)||Boolean(a.vid);
@@ -82,11 +92,12 @@ function agHtml(){
   const ROW=96;
   const chairCard=(chair,label)=>{
     const rows=list.filter(a=>String(a.cadeira||'1')===chair);
+    const rental=agRental(date,chair);
     let T0=SLOT0,T1=SLOT1+STEP;
     rows.forEach(a=>{const s=mins(a.hora),e=Math.max(s+(a.dur||30),s+STEP);T0=Math.min(T0,Math.floor(s/STEP)*STEP);T1=Math.max(T1,Math.ceil(e/STEP)*STEP)});
     T1=Math.min(T1,24*60);
     const grid=[];
-    const FREE=22,occ=m=>rows.some(a=>{const s0=mins(a.hora),e0=s0+(a.dur||30);return s0<m+STEP&&e0>m});
+    const FREE=22,occ=m=>agRentalOverlaps(date,chair,m,m+STEP)||rows.some(a=>{const s0=mins(a.hora),e0=s0+(a.dur||30);return s0<m+STEP&&e0>m});
     const tops=[],hs=[];let acc=0;
     for(let m=T0;m<T1;m+=STEP){const o=occ(m),active=rows.some(a=>!agClosed(a)&&mins(a.hora)<m+STEP&&mins(a.hora)+(a.dur||30)>m),h=o?(active?ROW:34):FREE;tops.push(acc);hs.push(h);acc+=h;
       grid.push(o?`<div class="slot has" style="height:${h}px"><div class="slot-h">${hm(m)}</div><div class="slot-b"></div></div>`:`<div class="slot thin" style="height:${h}px"><div class="slot-h">${hm(m)}</div><div class="slot-b"><button type="button" class="slot-free" data-act="agslot" data-h="${hm(m)}" data-c="${chair}">Livre</button></div></div>`)}
@@ -95,7 +106,8 @@ function agHtml(){
     const items=[];let lanesEnd=[],cl=[],clEnd=0;
     const flush=()=>{cl.forEach(x=>{x.n=lanesEnd.length});items.push(...cl);cl=[];lanesEnd=[]};
     rows.forEach(a=>{const s0=mins(a.hora),s=Math.floor(s0/STEP)*STEP,e=Math.max(s0+(a.dur||30),s+STEP);if(cl.length&&s>=clEnd)flush();let l=lanesEnd.findIndex(x=>x<=s);if(l<0){l=lanesEnd.length;lanesEnd.push(e)}else lanesEnd[l]=e;clEnd=cl.length?Math.max(clEnd,e):e;cl.push({a,s,e,l})});flush();
+    const rentalBlock=rental?`<div class="ag-rental-block" style="top:${yOf(mins(rental.inicio))+1}px;height:${Math.max(28,yOf(mins(rental.fim))-yOf(mins(rental.inicio))-2)}px"><strong>🔒 CONSULTÓRIO ALUGADO</strong><span>${esc(rental.inicio)}–${esc(rental.fim)}</span></div>`:'';
     const blocks=items.map(x=>`<div class="ag-block${x.n>1?' ag-narrow':''}" style="top:${yOf(x.s)+1}px;height:${agClosed(x.a)?Math.max(30,yOf(x.e)-yOf(x.s)-2):Math.max(ROW-2,yOf(x.e)-yOf(x.s)-2)}px;left:${x.l/x.n*100}%;width:${100/x.n}%">${apCard(x.a)}</div>`).join('');
-    return `<section class="card" style="margin:0"><div class="ag"><span><strong>${label}</strong></span><span class="badge">${rows.length} atendimento${rows.length===1?'':'s'}</span></div><div class="slots ag-tgrid">${grid.join('')}<div class="ag-layer">${blocks}</div></div></section>`};
-  return avsCardHtml()+dateNav+form+`<div class="ov-agenda-chairs">${chairCard('1','Consultório 1')}${chairCard('2','Consultório 2')}</div>`;
+    return `<section class="card" style="margin:0"><div class="ag"><span><strong>${label}</strong></span><span class="badge">${rows.length} atendimento${rows.length===1?'':'s'}</span></div><div class="slots ag-tgrid">${grid.join('')}<div class="ag-layer">${rentalBlock}${blocks}</div></div></section>`};
+  return avsCardHtml()+dateNav+rentalPanel+form+`<div class="ov-agenda-chairs">${chairCard('1','Consultório 1')}${chairCard('2','Consultório 2')}</div>`;
 }
