@@ -4,6 +4,31 @@ function topo() {
 	if (content) content.scrollTop = 0;
 }
 
+// Guarda somente o contexto de navegação desta aba (nunca dados clínicos).
+const OV_NAV_KEY = 'oralvalle:navigation:v1';
+function ovSaveNavigation() {
+  if (LOCKED || !ME) return;
+  try {
+    const state = { h: view.h, id: view.id, tab: view.tab, agDate: view.agDate,
+      sv: view.sv, ag: view.ag, q: typeof q === 'string' ? q : '',
+      clinicId: window.OralCloud?.clinicId || null, userId: ME.id || null };
+    sessionStorage.setItem(OV_NAV_KEY, JSON.stringify(state));
+  } catch (_) {}
+}
+function ovRestoreNavigation() {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(OV_NAV_KEY) || 'null');
+    if (!saved || saved.clinicId !== (window.OralCloud?.clinicId || null) || saved.userId !== (ME?.id || null)) return;
+    if (typeof saved.h === 'string' && saved.h.length < 24) view.h = saved.h;
+    if (saved.id != null && db.p.some(p => String(p.id) === String(saved.id))) view.id = saved.id;
+    if (typeof saved.tab === 'string' && saved.tab.length < 32) view.tab = saved.tab;
+    if (typeof saved.agDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(saved.agDate)) view.agDate = saved.agDate;
+    if (typeof saved.sv === 'string') view.sv = saved.sv;
+    if (typeof saved.ag === 'string') view.ag = saved.ag;
+    if (typeof saved.q === 'string') q = saved.q.slice(0, 150);
+  } catch (_) {}
+}
+window.addEventListener('pagehide', ovSaveNavigation);
 function render() {
 	applyTheme();
 	if (LOCKED) return;
@@ -29,6 +54,7 @@ function render() {
 	if (nextSidebar) nextSidebar.scrollTop = sidebarScroll;
 	if (nextContent) nextContent.scrollTop = contentScroll;
 	applyRO();
+	ovSaveNavigation();
 }
 
 // Este arquivo é carregado por último: todas as telas e ações já estão disponíveis.
