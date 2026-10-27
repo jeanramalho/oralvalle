@@ -202,7 +202,8 @@
     const warning = message ? `<div class="lk-err" role="alert">${esc(message)}</div>` : '';
     const email = '<label for="cloudEmail">E-mail</label><input id="cloudEmail" type="email" autocomplete="username" autocapitalize="none" required>';
     let body;
-    if (mode === 'load') body = `<h1>Carregar clínica</h1>${warning}<button type="submit">Tentar carregar novamente</button><button type="button" class="lk-link" data-cloud-back>Voltar ao login</button>`;
+    if (mode === 'checking') body = `<h1>Restaurando acesso</h1><p class="lk-t" role="status">Verificando sua sessão e carregando a clínica…</p>`;
+    else if (mode === 'load') body = `<h1>Carregar clínica</h1>${warning}<button type="submit">Tentar carregar novamente</button><button type="button" class="lk-link" data-cloud-back>Voltar ao login</button>`;
     else if (mode === 'signup') body = `<h1>Criar conta</h1><p class="lk-t">Cadastre seu acesso. O administrador precisará autorizar sua entrada na clínica.</p>${warning}<label for="cloudName">Nome completo</label><input id="cloudName" autocomplete="name" required>${email}<label for="cloudPassword">Senha (mínimo 6 caracteres)</label><input id="cloudPassword" type="password" autocomplete="new-password" minlength="6" required><label for="cloudRepeat">Repita a senha</label><input id="cloudRepeat" type="password" autocomplete="new-password" minlength="6" required><button type="submit">Cadastrar</button><button type="button" class="lk-link" data-cloud-back>Já tenho conta. Entrar</button>`;
     else if (mode === 'recover') body = `<h1>Redefinir senha</h1><p class="lk-t">Enviaremos um link para o e-mail cadastrado no Supabase.</p>${warning}${email}<button type="submit">Enviar link</button><button type="button" class="lk-link" data-cloud-back>Voltar</button>`;
     else if (mode === 'password') body = `<h1>Definir senha</h1>${warning}<label for="cloudPassword">Nova senha</label><input id="cloudPassword" type="password" autocomplete="new-password" minlength="6" required><label for="cloudRepeat">Repita a senha</label><input id="cloudRepeat" type="password" autocomplete="new-password" minlength="6" required><button type="submit">Salvar senha</button>`;
@@ -263,11 +264,13 @@
 
   authBoot = async function () {
     db = migrate({});
-    cloudLock(location.hash === '#cadastro' ? 'signup' : 'login');
+    // Não exibir o formulário de login enquanto uma sessão salva é validada.
+    cloudLock(location.hash === '#cadastro' ? 'signup' : 'checking');
     try {
       const restored = await OralCloud.restoreSession();
       if (restored?.recovery) cloudLock('password');
       else if (restored) await openClinic(restored.keep);
+      else if (location.hash !== '#cadastro') cloudLock('login');
     } catch (error) { cloudLock(error.clinicLoad ? 'load' : 'login', explain(error)); }
   };
 
