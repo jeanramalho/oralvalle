@@ -59,7 +59,7 @@ function ovSidebar(active){
 }
 function topCl(){return Object.assign({},CL_DEF,db.cl||{})}
 function ovTop(){
-  return `<header class="ov-top">
+  return `<header class="ov-top"><button type="button" class="ov-mobile-menu" aria-label="Abrir menu" aria-expanded="false" aria-controls="oral-mobile-nav">☰ <span>Menu</span></button>
     <div class="ov-brand">
       ${(db.cl&&db.cl.semLogo)?``:(db.cl&&db.cl.icone)?`<img class="ov-icon-img" src="${esc(db.cl.icone)}" alt="Ícone da empresa">`:(db.cl&&db.cl.logo)?`<img class="ov-logo-img" src="${esc(db.cl.logo)}" alt="Logo">`:`<div class="ov-logo" aria-label="Logo padrão">
         <svg viewBox="0 0 64 72" aria-hidden="true" focusable="false">

@@ -101,7 +101,7 @@ function home(){
   return `<div class="ov-content-inner">${content}</div>`;
 }
 function ovShell(content,active){
-  return `<div class="ov-shell">${ovTop()}${ovSidebar(active)}<main class="ov-content"><div id="valAlert">${valAlertHtml()}</div>${content}</main></div>`;
+  return `<div class="ov-shell">${ovTop()}<div id="oral-mobile-nav" class="ov-mobile-nav">${ovSidebar(active)}</div><main class="ov-content"><div id="valAlert">${valAlertHtml()}</div>${content}</main></div>`;
 }
 
 function listHtml(){
