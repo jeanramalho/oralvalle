@@ -607,3 +607,15 @@ input[type=date],input[type=time]{min-height:44px;-webkit-min-logical-width:0}
   body.pp #printarea .pr-info { max-width:125mm; min-width:0; overflow-wrap:anywhere; text-align:left; }
   body.pp #printarea .pr-title { text-align:center !important; }
 }
+/* Estoque por lotes: tabela alinhada e listrada */
+.ov-mt-card{width:100%;box-sizing:border-box}
+.ov-mt-stock{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:12px 0;color:#f3a34a}
+.ov-mt-table-wrap{width:100%;overflow-x:auto}
+.ov-mt-table{width:100%;border-collapse:collapse;min-width:620px;table-layout:auto}
+.ov-mt-table th,.ov-mt-table td{padding:9px 12px;text-align:left;vertical-align:middle;border-bottom:1px solid #34383a}
+.ov-mt-table tbody tr:nth-child(odd){background:#222426}
+.ov-mt-table tbody tr:nth-child(even){background:#181a1b}
+.ov-mt-table input{width:100%;min-width:105px;box-sizing:border-box}
+.ov-mt-newlot{display:flex;align-items:end;flex-wrap:wrap;gap:12px;margin:14px 0}
+.ov-mt-newlot label{flex:1 1 175px;min-width:0}
+.ov-mt-newlot button{min-height:40px}
