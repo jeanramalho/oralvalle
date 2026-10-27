@@ -104,3 +104,13 @@
  .ag-new-form>.row:nth-of-type(2){grid-template-columns:repeat(2,minmax(0,1fr))!important}
  .ag-date-panel>.row>.row{grid-template-columns:30px minmax(0,1fr) 30px auto}
 }
+
+/* Menu desktop independente do menu móvel: evita ocultar a navegação no PC. */
+@media (min-width:761px){
+ .ov-shell > .ov-sidebar{display:block;grid-column:1;grid-row:2;min-width:0}
+ .ov-shell > .ov-mobile-nav{display:none!important}
+ .ov-shell > .ov-content{grid-column:2;grid-row:2;min-width:0}
+}
+@media (max-width:760px){
+ .ov-shell > .ov-sidebar{display:none!important}
+}
