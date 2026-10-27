@@ -177,3 +177,21 @@
 .ag-block .ag-appointment.ag-compact.ag-compact-red{background:#4b1d20!important;border:1px solid #d85a62!important;color:#ffe0e0!important}
 .ag-block .ag-appointment.ag-compact.ag-compact-green{background:#163c2a!important;border:1px solid #349967!important;color:#d7ffea!important}
 .ag-block .ag-appointment.ag-compact .ag-patient-link:hover{color:inherit!important;text-decoration:underline}
+
+/* Agenda: nome perfeitamente centralizado, com indicador discreto de situação. */
+.ag-block .ag-appointment.ag-compact{
+ position:relative!important;justify-content:center!important;
+ background:#1b1e1f!important;border:1px solid #3a4142!important;
+ color:#f2f2f2!important;padding:3px 28px!important;
+}
+.ag-block .ag-appointment.ag-compact .ag-patient{
+ flex:0 1 auto!important;max-width:100%!important;
+ text-align:center!important;margin:0 auto!important;
+ font-weight:600!important;color:#f2f2f2!important;
+}
+.ag-block .ag-appointment.ag-compact .ag-compact-dot{
+ position:absolute;left:11px;top:50%;transform:translateY(-50%);
+ width:9px;height:9px;border-radius:50%;flex:none;
+}
+.ag-block .ag-appointment.ag-compact.ag-compact-red .ag-compact-dot{background:#ed5961;}
+.ag-block .ag-appointment.ag-compact.ag-compact-green .ag-compact-dot{background:#38bd77;}
