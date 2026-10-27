@@ -51,7 +51,7 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 document.addEventListener('input',e=>{const t=e.target;if(t.id==='rxTexto'&&view.rx){view.rx.texto=t.value;view.rx.edited=true}});
 document.addEventListener('change',e=>{const t=e.target,p=cur();
   if(!p||!view.rx)return;
-  if(t.id==='rxModelo'){view.rx.model=t.value;view.rx.texto=rxGen(p,t.value);view.rx.edited=false;render()}
+  if(t.id==='rxModelo'){view.rx.model=t.value;view.rx.texto=t.value?rxGen(p,t.value):'';view.rx.edited=false;render()}
   else if(t.id==='rxDent'){view.rx.dt=t.value;render()}
   else if(t.id==='rxData'){view.rx.data=t.value||tdy()}
 });

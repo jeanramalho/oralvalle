@@ -43,8 +43,7 @@ function rxGen(p,model){
 }
 function rxState(p){
   if(!view.rx||view.rx.pid!==p.id){
-    view.rx={pid:p.id,model:'peq',dt:docDtDef(),data:tdy(),texto:'',edited:false};
-    view.rx.texto=rxGen(p,'peq');
+    view.rx={pid:p.id,model:'',dt:docDtDef(),data:tdy(),texto:'',edited:false};
   }
   return view.rx;
 }
@@ -58,21 +57,23 @@ function rxHtml(p){
   const cond=['Anticoagulante','Problemas de coagulação','Diabetes','Hipertensão','Problemas cardíacos'].filter(x=>c[x]);
   if(cond.length)av.push('Marcado na anamnese: '+cond.join(', ')+'. Confirme se anti-inflamatório e corticoide são adequados.');
   if(!p.cpf)av.push('CPF não cadastrado: preencha na aba Dados para ele sair no receituário.');
-  const custom=!!(db.rxm||{})[st.model];
+  const custom=!!(st.model&&(db.rxm||{})[st.model]);
   return `<section class="card rx-card"><h2>Receituário</h2><p class="sub">Escolha o modelo: nome, CPF, data e dentista já entram automaticamente no documento.</p>
-  <label for="rxModelo">Modelo</label><select id="rxModelo">${RX_MODELOS.map(m=>`<option value="${m[0]}"${st.model===m[0]?' selected':''}>${m[1]}</option>`).join('')}</select>
+  <label for="rxModelo">Modelo</label><select id="rxModelo"><option value=""${!st.model?' selected':''}>Selecione um modelo de receita</option>${RX_MODELOS.map(m=>`<option value="${m[0]}"${st.model===m[0]?' selected':''}>${m[1]}</option>`).join('')}</select>
   <div class="row"><div><label for="rxDent">Dentista</label><select id="rxDent">${dentOpts(st.dt,'Sem dentista')}</select></div><div><label for="rxData">Data</label><input id="rxData" type="date" value="${esc(st.data)}"></div></div>
   ${dd?`<label for="rxCro">CRO do dentista</label><input id="rxCro" data-d="${dd.id}" data-f="cro" value="${esc(dd.cro||'')}" placeholder="Ex.: CRO-MG 12345" autocomplete="off">`:''}
   <div class="rx-dados"><div><small>Paciente</small><b>${esc(p.nome)}</b></div><div><small>CPF</small><b>${esc(p.cpf||'não informado')}</b></div><div><small>Nascimento</small><b>${p.nasc?esc(fd(p.nasc)):'não informado'}</b></div><div><small>Telefone</small><b>${esc(p.tel||'não informado')}</b></div></div>
   ${av.length?`<div class="rx-aviso">${av.map(x=>'<div>⚠ '+esc(x)+'</div>').join('')}</div>`:''}
-  <label for="rxTexto">Prescrição${custom?' (seu modelo salvo)':''} - pode editar</label><textarea id="rxTexto" rows="16" spellcheck="false">${esc(st.texto)}</textarea>
+  <label for="rxTexto">Prescrição${custom?' (seu modelo salvo)':''} - pode editar</label><textarea id="rxTexto" rows="10" spellcheck="false" placeholder="Selecione um modelo acima ou escreva uma prescrição personalizada.">${esc(st.texto)}</textarea>
   <p class="note" style="margin:6px 0 0">Doses sugeridas de uso comum. Confira e ajuste conforme o caso antes de emitir.</p>
   <div class="row" style="margin-top:12px;flex-wrap:wrap"><button class="sm" data-act="rxpdf">Baixar PDF</button><button class="ghost sm" data-act="rxprint">Abrir para imprimir</button><button class="ghost sm" data-act="rxsave">Salvar no prontuário</button></div>
   <div class="row" style="margin-top:8px;flex-wrap:wrap"><button class="ghost sm" data-act="rxmodel">Salvar como meu modelo</button>${custom?'<button class="ghost sm" data-act="rxreset">Voltar ao modelo original</button>':''}</div></section>`;
 }
 async function rxDoc(p){
   if(!(await ensureJsPDF())){toast('Não foi possível carregar o gerador de PDF. Verifique a conexão e tente novamente.',3500);return null}
-  const st=rxState(p),cl=Object.assign({},CL_DEF,db.cl||{}),dd=db.dt.find(d=>d.id===st.dt);
+  const st=rxState(p);
+  if(!String(st.texto||'').trim()){toast('Selecione um modelo ou preencha a prescrição antes de emitir.',3500);return null}
+  const cl=Object.assign({},CL_DEF,db.cl||{}),dd=db.dt.find(d=>d.id===st.dt);
   const {jsPDF}=window.jspdf,doc=new jsPDF({unit:'mm',format:'a4'});
   const S=v=>String(v==null?'':v).replace(/[−–—]/g,'-').replace(/[^\u0000-\u00FF]/g,'?');
   const ORG=[217,106,0],GRAY=[239,239,239],L=15,R=195,W=R-L,MAXY=278;
