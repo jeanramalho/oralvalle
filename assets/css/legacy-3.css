@@ -55,3 +55,52 @@
 .ag-block .ag-confirm{background:transparent!important;color:var(--ac,#f28c28)!important;border:1px solid currentColor}
 .ag-block .ag-appointment.is-confirmed .ag-status{color:var(--ac,#f28c28)}
 @media(max-width:480px){.ag-block .ag-appointment{padding:6px!important}.ag-block .ag-l1{gap:3px 5px}.ag-block .ag-actions button{font-size:10px}}
+
+/* Ajuste solicitado: cartões mais slim, sem esconder informações. */
+.ag-block .ag-appointment,.ag-block .ag-appointment.is-confirmed{padding:3px 7px!important;gap:2px!important;border-radius:6px!important}
+.ag-block .ag-appointment-main{gap:2px 6px!important;line-height:1.15!important;font-size:12px!important}
+.ag-block .ag-l1{gap:2px 5px!important;line-height:1.15!important}
+.ag-block .ag-patient-link{line-height:1.15!important;font-size:12px!important}
+.ag-block .ag-meta{font-size:10px!important;line-height:1.15!important}
+.ag-block .ag-actions,.ag-narrow .ag-actions{gap:3px!important;margin-top:1px!important}
+.ag-block .ag-actions button,.ag-narrow .ag-actions button{min-height:19px!important;padding:2px 5px!important;font-size:10px!important;line-height:1.1!important}
+.ag-block .ag-tipo{font-size:9px!important;line-height:12px!important;padding:0 4px!important}
+@media(max-width:480px){.ag-block .ag-appointment{padding:3px 5px!important}}
+
+
+/* Oral Valle — navegação e formulários adaptados a celulares */
+.ov-mobile-menu,.ov-mobile-nav{display:none}
+@media(max-width:760px){
+  .ov-shell{display:block!important;min-width:0!important}
+  .ov-top{display:flex!important;align-items:center!important;gap:8px!important;min-height:74px;height:auto!important;padding:10px 12px!important}
+  .ov-mobile-menu{display:flex;align-items:center;justify-content:center;gap:5px;flex:0 0 auto;border:1px solid rgba(255,255,255,.6);border-radius:10px;background:rgba(255,255,255,.12);color:white;font-weight:700;font-size:14px;padding:10px 8px;min-height:40px}
+  .ov-brand{min-width:0;flex:1;gap:7px!important}
+  .ov-brand-name{font-size:clamp(13px,4vw,19px)!important;overflow-wrap:anywhere}
+  .ov-brand-sub{font-size:10px!important}
+  .ov-logo,.ov-logo-img,.ov-icon-img{max-width:36px!important;flex-shrink:0}
+  .ov-user{flex:0 0 auto;margin-left:0!important}
+  .ov-sair{font-size:12px!important;padding:8px 10px!important;min-width:0!important}
+  .ov-mobile-nav{display:none;position:fixed;z-index:10010;top:75px;left:0;bottom:0;width:min(310px,88vw);background:#fff;box-shadow:6px 10px 24px #0004;overflow-y:auto;overscroll-behavior:contain}
+  .ov-mobile-nav.is-open{display:block}
+  .ov-mobile-nav .ov-sidebar{display:block!important;position:static!important;height:auto!important;min-height:100%;width:100%;overflow:visible!important;padding-bottom:30px}
+  .ov-content{padding:12px!important;min-width:0!important;overflow-x:hidden!important}
+  .ov-content-inner,.ov-content .card{min-width:0!important;max-width:100%!important}
+  .ag-date-panel{padding:14px!important}
+  .ag-date-panel>.row{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:10px!important}
+  .ag-date-panel>.row>.row{display:grid!important;grid-template-columns:36px minmax(0,1fr) 36px auto;gap:6px!important;width:100%;align-items:center}
+  .ag-date-panel #agDate{min-width:0!important;width:100%!important;padding-left:5px!important;padding-right:5px!important;font-size:14px!important}
+  .ag-date-panel [data-act="agdate"]{padding:5px!important;min-width:0!important}
+  .ag-date-panel #agDent{width:100%!important;min-width:0!important}
+  .ag-date-panel .ag-help{font-size:12px!important;line-height:1.4!important;overflow-wrap:anywhere}
+  .ag-new-form{padding:14px!important}
+  .ag-new-form>.row{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;align-items:end!important}
+  .ag-new-form>.row>div{min-width:0!important;width:100%!important;flex:none!important}
+  .ag-new-form input,.ag-new-form select{width:100%!important;min-width:0!important;max-width:100%!important;box-sizing:border-box!important}
+  .ag-new-form label{font-size:13px!important;line-height:1.3!important}
+  .ag-new-form #ad{font-size:13px!important}
+}
+@media(max-width:390px){
+ .ov-mobile-menu span{display:none}
+ .ag-new-form>.row:nth-of-type(2){grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .ag-date-panel>.row>.row{grid-template-columns:30px minmax(0,1fr) 30px auto}
+}
