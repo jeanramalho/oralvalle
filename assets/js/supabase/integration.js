@@ -53,6 +53,7 @@
         }
         return;
       }
+      // Mostrar a marca apenas durante a atualização efetiva, sem bloquear a edição.
       const raw = await OralCloudData.load();
       if (clinicId !== OralCloud.clinicId || LOCKED || disposed) return;
       db = migrate(raw);
@@ -186,7 +187,12 @@
     localToast(message, duration);
   };
 
+  function splashMessage(message) {
+    const el = document.getElementById('ov-splash-message');
+    if (el) el.textContent = message;
+  }
   async function openClinic(keep) {
+    splashMessage('Carregando seus procedimentos...');
     disposed = false;
     stopSync();
     document.removeEventListener('visibilitychange', onSyncVisible);
