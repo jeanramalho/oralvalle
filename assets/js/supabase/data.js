@@ -515,6 +515,7 @@
   async function salesForPeriod(from, to, options = {}) {
     return queryPage({ ...options, table: 'sales', from, to, limit: options.limit || 100 });
   }
+  function currentRevision() { return state?.revision || null; }
   function reset() { state = null; }
   async function members() {
     const c = cloud(), clinic = c.clinicId;
@@ -563,5 +564,5 @@
   }
   global.OralCloudData = Object.freeze({ load, loadPatient, patientLoaded, save, prepareDefaults, members, updateMember, pendingUsers, decideUser,
     snapshot, files, file, changeFile, exportData, restoreData, queryPage, searchPatients,
-    appointmentsForRange, salesForPeriod, reset });
+    appointmentsForRange, salesForPeriod, currentRevision, reset });
 })(window);

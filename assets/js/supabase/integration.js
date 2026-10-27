@@ -20,6 +20,7 @@
   let syncBusy = false;
   let syncRevision = null;
   let syncClinic = null;
+  let syncSession = 0;
   let syncNotice = false;
   const SYNC_INTERVAL_MS = 3000;
   const editing = () => {
@@ -29,6 +30,7 @@
   function stopSync() {
     clearInterval(syncTimer);
     syncTimer = null;
+    syncSession++;
     syncRevision = null;
     syncClinic = null;
     syncNotice = false;
@@ -37,11 +39,16 @@
     if (syncBusy || disposed || LOCKED || !OralCloud.clinicId || document.hidden) return;
     syncBusy = true;
     const clinicId = OralCloud.clinicId;
+    const session = syncSession;
     try {
       const meta = await OralCloud.request('/rest/v1/rpc/clinic_load_start', {
         method: 'POST', body: { p_clinic: clinicId }
       });
-      if (clinicId !== OralCloud.clinicId || LOCKED || disposed || typeof meta?.revision !== 'string') return;
+      if (session !== syncSession || clinicId !== OralCloud.clinicId || LOCKED || disposed || typeof meta?.revision !== 'string') return;
+      // A gravação feita neste aparelho também atualiza a revisão local.
+      // Evita recarregar todos os módulos sem necessidade após cada salvamento.
+      const currentRevision = OralCloudData.currentRevision();
+      if (meta.revision === currentRevision) { syncRevision = meta.revision; syncNotice = false; return; }
       // A primeira verificação também compara com o banco: uma alteração pode
       // ocorrer entre a abertura da clínica e o início do monitoramento.
       if (syncRevision !== null && meta.revision === syncRevision) return;
@@ -56,7 +63,9 @@
       }
       // Mostrar a marca apenas durante a atualização efetiva, sem bloquear a edição.
       const raw = await OralCloudData.load();
-      if (clinicId !== OralCloud.clinicId || LOCKED || disposed) return;
+      if (session !== syncSession || clinicId !== OralCloud.clinicId || LOCKED || disposed) return;
+      // O usuário pode começar a editar enquanto os dados são baixados.
+      if (pending || running || failure || membersRunning || membersPending || editing() || view.id) return;
       db = migrate(raw);
       OralCloudData.prepareDefaults(db);
       syncRevision = meta.revision;
@@ -71,9 +80,11 @@
     stopSync();
     syncClinic = clinicId;
     // Primeira leitura curta define a revisão após o carregamento inicial.
+    syncRevision = OralCloudData.currentRevision();
     syncTimer = setInterval(syncTick, SYNC_INTERVAL_MS);
     document.addEventListener('visibilitychange', onSyncVisible);
     window.addEventListener('online', onSyncVisible);
+    window.addEventListener('focus', onSyncVisible);
   }
   function onSyncVisible() { if (!document.hidden) syncTick(); }
 
@@ -144,7 +155,8 @@
         const snapshot = pending;
         pending = null;
         try {
-          await OralCloudData.save(snapshot);
+          const revision = await OralCloudData.save(snapshot);
+          syncRevision = revision;
           if (!pending) saved();
         } catch (error) {
           if (!pending) pending = snapshot;
@@ -199,6 +211,7 @@
     stopSync();
     document.removeEventListener('visibilitychange', onSyncVisible);
     window.removeEventListener('online', onSyncVisible);
+    window.removeEventListener('focus', onSyncVisible);
     window.OralCloudFiles?.reset();
     const clinics = await OralCloud.request('/rest/v1/rpc/clinic_list', { method: 'POST', body: {} });
     if (!Array.isArray(clinics) || !clinics.length)
@@ -372,6 +385,7 @@
     stopSync();
     document.removeEventListener('visibilitychange', onSyncVisible);
     window.removeEventListener('online', onSyncVisible);
+    window.removeEventListener('focus', onSyncVisible);
     window.OralCloudFiles?.reset();
     OralCloudData.reset();
     try { await OralCloud.logout(); } catch (_) {}
