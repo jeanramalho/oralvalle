@@ -74,7 +74,7 @@ function agHtml(){
     if(agClosed(a)){
       const cls=['Faltou','Cancelado'].includes(a.st)?'ag-compact-red':'ag-compact-green';
       const label=a.st==='Faltou'?'Faltou':a.st==='Cancelado'?'Desmarcou':'Compareceu';
-      return `<div class="ag-appointment ag-compact ${cls}" title="${label}: ${esc(pName(a.pid))}">${agPatient(a)}</div>`;
+      return `<div class="ag-appointment ag-compact ${cls}" title="${label}: ${esc(pName(a.pid))}"><span class="ag-compact-dot" aria-label="${label}" title="${label}"></span>${agPatient(a)}</div>`;
     }
     const confirmed=a.st==='Confirmado';const sub=[dName(a.dt),a.proc].filter(Boolean).join(' · ');
     return `<div class="ag-appointment ${confirmed?'is-confirmed':''}"><div class="ag-appointment-main"><div class="ag-l1"><strong>${esc(a.hora)}–${hm(mins(a.hora)+(a.dur||30))}</strong><span>·</span>${agPatient(a)}${a.tipo?`<span class="ag-tipo t1">${esc(a.tipo)}</span>`:''}</div><span class="ag-status">${esc(a.st||'Agendado')}</span></div><div class="ag-meta ag-l2">${a.tipo?`<span class="ag-tipo t2">${esc(a.tipo)}</span> `:''}${esc(sub)}</div><div class="ag-actions">${!confirmed?`<button class="sm ag-confirm" data-act="agstatus" data-id="${a.id}">Confirmar</button>`:''}<button class="ghost sm" data-act="agencerrar" data-id="${a.id}">Dar baixa</button><button class="danger sm" data-act="rmag" data-id="${a.id}" title="Remover" aria-label="Remover">✕</button></div></div>`;
