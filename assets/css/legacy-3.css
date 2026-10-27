@@ -256,3 +256,6 @@
 .ov-anam-extra-add{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .ov-anam-extra-add input{flex:1 1 230px;min-width:0;margin:0}
 .ov-anam-extra-add button{flex:0 0 auto}
+
+/* Bloqueio de consultório por aluguel */
+.ag-rental-panel{margin-bottom:12px}.ag-rental-head{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px}.ag-rental-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.ag-rental-item{display:flex;gap:10px;align-items:center;padding:8px 12px;background:#fff3e9;border:1px solid #efbb91;border-radius:9px;font-size:13px}.ag-rental-block{position:absolute;left:0;right:0;z-index:2;box-sizing:border-box;border:2px solid #c76d22;border-radius:7px;background:repeating-linear-gradient(135deg,#ffe4cc,#ffe4cc 12px,#ffeedf 12px,#ffeedf 24px);color:#803a0a;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;padding:5px;text-align:center;pointer-events:none;font-size:12px}.ag-rental-block span{font-size:11px}
