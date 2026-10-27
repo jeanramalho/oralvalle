@@ -136,11 +136,19 @@
     const clinic = configured ? clinics.find(item => item.clinic_id === configured) : clinics.length === 1 ? clinics[0] : null;
     if (!clinic) throw new Error('Defina clinicId no arquivo de configuração: há mais de uma clínica ou o vínculo não corresponde.');
     OralCloud.clinicId = clinic.clinic_id;
-    AUTH = { users: (await OralCloudData.members()).filter(member => member.active), rec: null };
+    // Members and clinic data are independent reads. Start both together to
+    // avoid an unnecessary network round trip during login.
+    const membersPromise = OralCloudData.members();
+    const dataPromise = OralCloudData.load();
+    let members, raw;
+    try {
+      [members, raw] = await Promise.all([membersPromise, dataPromise]);
+    } catch (error) {
+      error.clinicLoad = true;
+      throw error;
+    }
+    AUTH = { users: members.filter(member => member.active), rec: null };
     memberBaseline = copy(AUTH.users);
-    let raw;
-    try { raw = await OralCloudData.load(); }
-    catch (error) { error.clinicLoad = true; throw error; }
     // Nunca importar automaticamente os dados locais ao preencher as credenciais.
     db = migrate(raw);
     OralCloudData.prepareDefaults(db);
