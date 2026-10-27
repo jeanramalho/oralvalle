@@ -5,7 +5,7 @@
   const labels = {patients:'Paciente',budgets:'Orçamentos',budget_items:'Itens do orçamento',treatments:'Tratamentos',patient_evolutions:'Evoluções',patient_anamneses:'Anamnese',patient_conditions:'Condições de saúde',patient_odontograms:'Odontograma',odontogram_history:'Histórico odontológico',dental_plans:'Planejamento',patient_files:'Arquivos',treatment_materials:'Materiais do tratamento'};
   const actions = {INSERT:'Inclusão',UPDATE:'Alteração',DELETE:'Exclusão'};
   const safe = value => String(value == null ? '' : value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  function allowed() { return Boolean(global.OralCloud?.enabled && global.OralCloud?.clinicId && global.ME?.admin); }
+  function allowed() { return Boolean(global.OralCloud?.enabled && global.OralCloud?.clinicId && global.OralCurrentUser?.()?.admin); }
   function key(patientId) { return String(global.OralCloud.clinicId) + ':' + String(patientId); }
   function load(patientId, force) {
     if (!allowed()) return;
