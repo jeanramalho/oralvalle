@@ -28,9 +28,9 @@ function pfAll(){
   return l;
 }
 function pfListHtml(){
-  const st=view.pfSt||'',de=view.pfFrom||'',ate=view.pfTo||'',qq=String(view.pfQ||'').toLowerCase().trim();
+  const approved=Boolean(view.pfApproved),st=view.pfSt||'',de=view.pfFrom||'',ate=view.pfTo||'',qq=String(view.pfQ||'').toLowerCase().trim();
   const all=pfAll();
-  const l=all.filter(x=>(!st||x.o.status===st)&&(!de||(x.iso&&x.iso>=de))&&(!ate||(x.iso&&x.iso<=ate))&&(!qq||x.p.nome.toLowerCase().includes(qq)))
+  const l=all.filter(x=>(approved?x.o.status==='Aprovado':x.o.status!=='Aprovado')&&(!st||x.o.status===st)&&(!de||(x.iso&&x.iso>=de))&&(!ate||(x.iso&&x.iso<=ate))&&(!qq||x.p.nome.toLowerCase().includes(qq)))
     .sort((a,b)=>String(b.iso).localeCompare(String(a.iso))||a.p.nome.localeCompare(b.p.nome,'pt-BR'));
   const soma=l.reduce((t,x)=>t+total(x.o),0),pacs=new Set(l.map(x=>x.p.id)).size;
   const cls=s=>s==='Aprovado'?'pf-ok':s==='Recusado'?'pf-no':'pf-open';
@@ -38,9 +38,12 @@ function pfListHtml(){
   const pts=db.p.filter(p=>!p.arq).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
   const novo=view.pfNew?`<div class="card pf-new"><h2 style="margin-top:0">Nova proposta financeira</h2><label for="pfPaciente" style="margin-top:0">Paciente</label><select id="pfPaciente"><option value="">Selecionar paciente</option>${pts.map(x=>`<option value="${x.id}"${x.id===view.pfPid?' selected':''}>${esc(x.nome)}</option>`).join('')}</select><div class="row" style="margin-top:12px"><button data-act="pfCreate" style="flex:1">Criar proposta</button><button class="ghost" data-act="pfCancel" style="flex:1">Cancelar</button></div></div>`:'';
   const cards=l.length?l.map(x=>{const n=x.o.itens.length;return `<button class="pf-card" data-act="pfOpen" data-pid="${x.p.id}" data-oid="${x.o.id}"><span class="pf-top"><span class="pf-ic" aria-hidden="true">${ovIcon('dt')}</span><span class="pf-who"><b>${esc(x.p.nome)}</b><small>${n} ${n===1?'procedimento':'procedimentos'}</small></span><span class="pf-badge ${cls(x.o.status)}">${esc(lab(x.o.status))}</span></span><span class="pf-bot"><b>${brl(total(x.o))}</b><small>${esc(x.o.data||'')}</small></span></button>`}).join(''):`<div class="ov-patient-empty">${all.length?'Nenhuma proposta encontrada com esses filtros.':'Nenhum paciente fez orçamento ainda.'}</div>`;
+  const pendingCount=all.filter(x=>x.o.status!=='Aprovado').length,approvedCount=all.filter(x=>x.o.status==='Aprovado').length;
+  const options=approved?[["Aprovado","Aprovadas"]]:[["","Todas não aprovadas"],["Pendente","Em aberto"],["Recusado","Recusadas"]];
   return `<div class="ov-page-head"><div><h1>Propostas Financeiras</h1><p class="sub">Home</p></div></div>
+  <div class="pf-view-tabs" role="group" aria-label="Visualizar propostas"><button type="button" class="pf-view-tab ${approved?'':'on'}" data-act="pfShow" data-t="pending" aria-pressed="${!approved}">Não aprovadas (${pendingCount})</button><button type="button" class="pf-view-tab ${approved?'on':''}" data-act="pfShow" data-t="approved" aria-pressed="${approved}">✓ Aprovadas (${approvedCount})</button></div>
   <div class="card pf-filters">
-    <div><label for="pfSt" style="margin-top:0">Situação</label><select id="pfSt">${PF_ST.map(o=>`<option value="${o[0]}"${st===o[0]?' selected':''}>${o[1]}</option>`).join('')}</select></div>
+    <div><label for="pfSt" style="margin-top:0">Situação</label><select id="pfSt">${options.map(o=>`<option value="${o[0]}"${(approved?'Aprovado':st)===o[0]?' selected':''}>${o[1]}</option>`).join('')}</select></div>
     <div><label for="pfFrom" style="margin-top:0">De</label><input id="pfFrom" type="date" value="${esc(de)}"></div>
     <div><label for="pfTo" style="margin-top:0">Até</label><input id="pfTo" type="date" value="${esc(ate)}"></div>
     <div class="pf-q"><label for="pfQ" style="margin-top:0">Paciente</label><input id="pfQ" type="search" placeholder="Buscar pelo nome" autocomplete="off" value="${esc(view.pfQ||'')}"></div>
