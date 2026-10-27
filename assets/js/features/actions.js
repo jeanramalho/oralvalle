@@ -73,7 +73,8 @@ const A={
     db.p.push({id:uid(),nome:n,tel:pvFmtTel(tel),nasc:'',cpf:pvFmtCpf(cpfTxt),obs:'',arq:false,anam:{c:{},med:'',queixa:'',ultima:''},orcs:[],trat:[],olog:[],dplan:[],evol:[]});save();q='';view.novoPac=false;render();toast('Paciente cadastrado')},
   open:async (b,d)=>{const patient=db.p.find(x=>String(x.id)===String(d.id));if(!patient)return;if(window.OralCloud?.enabled&&window.OralCloudData?.loadPatient&&!OralCloudData.patientLoaded(patient.id)){b.disabled=true;b.setAttribute('aria-busy','true');try{const details=await OralCloudData.loadPatient(patient.id);if(details)Object.assign(patient,details);OralCloudData.prepareDefaults(db)}catch(error){b.disabled=false;b.removeAttribute('aria-busy');toast('Não foi possível carregar o prontuário: '+(error.message||'erro de conexão'),5000);return}}view.id=d.id;view.tab='dados';view.trSel=[];view.trTd={};view.trSh={};view.trUni=null;view.trBasket=[];view.trForm=false;view.trDraft=null;view.trFlt='';delArm=null;render();topo()},
   back:()=>{view.id=null;delArm=null;render()},
-  tab:(b,d)=>{view.tab=d.t;delArm=null;render()},
+  tab:(b,d)=>{if(d.t==='auditoria'&&!window.OralPatientAudit?.allowed())return;view.tab=d.t;delArm=null;render()},
+  auditrefresh:()=>{const p=cur();if(p&&window.OralPatientAudit?.allowed())window.OralPatientAudit.refresh(p.id)},
   rmArquivo:(b,d,p)=>{if(!p)return;p.arquivos=(p.arquivos||[]).filter(x=>x.id!==d.id);save();render();toast('Arquivo removido do prontuário')},
   arq:(b,d,p)=>{p.arq=!p.arq;save();view.id=null;render();toast(p.arq?'Paciente arquivado':'Paciente reativado')},
   del:(b,d,p)=>{

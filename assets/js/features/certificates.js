@@ -63,8 +63,8 @@ function patient(){
   const p=cur();if(!p){view.id=null;return home()}
   const t=view.tab;
   return `<div class="row" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><button class="ghost sm" data-act="back">‹ Pacientes</button><button class="sm" data-act="printficha">🖨 Imprimir ficha completa</button></div><h1>${esc(p.nome)}${p.arq?' <span class="badge">arquivado</span>':''}</h1><p class="sub">${esc(pvFmtTel(p.tel)||'Sem telefone')}</p><button type="button" class="save-chip" id="saveStat" data-act="savebtn" title="Toque para salvar agora" aria-live="polite">${saveStatText(p)}</button>`+
-  '<div class="tabs">'+[['dados','Dados'],['anam','Anamnese'],['odo','Evolução'],['orc','Orçamentos'],['trat','Tratamentos'],['pag','Pagamentos'],['agd','Agendamentos'],['arquivos','Radiografias e documentos']].filter(x=>pmTabOk(x[0])).map(x=>`<button data-act="tab" data-t="${x[0]}" class="${t===x[0]?'on':''}">${x[1]}</button>`).join('')+'</div>'+
-  (t==='dados'?tabDados(p):t==='anam'?tabAnam(p):t==='odo'?tabOdo(p):t==='orc'?tabOrc(p):t==='arquivos'?tabArquivos(p):t==='agd'?tabAgd(p):t==='pag'?tabPag(p):tratHtml(p));
+  '<div class="tabs">'+[['dados','Dados'],['anam','Anamnese'],['odo','Evolução'],['orc','Orçamentos'],['trat','Tratamentos'],['pag','Pagamentos'],['agd','Agendamentos'],['arquivos','Radiografias e documentos'],...((window.OralPatientAudit?.allowed())?[['auditoria','Histórico de alterações']]:[])].filter(x=>x[0]==='auditoria'||pmTabOk(x[0])).map(x=>`<button data-act="tab" data-t="${x[0]}" class="${t===x[0]?'on':''}">${x[1]}</button>`).join('')+'</div>'+
+  (t==='auditoria'?window.OralPatientAudit.render(p):t==='dados'?tabDados(p):t==='anam'?tabAnam(p):t==='odo'?tabOdo(p):t==='orc'?tabOrc(p):t==='arquivos'?tabArquivos(p):t==='agd'?tabAgd(p):t==='pag'?tabPag(p):tratHtml(p));
 }
 function orcText(p,o){
   const l=['Orçamento – '+p.nome,hojeBR()+(o.val?' · válido até '+fd(o.val):''),''];
