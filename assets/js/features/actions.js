@@ -1,5 +1,6 @@
 /* ===== ações ===== */
 const A={
+  ovSalesMonth:()=>{const dlg=document.getElementById('ov-sales-month-dialog');if(dlg&&!dlg.open)dlg.showModal();},
   logout:()=>doLogout(),
   pPage:(b,d)=>{view.pPage=Math.max(0,Number(d.p)||0);render();},
   vPage:(b,d)=>{view.vPage=Math.max(0,Number(d.p)||0);render();},

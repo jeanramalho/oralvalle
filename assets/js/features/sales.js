@@ -1,5 +1,17 @@
 /* ===== vendas ===== */
 function stat(l,v,n){return `<div class="card" style="margin:0"><div class="note" style="margin:0">${l}</div><strong style="font-size:20px">${brl(v)}</strong>${n?`<div class="note" style="margin:0">${n}</div>`:''}</div>`}
+/* Detalhamento de vendas: somente leitura, com os mesmos dados do resumo. */
+function ovSalesMonthDialog(mes){
+  const vendas=db.vd.filter(v=>String(v.data||'').slice(0,7)===mes).slice().sort((a,b)=>String(b.data||'').localeCompare(String(a.data||'')));
+  const total=sum(vendas,'valor');
+  const linhas=vendas.map(v=>`<tr><td>${esc(fd(v.data))}</td><td>${esc(pName(v.pid))}</td><td>${esc(v.proc||'Atendimento')}</td><td style="text-align:right;white-space:nowrap">${brl(v.valor)}</td></tr>`).join('');
+  return `<dialog id="ov-sales-month-dialog" aria-labelledby="ov-sales-month-title" style="width:min(850px,94vw);max-height:85vh;overflow:auto;border:1px solid #555;border-radius:14px;background:#191b1c;color:#eee;padding:20px;box-shadow:0 16px 60px #0009">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:16px"><h2 id="ov-sales-month-title" style="margin:0">Vendas do mês</h2><form method="dialog"><button class="ghost sm" type="submit" aria-label="Fechar detalhes">✕ Fechar</button></form></div>
+    <p class="note">${esc(mes.slice(5,7)+'/'+mes.slice(0,4))} · ${vendas.length} atendimento(s) · Total: <strong>${brl(total)}</strong></p>
+    <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;text-align:left"><thead><tr><th style="padding:10px 8px">Data</th><th style="padding:10px 8px">Paciente</th><th style="padding:10px 8px">Procedimento</th><th style="padding:10px 8px;text-align:right">Valor</th></tr></thead><tbody>${linhas||'<tr><td colspan="4" style="padding:16px">Nenhuma venda neste mês.</td></tr>'}</tbody></table></div>
+    <p style="text-align:right;margin-bottom:0"><strong>Total de vendas: ${brl(total)}</strong></p>
+  </dialog>`;
+}
 function fillRep(src){
   const pn=$('vpr').value.trim();
   if(src==='vpr'){const m=procBy(pn);if(m&&m.preco&&!$('vv').value)$('vv').value=m.preco}
@@ -23,7 +35,8 @@ function vdHtml(){
   const dia=db.vd.filter(x=>x.data===t),mes=db.vd.filter(x=>x.data.slice(0,7)===m);
   let recMes=0;db.vd.forEach(v=>v.pg.forEach(p=>{if((p.data||'').slice(0,7)===m)recMes+=num(p.valor)}));
   const aRec=db.vd.reduce((s,v)=>s+saldoV(v),0);
-  let h='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'+stat('Vendas de hoje',sum(dia,'valor'),dia.length+' atendimento(s)')+stat('Vendas do mês',sum(mes,'valor'),mes.length+' atendimento(s)')+stat('Recebido no mês',recMes)+stat('A receber de pacientes',aRec)+stat('Comissões do mês',sum(mes,'rep'))+stat('Sobra após comissões (mês)',sum(mes,'valor')-sum(mes,'rep'))+'</div>';
+  let h='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'+stat('Vendas de hoje',sum(dia,'valor'),dia.length+' atendimento(s)')+`<button type="button" data-act="ovSalesMonth" aria-haspopup="dialog" title="Ver vendas do mês" class="card" style="margin:0;display:block;text-align:left;width:100%;color:inherit;font:inherit;cursor:pointer"><span class="note" style="display:block;margin:0">Vendas do mês ↗</span><strong style="font-size:20px">${brl(sum(mes,'valor'))}</strong><span class="note" style="display:block;margin:0">${mes.length} atendimento(s)</span></button>`+stat('Recebido no mês',recMes)+stat('A receber de pacientes',aRec)+stat('Comissões do mês',sum(mes,'rep'))+stat('Sobra após comissões (mês)',sum(mes,'valor')-sum(mes,'rep'))+'</div>';
+  h+=ovSalesMonthDialog(m);
   const pts=db.p.filter(p=>!p.arq||p.id===pre.pid),dts=db.dt.filter(d=>d.ativo!==false||d.id===pre.dt);
   if(!pts.length||!dts.length)h+='<div class="empty">Cadastre ao menos um paciente e um dentista ativo para lançar vendas.</div>';
   else{
