@@ -30,3 +30,28 @@
 @media(max-width:480px){.ag-tipo.t1{display:none}.ag-tipo.t2{display:inline-block}.ag-block .ag-actions .lg{display:none}.ag-block .ag-actions .sh{display:inline}.ag-block .ag-actions{gap:3px}.ag-block .ag-actions button{padding:0 5px;font-size:10.5px}.ag-block .ag-actions button.danger{padding:0 6px}.ag-block .ag-appointment{padding:3px 6px!important}}
 .ag-narrow .ag-tipo.t1{display:none}.ag-narrow .ag-tipo.t2{display:inline-block}.ag-narrow .ag-actions .lg{display:none}.ag-narrow .ag-actions .sh{display:inline}.ag-narrow .ag-actions{gap:2px}.ag-narrow .ag-actions button{padding:0 3px;font-size:10px}.ag-narrow .ag-actions button.danger{padding:0 5px}.ag-narrow .ag-appointment{padding:3px 6px!important}
 @media(max-width:340px){.ag-block .ag-actions button{padding:0 3px;font-size:10px}.ag-block .ag-actions{gap:2px}}
+
+/* Oral Valle — agenda legível, sem caixas laranja nem rolagem interna. */
+.ag-block .ag-appointment, .ag-block .ag-appointment.is-confirmed {
+  background:var(--card,#fff)!important;color:var(--text,#3f4650)!important;
+  border:1px solid var(--ln,#e5e8e7)!important;border-left:1px solid var(--ln,#e5e8e7)!important;
+  border-radius:9px;box-shadow:none;overflow:visible!important;
+  padding:8px 9px!important;justify-content:flex-start;gap:5px;
+}
+.ag-block .ag-appointment-main{display:flex;flex-wrap:wrap;align-items:flex-start;gap:4px 8px;line-height:1.4}
+.ag-block .ag-l1{flex:1 1 100%;display:flex;flex-wrap:wrap;white-space:normal;align-items:baseline;gap:4px 7px;min-width:0}
+.ag-block .ag-l1>*{flex:0 0 auto}
+.ag-block .ag-l1 .ag-patient{flex:1 1 110px;min-width:0;overflow:visible;text-overflow:clip;white-space:normal;overflow-wrap:anywhere}
+.ag-block .ag-patient-link{appearance:none;background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;margin:0!important;border-radius:0!important;color:inherit!important;font:inherit;font-weight:700;line-height:1.35;text-align:left;cursor:pointer}
+.ag-block .ag-patient-link:hover{text-decoration:underline;text-underline-offset:3px;color:var(--ac,#f28c28)!important}
+.ag-block .ag-patient-link:focus-visible{outline:2px solid var(--ac,#f28c28);outline-offset:3px}
+.ag-block .ag-status{font-size:10px;font-weight:650;white-space:normal;overflow-wrap:anywhere;color:var(--mut,#697177)}
+.ag-block .ag-meta{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;line-height:1.35;font-size:11px;margin:0;color:var(--mut,#7b8580)}
+.ag-block .ag-actions,.ag-narrow .ag-actions{display:flex;flex-wrap:wrap;overflow:visible;gap:4px;margin-top:auto;align-items:center}
+.ag-block .ag-actions button,.ag-narrow .ag-actions button{height:auto;min-height:24px;white-space:normal;line-height:1.2;padding:4px 6px;font-size:10px}
+.ag-block .ag-actions button.danger{margin-left:auto}
+.ag-block .ag-tipo.t1{display:inline-block}.ag-block .ag-tipo.t2{display:none}
+.ag-block .ag-actions .lg{display:none}.ag-block .ag-actions .sh{display:inline}
+.ag-block .ag-confirm{background:transparent!important;color:var(--ac,#f28c28)!important;border:1px solid currentColor}
+.ag-block .ag-appointment.is-confirmed .ag-status{color:var(--ac,#f28c28)}
+@media(max-width:480px){.ag-block .ag-appointment{padding:6px!important}.ag-block .ag-l1{gap:3px 5px}.ag-block .ag-actions button{font-size:10px}}
