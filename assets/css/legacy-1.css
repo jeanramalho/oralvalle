@@ -593,3 +593,17 @@ input[type=date],input[type=time]{min-height:44px;-webkit-min-logical-width:0}
 @media (prefers-reduced-motion:reduce){.ov-nav-btn .nav-dot{animation:none}}
 
 .proc-page{margin-top:8px!important}
+
+/* Oral Valle — cabeçalho da proposta centralizado exclusivamente na impressão */
+@media print {
+  body.pp #printarea .pr { width:100%; max-width:186mm; margin:0 auto !important; box-sizing:border-box; }
+  body.pp #printarea .pr-head {
+    display:flex !important; align-items:center !important; justify-content:center !important;
+    gap:7mm !important; width:100%; box-sizing:border-box;
+    padding:0 0 4mm !important; margin:0 auto 3mm !important;
+    border-bottom:1px solid #e6e6e6 !important;
+  }
+  body.pp #printarea .pr-head img { width:auto !important; max-width:30mm !important; max-height:24mm !important; height:auto !important; object-fit:contain; flex-shrink:0; }
+  body.pp #printarea .pr-info { max-width:125mm; min-width:0; overflow-wrap:anywhere; text-align:left; }
+  body.pp #printarea .pr-title { text-align:center !important; }
+}
