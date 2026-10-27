@@ -81,6 +81,7 @@ document.addEventListener('change',e=>{
   const t=e.target;
   if(t.dataset&&t.dataset.dup==='1'&&cur()){t.value=cur()[t.dataset.k]||'';t.dataset.dup='';t.style.borderColor='';toast('Valor duplicado desfeito. Mantido o dado original.',3000);return}
   if(t.dataset&&(t.dataset.k||t.dataset.a||t.dataset.c||t.dataset.tr)&&cur()){save();toastSaved('✓ Alterações salvas')}
+  if(t.dataset&&t.dataset.ortho==='1'&&cur()){cur().orthoMensal=t.checked;save();toast(t.checked?'Retorno ortodôntico mensal ativado':'Retorno ortodôntico mensal desativado',2500);return}
   if(t.id==='importPacFile'&&t.files&&t.files[0]){importPatientsFile(t.files[0]);t.value='';return;}
   if(t.id==='arqFiles'&&t.files&&t.files.length){
     const p=cur();if(!p){toast('Abra o prontuário do paciente primeiro');return}

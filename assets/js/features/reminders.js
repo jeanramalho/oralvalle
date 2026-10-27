@@ -22,6 +22,35 @@ function retLista(){
   never.sort((a,b)=>String(a.nome).localeCompare(String(b.nome),'pt-BR'));
   return {out,never};
 }
+/* Retornos ortodônticos: prazo de um mês de calendário após atendimento realizado. */
+function orthoPrazo(iso){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(iso||'')))return '';
+  const [y,m,d]=iso.split('-').map(Number),next=new Date(y,m,1,12);
+  const lastDay=new Date(next.getFullYear(),next.getMonth()+1,0).getDate();
+  next.setDate(Math.min(d,lastDay));return isoL(next);
+}
+function orthoUltima(p){
+  const hoje=tdy();let last='';
+  (db.ag||[]).forEach(a=>{if(a.pid===p.id&&a.st==='Compareceu'&&a.data&&a.data<=hoje&&a.data>last)last=a.data});
+  (db.vd||[]).forEach(v=>{if(v.pid===p.id&&v.data&&v.data<=hoje&&v.data>last)last=v.data});
+  return last;
+}
+function orthoLista(){
+  const hoje=tdy(),out=[];
+  (db.p||[]).forEach(p=>{
+    if(p.arq||!p.orthoMensal)return;
+    const last=orthoUltima(p);if(!last)return;
+    const prazo=orthoPrazo(last);if(!prazo||prazo>hoje)return;
+    if((db.ag||[]).some(a=>a.pid===p.id&&a.data>=hoje&&a.st!=='Cancelado'&&a.st!=='Faltou'))return;
+    out.push({p,last,prazo});
+  });
+  return out.sort((a,b)=>a.prazo.localeCompare(b.prazo)||String(a.p.nome).localeCompare(String(b.p.nome),'pt-BR'));
+}
+function orthoHtml(){
+  const list=orthoLista();
+  return `<section class="card ret-card"><h2>Retornos de ortodontia (${list.length})</h2><p class="sub">Pacientes marcados para retorno mensal, com pelo menos um mês desde o último atendimento realizado e sem consulta futura agendada. Consultas canceladas ou faltas não contam como atendimento.</p>
+  ${list.length?list.map(({p,last,prazo})=>{const tel=String(p.tel||'').replace(/\D/g,'');return `<div class="ret-it"><div class="ret-i"><strong>${esc(p.nome)}</strong><small>Último atendimento: ${esc(fd(last))} · Retorno previsto: ${esc(fd(prazo))}${p.tel?' · '+esc(p.tel):''}</small></div><div class="ret-act">${tel?`<button class="sm" data-act="orthowa" data-id="${p.id}">WhatsApp</button>`:''}<button class="ghost sm" data-act="open" data-id="${p.id}">Ver ficha</button></div></div>`}).join(''):'<p class="note">Nenhum retorno ortodôntico vencido.</p>'}</section>`;
+}
 function retPend(){return retLista().out.filter(x=>!retRecente(x.p)).length}
 function retMsg(p,last){
   const cl=Object.assign({},CL_DEF,db.cl||{}),pn=String(p.nome||'').trim().split(/\s+/)[0]||'paciente',u=last?last.slice(5,7)+'/'+last.slice(0,4):'';
@@ -55,14 +84,14 @@ function lembretesHtml(){
   });
   const hoje=tdy();
   const pend=list.filter(x=>!x.feito).length;
-  const TIPOS=['Geral','Paciente','Financeiro','Agenda','Administrativo','Retorno'],rp=retPend();
-  const tabs=[['todos','Todos',pend],['ret','Sem retorno',rp]].concat(TIPOS.map(t=>[t,t,list.filter(x=>!x.feito&&(x.tipo||'Geral')===t).length]));
+  const TIPOS=['Geral','Paciente','Financeiro','Agenda','Administrativo','Retorno'],rp=retPend(),op=orthoLista().length;
+  const tabs=[['todos','Todos',pend],['ret','Sem retorno',rp],['ortho','Ortodontia',op]].concat(TIPOS.map(t=>[t,t,list.filter(x=>!x.feito&&(x.tipo||'Geral')===t).length]));
   const T=tabs.some(x=>x[0]===view.lemTab)?view.lemTab:'todos';
   const shown=T==='todos'?list:list.filter(x=>(x.tipo||'Geral')===T),tipoSel=TIPOS.includes(T)?T:'Geral';
   const tabsHtml=`<div class="lem-tabs" role="tablist" aria-label="Assuntos dos lembretes">${tabs.map(x=>`<button type="button" role="tab" aria-selected="${T===x[0]}" class="${T===x[0]?'on':''}" data-act="lemtab" data-t="${x[0]}">${x[1]}${x[2]?` <span class="lem-n">${x[2]}</span>`:''}</button>`).join('')}</div>`;
   const retNote=`<div class="card" style="margin-bottom:12px;border-color:var(--ac)"><div class="row" style="align-items:center"><div style="flex:1"><strong>${rp} ${rp===1?'paciente sem retorno':'pacientes sem retorno'} há mais de ${retMeses()} meses</strong></div><button class="sm" data-act="lemtab" data-t="ret" style="flex:none">Ver lista</button></div></div>`;
   return `<div class="ov-page-head"><div><h1>Lembretes</h1><p class="sub">Anote tarefas, retornos e assuntos importantes da clínica.</p></div><span class="badge" style="font-size:14px;padding:7px 12px">${pend} pendente${pend===1?'':'s'}</span></div>
-  ${tabsHtml}${T==='ret'?retHtml():`${T==='todos'&&rp?retNote:''}
+  ${tabsHtml}${T==='ret'?retHtml():T==='ortho'?orthoHtml():`${T==='todos'&&rp?retNote:''}
   <div class="ov-reminder-grid">
     <section class="ov-reminder-form">
       <h2>Novo lembrete</h2>
