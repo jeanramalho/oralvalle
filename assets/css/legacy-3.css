@@ -218,3 +218,12 @@
 .dt-collapsible[open] .dt-chevron { transform:rotate(180deg); }
 .dt-collapsible > :not(summary) { margin-left:14px; margin-right:14px; }
 .dt-collapsible > :last-child { margin-bottom:14px; }
+
+/* Cadastro de dentistas recolhido por padrao */
+.dt-new-collapsible{margin-bottom:18px}
+.dt-new-toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;list-style:none;background:var(--ac,#d86a00);color:#fff;font-weight:700;border-radius:12px;padding:13px 18px;min-height:44px;box-sizing:border-box}
+.dt-new-toggle::-webkit-details-marker{display:none}
+.dt-new-toggle:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.dt-new-toggle span{transition:transform .15s ease}
+.dt-new-collapsible[open]>.dt-new-toggle span{transform:rotate(180deg)}
+.dt-new-collapsible>.dt-novo{margin-top:12px}
