@@ -63,7 +63,36 @@ const A={
   orthonav:()=>{view.h='ortho';view.id=null;render();topo()},
   implnav:()=>{view.h='impl';view.id=null;render();topo()},
   protnav:()=>{view.h='prot';view.id=null;render();topo()},
-  orthobaixa:(b,d)=>{const p=db.p.find(x=>x.id===d.id);if(!p||!p.orthoMensal)return;const mes=tdy().slice(0,7);p.orthoBaixas=p.orthoBaixas||[];p.orthoBaixas=p.orthoBaixas.includes(mes)?p.orthoBaixas.filter(x=>x!==mes):[...p.orthoBaixas,mes];save();render();toast(p.orthoBaixas.includes(mes)?'Manutenção do mês registrada':'Baixa desfeita')},
+  carebaixa:(b,d)=>{
+    const p=db.p.find(x=>String(x.id)===String(d.id)),kind=d.kind;if(!p||!['ortho','impl','prot'].includes(kind))return;
+    if(!(kind==='ortho'?p.orthoMensal:kind==='impl'?p.implAtivo:p.protAtivo))return;
+    const today=tdy(),stages=kind==='impl'?IMPL_ETAPAS:PROT_ETAPAS,key=kind==='impl'?'implEtapa':'protEtapa';
+    const current=kind==='ortho'?'Manutenção ortodôntica':(p[key]||stages[0]);
+    const detail=prompt('Descreva o procedimento realizado para registrar na evolução:',current);
+    if(detail===null)return;if(!detail.trim()){toast('Informe o procedimento realizado');return}
+    let next='';
+    if(kind==='ortho'){
+      const proposed=p.orthoProximo||orthoPrazo(today);
+      const date=prompt('Data do próximo retorno (AAAA-MM-DD):',proposed);
+      if(date===null)return;if(date&&!/^\d{4}-\d{2}-\d{2}$/.test(date)){toast('Data inválida. Use AAAA-MM-DD');return}
+      next=date;
+    }else{
+      const i=stages.indexOf(current),candidate=stages[Math.min(i+1,stages.length-1)];
+      if(!confirm('Registrar a etapa "'+current+'" e avançar para "'+candidate+'"?'))return;
+      next=candidate;
+    }
+    (p.evol=p.evol||[]).push({id:uid(),data:today,n:'',txt:'['+(kind==='ortho'?'Ortodontia':kind==='impl'?'Implantodontia':'Prótese')+'] '+detail.trim()+(kind==='prot'&&p.protCor?' | Cor: '+p.protCor:'')});
+    if(kind==='ortho'){p.orthoBaixas=p.orthoBaixas||[];if(!p.orthoBaixas.includes(today.slice(0,7)))p.orthoBaixas.push(today.slice(0,7));p.orthoUltimaData=today;p.orthoProximo=next}
+    else{p[key]=next;p[kind==='impl'?'implUltimaData':'protUltimaData']=today}
+    save();view.id=p.id;view.tab='odo';render();topo();toast('Baixa registrada na evolução. Paciente permanece em acompanhamento.');
+  },
+  carealta:(b,d)=>{const p=db.p.find(x=>String(x.id)===String(d.id)),kind=d.kind;if(!p||!['ortho','impl','prot'].includes(kind))return;
+    if(!confirm('Confirmar '+(kind==='ortho'?'alta ortodôntica':'conclusão do tratamento')+' de '+p.nome+'? O paciente sairá desta lista.'))return;
+    const label=kind==='ortho'?'Ortodontia':kind==='impl'?'Implantodontia':'Prótese';
+    (p.evol=p.evol||[]).push({id:uid(),data:tdy(),n:'',txt:'['+label+'] Tratamento finalizado / alta registrada.'});
+    if(kind==='ortho')p.orthoMensal=false;else if(kind==='impl'){p.implAtivo=false;p.implEtapa='Tratamento concluído'}else{p.protAtivo=false;p.protEtapa='Tratamento concluído'}
+    save();render();toast('Alta registrada no prontuário');
+  },
   nav:(b,d)=>{view.obx=null;view.obxAll=null;view.h=d.t;view.id=null;view.trForm=false;view.trDraft=null;view.link=null;view.novoPac=false;delArm=null;view.prOpen=null;if(d.t==='pf'){view.pfPid='';view.pfNew=false}if(d.t!=='cm')view.cmDent='';render();topo()},
   pfShow:(b,d)=>{view.pfApproved=d.t==='approved';view.pfSt='';view.pfNew=false;render();},
   pfNew:()=>{view.pfNew=true;view.pfPid='';render()},

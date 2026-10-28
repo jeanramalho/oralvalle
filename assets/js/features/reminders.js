@@ -45,32 +45,27 @@ function orthoLista(){
   });
   return out.sort((a,b)=>Number(!!a.proxima)-Number(!!b.proxima)||(a.prazo||'9999').localeCompare(b.prazo||'9999')||String(a.p.nome).localeCompare(String(b.p.nome),'pt-BR'));
 }
+function ovCareRow(p,kind,stages){
+ const stageKey=kind==='impl'?'implEtapa':'protEtapa',dateKey=kind==='impl'?'implUltimaData':'protUltimaData';
+ const stage=p[stageKey]||stages[0],idx=stages.indexOf(stage),done=kind==='impl'?'Tratamento concluído':'Tratamento concluído';
+ const last=p[dateKey]||(kind==='impl'?implUltimo(p):'');
+ return `<div class="ret-it"><div class="ret-i" style="flex:1;min-width:230px"><strong>${esc(p.nome)}</strong><small>Último procedimento: ${last?esc(fd(last)):'Não registrado'}</small>
+ <label>Etapa atual<select data-${kind}-etapa="${esc(p.id)}">${stages.map(t=>`<option value="${esc(t)}"${stage===t?' selected':''}>${esc(t)}</option>`).join('')}</select></label>
+ ${kind==='prot'?`<label>Cor dos dentes<input data-prot-cor="${esc(p.id)}" maxlength="60" value="${esc(p.protCor||'')}" placeholder="Ex.: A2, B1"></label>`:''}
+ <label>Data do procedimento<input type="date" data-${kind}-data="${esc(p.id)}" value="${esc(p[dateKey]||'')}"></label>
+ <small>${idx>=stages.length-1?'Última etapa — finalize quando houver alta.':'Próxima etapa: '+esc(stages[Math.min(idx+1,stages.length-1)])}</small></div>
+ <div class="ret-act"><button class="sm" data-act="carebaixa" data-id="${esc(p.id)}" data-kind="${kind}">Dar baixa e evoluir</button><button class="ghost sm" data-act="carealta" data-id="${esc(p.id)}" data-kind="${kind}">Finalizar tratamento</button><button class="ghost sm" data-act="open" data-id="${esc(p.id)}">Ver ficha</button></div></div>`;
+}
 function orthoHtml(){
-  const list=orthoLista(),mes=tdy().slice(0,7);
-  return `<div class="ov-page-head"><div><h1>Ortodontia</h1><p class="sub">Controle das manutenções mensais.</p></div><span class="badge">${list.length} pacientes</span></div>
-  <section class="card ret-card"><h2>Pacientes em tratamento</h2><p class="sub">A baixa é registrada por mês e pode ser desfeita. Não altera a agenda ou o prontuário.</p>
-  ${list.length?list.map(({p,last,proxima})=>{const baixa=(p.orthoBaixas||[]).includes(mes);return `<div class="ret-it"><div class="ret-i"><strong>${esc(p.nome)}</strong><small>Última consulta: ${last?esc(fd(last)):'Não registrada'} · Próximo retorno: ${proxima?esc(fd(proxima.data)):'Não agendado'}</small><small>${baixa?'✓ Manutenção do mês registrada':'Manutenção do mês pendente'}</small></div><div class="ret-act"><button class="${baixa?'ghost ':''}sm" data-act="orthobaixa" data-id="${esc(p.id)}">${baixa?'Desfazer baixa':'Dar baixa no mês'}</button><button class="ghost sm" data-act="open" data-id="${esc(p.id)}">Ver ficha</button></div></div>`}).join(''):'<p class="note">Nenhum paciente sinalizado como ortodôntico.</p>'}</section>`;
+ const list=orthoLista(),mes=tdy().slice(0,7);
+ return `<div class="ov-page-head"><div><h1>Ortodontia</h1><p class="sub">Manutenções e retornos mensais.</p></div><span class="badge">${list.length} pacientes</span></div><section class="card ret-card"><h2>Pacientes em tratamento</h2>
+ ${list.length?list.map(({p,last,proxima})=>{const baixa=(p.orthoBaixas||[]).includes(mes),ret=p.orthoProximo||proxima?.data||'';return `<div class="ret-it"><div class="ret-i" style="flex:1;min-width:220px"><strong>${esc(p.nome)}</strong><small>Última manutenção: ${p.orthoUltimaData?esc(fd(p.orthoUltimaData)):last?esc(fd(last)):'Não registrada'}</small><small>${baixa?'✓ Baixa registrada neste mês':'Manutenção pendente neste mês'}</small><label>Próximo retorno<input type="date" data-ortho-retorno="${esc(p.id)}" value="${esc(ret)}"></label><small>Data de controle; não cria agendamento na agenda.</small></div><div class="ret-act"><button class="sm" data-act="carebaixa" data-id="${esc(p.id)}" data-kind="ortho">${baixa?'Registrar nova evolução':'Dar baixa e evoluir'}</button><button class="ghost sm" data-act="carealta" data-id="${esc(p.id)}" data-kind="ortho">Dar alta</button><button class="ghost sm" data-act="open" data-id="${esc(p.id)}">Ver ficha</button></div></div>`}).join(''):'<p class="note">Nenhum paciente em tratamento ortodôntico.</p>'}</section>`;
 }
 const IMPL_ETAPAS=['Avaliação e planejamento','Exames e planejamento cirúrgico','Cirurgia de implante','Osseointegração','Reabertura / cicatrizador','Moldagem / escaneamento','Prova da prótese','Instalação da prótese','Acompanhamento','Tratamento concluído'];
-function implUltimo(p){
-  const hoje=tdy(),datas=[];
-  (p.evol||[]).forEach(e=>{if(e.data&&e.data<=hoje)datas.push(e.data)});
-  (p.trat||[]).forEach(t=>{if(t.data&&t.data<=hoje&&t.status==='Concluído')datas.push(t.data)});
-  (db.vd||[]).forEach(v=>{if(v.pid===p.id&&v.data&&v.data<=hoje)datas.push(v.data)});
-  return datas.sort().pop()||'';
-}
-function implHtml(){
- const list=(db.p||[]).filter(p=>!p.arq&&p.implAtivo).sort((a,b)=>String(a.nome).localeCompare(String(b.nome),'pt-BR'));
- return `<div class="ov-page-head"><div><h1>Implantodontia</h1><p class="sub">Acompanhamento dos pacientes em tratamento com implantes.</p></div><span class="badge">${list.length} pacientes</span></div><section class="card ret-card"><h2>Etapas do tratamento</h2><p class="sub">A etapa é atualizada manualmente. A última data considera procedimentos registrados na evolução, tratamentos concluídos e vendas/atendimentos; confira o prontuário para identificar o procedimento exato.</p>${list.length?list.map(p=>`<div class="ret-it"><div class="ret-i"><strong>${esc(p.nome)}</strong><small>Último procedimento registrado: ${implUltimo(p)?esc(fd(implUltimo(p))):'Não registrado'}</small><label for="impl-${esc(p.id)}">Etapa atual</label><select id="impl-${esc(p.id)}" data-impl-etapa="${esc(p.id)}">${IMPL_ETAPAS.map(t=>`<option value="${esc(t)}"${(p.implEtapa||IMPL_ETAPAS[0])===t?' selected':''}>${esc(t)}</option>`).join('')}</select></div><div class="ret-act"><button class="ghost sm" data-act="open" data-id="${esc(p.id)}">Ver ficha</button></div></div>`).join(''):'<p class="note">Nenhum paciente sinalizado em implantodontia. Ative o acompanhamento no cadastro do paciente.</p>'}</section>`;
-}
-
+function implUltimo(p){const hoje=tdy(),datas=[];(p.evol||[]).forEach(e=>{if(e.data&&e.data<=hoje)datas.push(e.data)});return datas.sort().pop()||''}
+function implHtml(){const list=(db.p||[]).filter(p=>!p.arq&&p.implAtivo).sort((a,b)=>String(a.nome).localeCompare(String(b.nome),'pt-BR'));return `<div class="ov-page-head"><div><h1>Implantodontia</h1><p class="sub">Etapas e evolução dos tratamentos.</p></div><span class="badge">${list.length} pacientes</span></div><section class="card ret-card"><h2>Tratamentos ativos</h2>${list.length?list.map(p=>ovCareRow(p,'impl',IMPL_ETAPAS)).join(''):'<p class="note">Nenhum paciente em tratamento.</p>'}</section>`}
 const PROT_ETAPAS=['Avaliação e planejamento','Moldagem','Prova com cera','Prova com dentes','Acrilização','Entrega','Ajustes e acompanhamento','Tratamento concluído'];
-function protHtml(){
- const list=(db.p||[]).filter(p=>!p.arq&&p.protAtivo).sort((a,b)=>String(a.nome).localeCompare(String(b.nome),'pt-BR'));
- return `<div class="ov-page-head"><div><h1>Prótese</h1><p class="sub">Acompanhamento das etapas dos tratamentos protéticos.</p></div><span class="badge">${list.length} pacientes</span></div>
- <section class="card ret-card"><h2>Etapas e cor dos dentes</h2><p class="sub">Atualize manualmente a etapa, a cor escolhida e a data do último procedimento protético. A data é preenchida automaticamente ao mudar a etapa e pode ser corrigida.</p>
- ${list.length?list.map(p=>`<div class="ret-it"><div class="ret-i" style="flex:1;min-width:240px"><strong>${esc(p.nome)}</strong><small>Último procedimento protético: ${p.protUltimaData?esc(fd(p.protUltimaData)):'Não registrado'}</small><div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:8px"><label style="flex:1;min-width:170px">Etapa atual<select data-prot-etapa="${esc(p.id)}">${PROT_ETAPAS.map(t=>`<option value="${esc(t)}"${(p.protEtapa||PROT_ETAPAS[0])===t?' selected':''}>${esc(t)}</option>`).join('')}</select></label><label style="flex:1;min-width:130px">Cor dos dentes<input type="text" maxlength="60" placeholder="Ex.: A2, B1, BL2" value="${esc(p.protCor||'')}" data-prot-cor="${esc(p.id)}"></label><label style="flex:1;min-width:145px">Data do procedimento<input type="date" value="${esc(p.protUltimaData||'')}" data-prot-data="${esc(p.id)}"></label></div></div><div class="ret-act"><button class="ghost sm" data-act="open" data-id="${esc(p.id)}">Ver ficha</button></div></div>`).join(''):'<p class="note">Nenhum paciente sinalizado para prótese. Marque o acompanhamento na aba Agendamentos do prontuário.</p>'}</section>`;
-}
+function protHtml(){const list=(db.p||[]).filter(p=>!p.arq&&p.protAtivo).sort((a,b)=>String(a.nome).localeCompare(String(b.nome),'pt-BR'));return `<div class="ov-page-head"><div><h1>Prótese</h1><p class="sub">Etapas, cor e evolução do tratamento.</p></div><span class="badge">${list.length} pacientes</span></div><section class="card ret-card"><h2>Tratamentos ativos</h2>${list.length?list.map(p=>ovCareRow(p,'prot',PROT_ETAPAS)).join(''):'<p class="note">Nenhum paciente em tratamento.</p>'}</section>`}
 function retPend(){return retLista().out.filter(x=>!retRecente(x.p)).length}
 function retMsg(p,last){
   const cl=Object.assign({},CL_DEF,db.cl||{}),pn=String(p.nome||'').trim().split(/\s+/)[0]||'paciente',u=last?last.slice(5,7)+'/'+last.slice(0,4):'';
