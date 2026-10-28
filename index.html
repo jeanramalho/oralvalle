@@ -65,6 +65,7 @@
     <script defer src="./assets/js/features/payments.js"></script>
     <script defer src="./assets/js/features/events.js"></script>
     <script defer src="./assets/js/features/notifications.js"></script>
+    <script defer src="./assets/js/oralvalle-push-client.js"></script>
     <script defer src="./assets/js/permissions.js"></script>
     <script defer src="./assets/js/supabase/config.js"></script>
     <script defer src="./assets/js/supabase/client.js"></script>
@@ -73,5 +74,6 @@
     <script defer src="./assets/js/features/cloud-files.js"></script>
     <script defer src="./assets/js/features/patient-audit.js"></script>
     <script defer src="./assets/js/app.js"></script>
+    <script>if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(console.warn));</script>
   </body>
 </html>
