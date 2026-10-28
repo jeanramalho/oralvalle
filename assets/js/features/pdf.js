@@ -145,6 +145,7 @@ function cfgHtml(){
   <section class="card cfg-card"><h2>Dados da empresa</h2><p class="note" style="margin:0 0 4px">Alterações são salvas automaticamente.</p>
     ${f('nome','Nome da clínica (nos documentos)')}${f('marca','Nome da empresa no topo do sistema')}${f('sub','Subtítulo no topo do sistema (opcional)')}${f('end','Endereço')}${f('email','E-mail','type="email"')}${f('tel','Telefone','inputmode="tel"')}${f('cnpj','CNPJ')}
   </section>
+  ${ovFeeSettings()}
   <section class="cfg-card card"><h2>Retorno de pacientes</h2><p class="note" style="margin:0 0 4px">Lista de pacientes que não voltam à clínica, em Lembretes, com aviso na Agenda.</p>
     <label for="cl_retMeses">Avisar quando passar de</label><select id="cl_retMeses" data-cl="retMeses">${[3,4,6,9,12].map(n=>`<option value="${n}"${String(cl.retMeses)===String(n)?' selected':''}>${n} meses sem consulta</option>`).join('')}</select>
     <label for="cl_retMsg">Mensagem do WhatsApp</label><textarea id="cl_retMsg" data-cl="retMsg" rows="5">${esc(cl.retMsg)}</textarea>
