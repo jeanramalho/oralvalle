@@ -1,9 +1,8 @@
-```yaml
 name: Backup criptografado do Supabase
 
 on:
   schedule:
-    - cron: '0 5 * * *' # 02:00 em Brasilia (UTC-3)
+    - cron: '0 5 * * *'
   workflow_dispatch:
 
 permissions:
@@ -57,13 +56,13 @@ jobs:
           print("Porta:", conexao.port)
 
           if conexao.username != "postgres.ldfhcaztdnoqjxtflmud":
-              raise SystemExit("ERRO: usuario incorreto no segredo SUPABASE_DB_URL")
+              raise SystemExit("ERRO: usuario incorreto")
 
           if conexao.hostname != "aws-0-us-east-1.pooler.supabase.com":
-              raise SystemExit("ERRO: servidor incorreto no segredo SUPABASE_DB_URL")
+              raise SystemExit("ERRO: servidor incorreto")
 
           if conexao.port != 5432:
-              raise SystemExit("ERRO: porta incorreta no segredo SUPABASE_DB_URL")
+              raise SystemExit("ERRO: porta incorreta")
 
           print("Configuracao da conexao confirmada.")
           PY
@@ -105,7 +104,6 @@ jobs:
           test -s "$DUMP"
 
           echo "Exportacao concluida."
-
           echo "Criptografando backup..."
 
           age \
@@ -128,4 +126,3 @@ jobs:
           path: ${{ env.BACKUP_FILE }}
           retention-days: 30
           if-no-files-found: error
-```
