@@ -37,6 +37,7 @@ function ovSidebar(active){
     <nav class="ov-nav">
       ${item('ag','Agenda')}
       ${item('pac','Pacientes')}
+      ${pmSee('lem')?`<button class="ov-nav-btn${active==='ortho'?' on':''}" data-act="orthonav"><span class="ico">◷</span><span>Ortodontia</span></button>`:''}
       ${item('lem','Lembretes')}
       ${item('dt','Dentistas')}
       ${item('cm','Comissões')}

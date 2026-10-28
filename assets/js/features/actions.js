@@ -60,6 +60,7 @@ const A={
     const salt=rnd(16);AUTH.users.push({id:uid(),nome,login,salt,hash:await hashPw(pw,salt),admin:false,perms:pmDefault()});view.pmOpen=AUTH.users[AUTH.users.length-1].id;aSave();render();toast('Usuário adicionado. Defina o que ele pode ver e alterar.',3500)},
   acrm:(b,d)=>{if(!ME||!ME.admin||d.id===ME.id)return;arm(d.id,()=>{AUTH.users=AUTH.users.filter(x=>x.id!==d.id);aSave();render();toast('Usuário removido')})},
   acrec:async()=>{if(!ME||!ME.admin)return;const c=newCode(),s=rnd(16);AUTH.rec={salt:s,hash:await hashPw(recNorm(c),s)};aSave();view.newrec=c;render();toast('Novo código gerado. Anote agora.',3500)},
+  orthonav:()=>{view.h='ortho';view.id=null;render();topo()},
   nav:(b,d)=>{view.obx=null;view.obxAll=null;view.h=d.t;view.id=null;view.trForm=false;view.trDraft=null;view.link=null;view.novoPac=false;delArm=null;view.prOpen=null;if(d.t==='pf'){view.pfPid='';view.pfNew=false}if(d.t!=='cm')view.cmDent='';render();topo()},
   pfShow:(b,d)=>{view.pfApproved=d.t==='approved';view.pfSt='';view.pfNew=false;render();},
   pfNew:()=>{view.pfNew=true;view.pfPid='';render()},

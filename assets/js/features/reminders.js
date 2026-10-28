@@ -39,17 +39,17 @@ function orthoLista(){
   const hoje=tdy(),out=[];
   (db.p||[]).forEach(p=>{
     if(p.arq||!p.orthoMensal)return;
-    const last=orthoUltima(p);if(!last)return;
-    const prazo=orthoPrazo(last);if(!prazo||prazo>hoje)return;
-    if((db.ag||[]).some(a=>a.pid===p.id&&a.data>=hoje&&a.st!=='Cancelado'&&a.st!=='Faltou'))return;
-    out.push({p,last,prazo});
+    const last=orthoUltima(p),prazo=last?orthoPrazo(last):'';
+    const futuras=(db.ag||[]).filter(a=>a.pid===p.id&&a.data>=hoje&&a.st!=='Cancelado'&&a.st!=='Faltou').sort((a,b)=>(a.data+' '+(a.hora||'')).localeCompare(b.data+' '+(b.hora||'')));
+    out.push({p,last,prazo,proxima:futuras[0]||null});
   });
-  return out.sort((a,b)=>a.prazo.localeCompare(b.prazo)||String(a.p.nome).localeCompare(String(b.p.nome),'pt-BR'));
+  return out.sort((a,b)=>Number(!!a.proxima)-Number(!!b.proxima)||(a.prazo||'9999').localeCompare(b.prazo||'9999')||String(a.p.nome).localeCompare(String(b.p.nome),'pt-BR'));
 }
 function orthoHtml(){
-  const list=orthoLista();
-  return `<section class="card ret-card"><h2>Retornos de ortodontia (${list.length})</h2><p class="sub">Pacientes marcados para retorno mensal, com pelo menos um mês desde o último atendimento realizado e sem consulta futura agendada. Consultas canceladas ou faltas não contam como atendimento.</p>
-  ${list.length?list.map(({p,last,prazo})=>{const tel=String(p.tel||'').replace(/\D/g,'');return `<div class="ret-it"><div class="ret-i"><strong>${esc(p.nome)}</strong><small>Último atendimento: ${esc(fd(last))} · Retorno previsto: ${esc(fd(prazo))}${p.tel?' · '+esc(p.tel):''}</small></div><div class="ret-act">${tel?`<button class="sm" data-act="orthowa" data-id="${p.id}">WhatsApp</button>`:''}<button class="ghost sm" data-act="open" data-id="${p.id}">Ver ficha</button></div></div>`}).join(''):'<p class="note">Nenhum retorno ortodôntico vencido.</p>'}</section>`;
+  const list=orthoLista(),hoje=tdy();
+  return `<div class="ov-page-head"><div><h1>Ortodontia</h1><p class="sub">Todos os pacientes sinalizados para tratamento ortodôntico e seus retornos.</p></div><span class="badge">${list.length} paciente${list.length===1?'':'s'}</span></div>
+  <section class="card ret-card"><h2>Acompanhamento ortodôntico</h2><p class="sub">As datas são atualizadas automaticamente pela agenda. A última consulta considera atendimentos com status Compareceu e registros de venda/atendimento.</p>
+  ${list.length?list.map(({p,last,prazo,proxima})=>{const tel=String(p.tel||'').replace(/\D/g,'');const status=proxima?'Retorno agendado':!last?'Sem consulta registrada':prazo&&prazo<=hoje?'Retorno pendente':'Aguardando prazo de retorno';return `<div class="ret-it"><div class="ret-i"><strong>${esc(p.nome)}</strong><small>Última consulta: ${last?esc(fd(last)):'Não registrada'} · Próximo retorno: ${proxima?esc(fd(proxima.data))+(proxima.hora?' às '+esc(proxima.hora):''):'Não agendado'}</small><small>${esc(status)}${!proxima&&prazo?' · Retorno previsto: '+esc(fd(prazo)):''}</small></div><div class="ret-act">${tel?`<button class="sm" data-act="orthowa" data-id="${p.id}">WhatsApp</button>`:''}<button class="ghost sm" data-act="open" data-id="${p.id}">Ver ficha</button></div></div>`}).join(''):'<p class="note">Nenhum paciente sinalizado como ortodôntico. Marque a opção no cadastro do paciente.</p>'}</section>`;
 }
 function retPend(){return retLista().out.filter(x=>!retRecente(x.p)).length}
 function retMsg(p,last){
@@ -125,7 +125,7 @@ function lembretesHtml(){
   </div>`}`;
 }
 function home(){
-  const n=view.h||'ag',fn={inicio:agHtml,pac:homePac,pf:pfListHtml,ag:agHtml,lem:lembretesHtml,vd:vdHtml,dt:dtHtml,cm:comHtml,pr:prHtml,mt:mtHtml,hc:hcHtml,bk:bkHtml,cfg:cfgHtml,conta:pmContaHtml}[n]||homePac;
+  const n=view.h||'ag',fn={ortho:orthoHtml,inicio:agHtml,pac:homePac,pf:pfListHtml,ag:agHtml,lem:lembretesHtml,vd:vdHtml,dt:dtHtml,cm:comHtml,pr:prHtml,mt:mtHtml,hc:hcHtml,bk:bkHtml,cfg:cfgHtml,conta:pmContaHtml}[n]||homePac;
   const content=fn();
   return `<div class="ov-content-inner">${content}</div>`;
 }
