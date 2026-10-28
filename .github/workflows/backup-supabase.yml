@@ -16,19 +16,42 @@ jobs:
   backup:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+
     steps:
       - name: Verificar configuracao
         env:
           DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
           AGE_RECIPIENT: ${{ secrets.BACKUP_AGE_RECIPIENT }}
         run: |
-          test -n "$DATABASE_URL" || { echo 'Falta SUPABASE_DB_URL'; exit 1; }
-          test -n "$AGE_RECIPIENT" || { echo 'Falta BACKUP_AGE_RECIPIENT'; exit 1; }
-          case "$AGE_RECIPIENT" in age1*) ;; *) echo 'BACKUP_AGE_RECIPIENT invalido'; exit 1 ;; esac
+          test -n "$DATABASE_URL" || {
+            echo 'Falta SUPABASE_DB_URL'
+            exit 1
+          }
+
+          test -n "$AGE_RECIPIENT" || {
+            echo 'Falta BACKUP_AGE_RECIPIENT'
+            exit 1
+          }
+
+          case "$AGE_RECIPIENT" in
+            age1*) ;;
+            *)
+              echo 'BACKUP_AGE_RECIPIENT invalido'
+              exit 1
+              ;;
+          esac
+
       - name: Instalar ferramentas
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq postgresql-client-17 age
+          sudo apt-get install -y -qq postgresql-client age
+
+          echo "Versao do PostgreSQL:"
+          pg_dump --version
+
+          echo "Versao do age:"
+          age --version
+
       - name: Exportar e criptografar banco
         env:
           DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
@@ -36,11 +59,41 @@ jobs:
         run: |
           set -euo pipefail
           umask 077
+
           mkdir -p "$RUNNER_TEMP/backup"
+
+          DUMP="$RUNNER_TEMP/backup/oralvalle.dump"
+
           OUT="$RUNNER_TEMP/backup/oralvalle-$(date -u +%Y%m%dT%H%M%SZ).dump.age"
-          pg_dump --dbname="$DATABASE_URL" --format=custom --no-owner --no-acl | age -r "$AGE_RECIPIENT" -o "$OUT"
+
+          echo "Iniciando exportacao do banco..."
+
+          pg_dump \
+            --dbname="$DATABASE_URL" \
+            --format=custom \
+            --no-owner \
+            --no-acl \
+            --file="$DUMP"
+
+          test -s "$DUMP"
+
+          echo "Exportacao concluida."
+
+          echo "Criptografando backup..."
+
+          age \
+            -r "$AGE_RECIPIENT" \
+            -o "$OUT" \
+            "$DUMP"
+
           test -s "$OUT"
+
+          rm -f "$DUMP"
+
+          echo "Backup criptografado gerado."
+
           echo "BACKUP_FILE=$OUT" >> "$GITHUB_ENV"
+
       - name: Guardar backup criptografado por 30 dias
         uses: actions/upload-artifact@v4
         with:
@@ -48,3 +101,4 @@ jobs:
           path: ${{ env.BACKUP_FILE }}
           retention-days: 30
           if-no-files-found: error
+        
