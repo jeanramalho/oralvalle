@@ -632,3 +632,46 @@ input[type=date],input[type=time]{min-height:44px;-webkit-min-logical-width:0}
 
 /* Propostas: separação entre não aprovadas e aprovadas */
 .pf-view-tabs{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 14px}.pf-view-tab{border:1px solid var(--ln);border-radius:12px;background:transparent;color:var(--mut);padding:11px 16px;font-weight:700;cursor:pointer;min-height:44px}.pf-view-tab.on{border-color:#ed7900;background:rgba(237,121,0,.16);color:#ff9b40}.pf-view-tab:hover{border-color:#ed7900}.pf-view-tab:focus-visible{outline:2px solid #ff9b40;outline-offset:3px}
+
+/* Oral Valle 046 — cartões individuais nas listas de tratamentos */
+.ret-card > .ov-care-collapse.ret-it {
+  display:block !important;
+  width:100%;
+  box-sizing:border-box;
+  margin:12px 0;
+  padding:0;
+  border:1px solid var(--ln);
+  border-radius:12px;
+  background:var(--card, var(--bg2, transparent));
+  overflow:hidden;
+}
+.ret-card > .ov-care-collapse.ret-it > summary {
+  display:list-item;
+  padding:16px 18px !important;
+  cursor:pointer;
+  list-style-position:inside;
+  line-height:1.55;
+}
+.ret-card > .ov-care-collapse.ret-it > summary::marker { color:var(--ac); }
+.ret-card > .ov-care-collapse.ret-it > summary strong { margin-left:5px; }
+.ret-card > .ov-care-collapse.ret-it > summary small {
+  display:inline;
+  margin-left:12px;
+  overflow-wrap:anywhere;
+}
+.ret-card > .ov-care-collapse.ret-it[open] > summary {
+  border-bottom:1px solid var(--ln);
+  background:rgba(128,128,128,.06);
+}
+.ret-card > .ov-care-collapse.ret-it > .ret-i {
+  padding:14px 18px 0;
+}
+.ret-card > .ov-care-collapse.ret-it > .ret-act {
+  padding:12px 18px 18px;
+}
+@media(max-width:600px){
+  .ret-card > .ov-care-collapse.ret-it > summary small {
+    display:block;
+    margin:4px 0 0 22px;
+  }
+}
