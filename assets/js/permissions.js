@@ -35,7 +35,7 @@ const pmTabOk=k=>{const u=pmUser();return !u||u.admin||pmTabLvl(k)>=1};
 function pmCur(){
   const u=pmUser();if(!u||u.admin)return 2;
   if(view.id)return pmTabLvl(view.tab);
-  return pmLvl(view.h||'pac');
+  return pmLvl(view.h==='ortho'?'lem':view.h||'pac');
 }
 function pmFirst(){return PM_ORDER.find(k=>pmLvl(k)>=1)||'conta'}
 function sanitizeView(){
@@ -44,7 +44,7 @@ function sanitizeView(){
     if(!(pmLvl('pac')>=1||(view.h==='pf'&&pmLvl('pf')>=1))){view.id=null}
     else{const t=PM_TABS.filter(pmTabOk);if(!t.length)view.id=null;else if(t.indexOf(view.tab)<0)view.tab=t[0]}
   }
-  const h=view.h||'pac';
+  const h=view.h==='ortho'?'lem':view.h||'pac';
   if(h!=='conta'&&pmLvl(h)<1)view.h=pmFirst();
 }
 function pmAllowed(act,d){
