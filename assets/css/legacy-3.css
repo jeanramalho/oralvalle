@@ -414,3 +414,18 @@ section.ret-card:has(> details.ov-care-collapse) > h2 {
 .ret-card > details.ov-care-collapse.ret-it[open] > summary .ov-care-arrow {transform:translateY(-50%) rotate(90deg);}
 .dt-collapsible > summary.dt-head .dt-chevron.ov-patient-arrow {margin-left:auto;font-size:25px;line-height:1;font-weight:400;color:var(--mut);transform:none;transition:transform .16s;}
 .dt-collapsible[open] > summary.dt-head .dt-chevron.ov-patient-arrow {transform:rotate(90deg);}
+
+/* 057: edição e fechamento de agendamentos com baixa, inclusive no celular */
+.ag-block .ag-appointment.ag-compact .ag-compact-expand{
+ position:absolute!important;right:5px!important;top:50%!important;transform:translateY(-50%)!important;
+ border:0!important;background:transparent!important;color:inherit!important;
+ font-size:20px!important;line-height:1!important;padding:5px 7px!important;cursor:pointer!important;
+}
+.ag-block .ag-appointment.ag-closed-expanded{
+ height:100%!important;min-height:0!important;overflow:auto!important;
+ display:flex!important;flex-direction:column!important;justify-content:center!important;gap:7px!important;
+ padding:6px 9px!important;background:var(--bg2,#242526)!important;
+}
+.ag-block .ag-closed-expanded .ag-appointment-main{flex-wrap:wrap!important;gap:5px!important}
+.ag-block .ag-closed-expanded .ag-actions{display:flex!important;gap:6px!important;flex-wrap:wrap!important}
+.ag-block .ag-closed-expanded .ag-actions button{min-height:27px!important}
