@@ -1,0 +1,11 @@
+/* Aparência: sobrepõe apenas cores, preservando layout e identidade da clínica. */
+html[data-ov-mode="light"]{color-scheme:light;--bg:#f5f5f5;--sf:#fff;--ink:#303943;--mut:#687481;--ln:#dfe3e7;--acf:#fff;}
+html[data-ov-mode="dark"]{color-scheme:dark;--bg:#171a1c;--sf:#202426;--ink:#f1f2f3;--mut:#b5bdc4;--ln:#3b4145;--acf:#fff;}
+html[data-ov-mode] body{background:var(--bg);color:var(--ink)}
+html[data-ov-mode] .card,html[data-ov-mode] .pt,html[data-ov-mode] .chk,html[data-ov-mode] .ob-pay{background:var(--sf);color:var(--ink);border-color:var(--ln)}
+html[data-ov-mode] input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),html[data-ov-mode] select,html[data-ov-mode] textarea{background:var(--sf);color:var(--ink);border-color:var(--ln)}
+html[data-ov-mode] input[data-ov-theme-choice]{appearance:auto!important;-webkit-appearance:radio!important;accent-color:var(--ac,#f28c28);width:20px!important;height:20px!important;min-height:20px!important;flex:0 0 20px;cursor:pointer;pointer-events:auto}
+html[data-ov-mode] label:has(> input[data-ov-theme-choice]){cursor:pointer}
+html[data-ov-mode="dark"] .dt-card,html[data-ov-mode="dark"] .oitem{background:#292e31;color:var(--ink)}
+html[data-ov-mode="light"] .dt-card,html[data-ov-mode="light"] .oitem{background:#f5f5f5;color:var(--ink)}
+html[data-ov-mode="dark"] #ov-startup-shell{background:#171a1c;color:#b5bdc4}
