@@ -46,11 +46,24 @@ function orthoLista(){
   return out.sort((a,b)=>Number(!!a.proxima)-Number(!!b.proxima)||(a.prazo||'9999').localeCompare(b.prazo||'9999')||String(a.p.nome).localeCompare(String(b.p.nome),'pt-BR'));
 }
 function orthoHtml(){
-  const list=orthoLista(),hoje=tdy();
-  return `<div class="ov-page-head"><div><h1>Ortodontia</h1><p class="sub">Todos os pacientes sinalizados para tratamento ortodôntico e seus retornos.</p></div><span class="badge">${list.length} paciente${list.length===1?'':'s'}</span></div>
-  <section class="card ret-card"><h2>Acompanhamento ortodôntico</h2><p class="sub">As datas são atualizadas automaticamente pela agenda. A última consulta considera atendimentos com status Compareceu e registros de venda/atendimento.</p>
-  ${list.length?list.map(({p,last,prazo,proxima})=>{const tel=String(p.tel||'').replace(/\D/g,'');const status=proxima?'Retorno agendado':!last?'Sem consulta registrada':prazo&&prazo<=hoje?'Retorno pendente':'Aguardando prazo de retorno';return `<div class="ret-it"><div class="ret-i"><strong>${esc(p.nome)}</strong><small>Última consulta: ${last?esc(fd(last)):'Não registrada'} · Próximo retorno: ${proxima?esc(fd(proxima.data))+(proxima.hora?' às '+esc(proxima.hora):''):'Não agendado'}</small><small>${esc(status)}${!proxima&&prazo?' · Retorno previsto: '+esc(fd(prazo)):''}</small></div><div class="ret-act">${tel?`<button class="sm" data-act="orthowa" data-id="${p.id}">WhatsApp</button>`:''}<button class="ghost sm" data-act="open" data-id="${p.id}">Ver ficha</button></div></div>`}).join(''):'<p class="note">Nenhum paciente sinalizado como ortodôntico. Marque a opção no cadastro do paciente.</p>'}</section>`;
+  const list=orthoLista(),mes=tdy().slice(0,7);
+  return `<div class="ov-page-head"><div><h1>Ortodontia</h1><p class="sub">Controle das manutenções mensais.</p></div><span class="badge">${list.length} pacientes</span></div>
+  <section class="card ret-card"><h2>Pacientes em tratamento</h2><p class="sub">A baixa é registrada por mês e pode ser desfeita. Não altera a agenda ou o prontuário.</p>
+  ${list.length?list.map(({p,last,proxima})=>{const baixa=(p.orthoBaixas||[]).includes(mes);return `<div class="ret-it"><div class="ret-i"><strong>${esc(p.nome)}</strong><small>Última consulta: ${last?esc(fd(last)):'Não registrada'} · Próximo retorno: ${proxima?esc(fd(proxima.data)):'Não agendado'}</small><small>${baixa?'✓ Manutenção do mês registrada':'Manutenção do mês pendente'}</small></div><div class="ret-act"><button class="${baixa?'ghost ':''}sm" data-act="orthobaixa" data-id="${esc(p.id)}">${baixa?'Desfazer baixa':'Dar baixa no mês'}</button><button class="ghost sm" data-act="open" data-id="${esc(p.id)}">Ver ficha</button></div></div>`}).join(''):'<p class="note">Nenhum paciente sinalizado como ortodôntico.</p>'}</section>`;
 }
+const IMPL_ETAPAS=['Avaliação e planejamento','Exames e planejamento cirúrgico','Cirurgia de implante','Osseointegração','Reabertura / cicatrizador','Moldagem / escaneamento','Prova da prótese','Instalação da prótese','Acompanhamento','Tratamento concluído'];
+function implUltimo(p){
+  const hoje=tdy(),datas=[];
+  (p.evol||[]).forEach(e=>{if(e.data&&e.data<=hoje)datas.push(e.data)});
+  (p.trat||[]).forEach(t=>{if(t.data&&t.data<=hoje&&t.status==='Concluído')datas.push(t.data)});
+  (db.vd||[]).forEach(v=>{if(v.pid===p.id&&v.data&&v.data<=hoje)datas.push(v.data)});
+  return datas.sort().pop()||'';
+}
+function implHtml(){
+ const list=(db.p||[]).filter(p=>!p.arq&&p.implAtivo).sort((a,b)=>String(a.nome).localeCompare(String(b.nome),'pt-BR'));
+ return `<div class="ov-page-head"><div><h1>Implantodontia</h1><p class="sub">Acompanhamento dos pacientes em tratamento com implantes.</p></div><span class="badge">${list.length} pacientes</span></div><section class="card ret-card"><h2>Etapas do tratamento</h2><p class="sub">A etapa é atualizada manualmente. A última data considera procedimentos registrados na evolução, tratamentos concluídos e vendas/atendimentos; confira o prontuário para identificar o procedimento exato.</p>${list.length?list.map(p=>`<div class="ret-it"><div class="ret-i"><strong>${esc(p.nome)}</strong><small>Último procedimento registrado: ${implUltimo(p)?esc(fd(implUltimo(p))):'Não registrado'}</small><label for="impl-${esc(p.id)}">Etapa atual</label><select id="impl-${esc(p.id)}" data-impl-etapa="${esc(p.id)}">${IMPL_ETAPAS.map(t=>`<option value="${esc(t)}"${(p.implEtapa||IMPL_ETAPAS[0])===t?' selected':''}>${esc(t)}</option>`).join('')}</select></div><div class="ret-act"><button class="ghost sm" data-act="open" data-id="${esc(p.id)}">Ver ficha</button></div></div>`).join(''):'<p class="note">Nenhum paciente sinalizado em implantodontia. Ative o acompanhamento no cadastro do paciente.</p>'}</section>`;
+}
+
 function retPend(){return retLista().out.filter(x=>!retRecente(x.p)).length}
 function retMsg(p,last){
   const cl=Object.assign({},CL_DEF,db.cl||{}),pn=String(p.nome||'').trim().split(/\s+/)[0]||'paciente',u=last?last.slice(5,7)+'/'+last.slice(0,4):'';
@@ -125,7 +138,7 @@ function lembretesHtml(){
   </div>`}`;
 }
 function home(){
-  const n=view.h||'ag',fn={ortho:orthoHtml,inicio:agHtml,pac:homePac,pf:pfListHtml,ag:agHtml,lem:lembretesHtml,vd:vdHtml,dt:dtHtml,cm:comHtml,pr:prHtml,mt:mtHtml,hc:hcHtml,bk:bkHtml,cfg:cfgHtml,conta:pmContaHtml}[n]||homePac;
+  const n=view.h||'ag',fn={ortho:orthoHtml,impl:implHtml,inicio:agHtml,pac:homePac,pf:pfListHtml,ag:agHtml,lem:lembretesHtml,vd:vdHtml,dt:dtHtml,cm:comHtml,pr:prHtml,mt:mtHtml,hc:hcHtml,bk:bkHtml,cfg:cfgHtml,conta:pmContaHtml}[n]||homePac;
   const content=fn();
   return `<div class="ov-content-inner">${content}</div>`;
 }

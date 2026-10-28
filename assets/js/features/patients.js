@@ -78,7 +78,7 @@ function tabAgd(p){
   const st=a=>a.st||'Agendado',hoje=tdy();
   const comp=ags.filter(a=>st(a)==='Compareceu').length,falt=ags.filter(a=>st(a)==='Faltou').length,canc=ags.filter(a=>st(a)==='Cancelado').length;
   const prox=ags.filter(a=>a.data>=hoje&&['Agendado','Confirmado'].includes(st(a))).length;
-  const box=(n,l,c)=>`<div style="flex:1;min-width:110px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card)"><div style="font-size:22px;font-weight:800;${c?'color:'+c:''}">${n}</div><div class="note" style="margin:0">${l}</div></div>`;
+  const box=(n,l,c)=>`<div style="flex:1;min-width:110px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card)"><div style="font-size:22px;font-weight:800;${c?'color:'+c:''}">${n}</div><div class="note" style="margin:0">${l}<div class="ov-ortho-toggle"><label style="display:flex;align-items:center;gap:10px;margin-top:16px;cursor:pointer"><input type="checkbox" data-impl="1" ${p.implAtivo?'checked':''} style="width:18px;height:18px;flex:none"><strong>Paciente em tratamento de implantodontia</strong></label><p class="note">Ative para acompanhar o paciente na aba Implantodontia.</p></div></div></div>`;
   const resumo=`<div class="row" style="gap:8px;margin-bottom:12px">${box(comp,'Atendimentos realizados','#D96A00')}${box(falt,'Faltas','#c0392b')}${box(canc,'Cancelamentos')}${box(prox,'Próximos agendados')}</div>`;
   const cls=x=>x==='Compareceu'||x==='Confirmado'?'badge stt-ok':x==='Faltou'?'badge stt-wr':'badge';
   const itens=ags.map(a=>{

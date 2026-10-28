@@ -61,6 +61,8 @@ const A={
   acrm:(b,d)=>{if(!ME||!ME.admin||d.id===ME.id)return;arm(d.id,()=>{AUTH.users=AUTH.users.filter(x=>x.id!==d.id);aSave();render();toast('Usuário removido')})},
   acrec:async()=>{if(!ME||!ME.admin)return;const c=newCode(),s=rnd(16);AUTH.rec={salt:s,hash:await hashPw(recNorm(c),s)};aSave();view.newrec=c;render();toast('Novo código gerado. Anote agora.',3500)},
   orthonav:()=>{view.h='ortho';view.id=null;render();topo()},
+  implnav:()=>{view.h='impl';view.id=null;render();topo()},
+  orthobaixa:(b,d)=>{const p=db.p.find(x=>x.id===d.id);if(!p||!p.orthoMensal)return;const mes=tdy().slice(0,7);p.orthoBaixas=p.orthoBaixas||[];p.orthoBaixas=p.orthoBaixas.includes(mes)?p.orthoBaixas.filter(x=>x!==mes):[...p.orthoBaixas,mes];save();render();toast(p.orthoBaixas.includes(mes)?'Manutenção do mês registrada':'Baixa desfeita')},
   nav:(b,d)=>{view.obx=null;view.obxAll=null;view.h=d.t;view.id=null;view.trForm=false;view.trDraft=null;view.link=null;view.novoPac=false;delArm=null;view.prOpen=null;if(d.t==='pf'){view.pfPid='';view.pfNew=false}if(d.t!=='cm')view.cmDent='';render();topo()},
   pfShow:(b,d)=>{view.pfApproved=d.t==='approved';view.pfSt='';view.pfNew=false;render();},
   pfNew:()=>{view.pfNew=true;view.pfPid='';render()},
