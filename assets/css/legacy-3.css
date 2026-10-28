@@ -370,3 +370,40 @@
   .dt-collapsible > summary.dt-head {min-height:60px;padding:12px 14px !important;}
   .ret-card > .ov-care-collapse.ret-it > summary small {display:block;margin:3px 0 0 22px;}
 }
+
+/* Oral Valle 050 — acompanhamentos: sem moldura externa e alinhamento vertical. */
+/* Restrito às seções que contêm cartões expansíveis de tratamento. */
+section.ret-card:has(> details.ov-care-collapse) {
+  background:transparent !important;
+  border:0 !important;
+  border-radius:0 !important;
+  box-shadow:none !important;
+  padding:0 !important;
+}
+section.ret-card:has(> details.ov-care-collapse) > h2 {
+  margin:0 0 12px !important;
+}
+.ret-card > details.ov-care-collapse.ret-it > summary {
+  display:flex !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  flex-wrap:wrap !important;
+  gap:4px 12px !important;
+  min-height:62px !important;
+  padding:12px 16px !important;
+  line-height:1.4 !important;
+  list-style:none !important;
+}
+.ret-card > details.ov-care-collapse.ret-it > summary::-webkit-details-marker {display:none;}
+.ret-card > details.ov-care-collapse.ret-it > summary strong {
+  margin:0 !important;
+  line-height:1.4 !important;
+}
+.ret-card > details.ov-care-collapse.ret-it > summary small {
+  display:inline !important;
+  margin:0 !important;
+  line-height:1.4 !important;
+}
+@media(max-width:600px){
+  .ret-card > details.ov-care-collapse.ret-it > summary {min-height:60px !important;}
+}
