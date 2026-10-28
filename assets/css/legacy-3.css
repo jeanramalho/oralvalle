@@ -429,3 +429,41 @@ section.ret-card:has(> details.ov-care-collapse) > h2 {
 .ag-block .ag-closed-expanded .ag-appointment-main{flex-wrap:wrap!important;gap:5px!important}
 .ag-block .ag-closed-expanded .ag-actions{display:flex!important;gap:6px!important;flex-wrap:wrap!important}
 .ag-block .ag-closed-expanded .ag-actions button{min-height:27px!important}
+
+/* 059: bolinha ao lado do nome e X no fim do retangulo; exclusao exige confirmacao. */
+.ag-block .ag-appointment.ag-compact{
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  padding:3px 74px 3px 8px!important;position:relative!important;min-width:0!important;
+}
+.ag-block .ag-appointment.ag-compact .ag-compact-identity{
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  gap:7px!important;min-width:0!important;max-width:100%!important;
+}
+.ag-block .ag-appointment.ag-compact .ag-compact-identity .ag-compact-dot{
+  position:static!important;transform:none!important;display:inline-block!important;
+  flex:0 0 9px!important;width:9px!important;height:9px!important;
+}
+.ag-block .ag-appointment.ag-compact .ag-compact-identity .ag-patient{
+  flex:0 1 auto!important;min-width:0!important;max-width:100%!important;
+  overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;
+  margin:0!important;text-align:left!important;
+}
+.ag-block .ag-appointment.ag-compact .ag-compact-controls{
+  position:absolute!important;right:4px!important;top:50%!important;transform:translateY(-50%)!important;
+  display:flex!important;align-items:center!important;gap:2px!important;z-index:2!important;
+}
+.ag-block .ag-appointment.ag-compact .ag-compact-controls .ag-compact-expand,
+.ag-block .ag-appointment.ag-compact .ag-compact-controls .ag-compact-remove{
+  position:static!important;transform:none!important;min-height:26px!important;
+  padding:2px 5px!important;line-height:1!important;border:0!important;
+  background:transparent!important;color:inherit!important;cursor:pointer!important;
+}
+.ag-block .ag-appointment.ag-compact .ag-compact-controls .ag-compact-remove{
+  font-size:17px!important;font-weight:700!important;color:#e15b63!important;
+}
+.ag-block .ag-appointment.ag-compact .ag-compact-controls .ag-compact-remove:hover{color:#ff7780!important;}
+.ag-block .ag-appointment.ag-compact .ag-compact-controls .ag-compact-remove:focus-visible{outline:2px solid #e15b63!important;border-radius:4px!important;}
+@media(max-width:480px){
+  .ag-block .ag-appointment.ag-compact{padding-right:72px!important;padding-left:5px!important;}
+  .ag-block .ag-appointment.ag-compact .ag-compact-identity{gap:4px!important;}
+}
