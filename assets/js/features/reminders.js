@@ -64,6 +64,13 @@ function implHtml(){
  return `<div class="ov-page-head"><div><h1>Implantodontia</h1><p class="sub">Acompanhamento dos pacientes em tratamento com implantes.</p></div><span class="badge">${list.length} pacientes</span></div><section class="card ret-card"><h2>Etapas do tratamento</h2><p class="sub">A etapa é atualizada manualmente. A última data considera procedimentos registrados na evolução, tratamentos concluídos e vendas/atendimentos; confira o prontuário para identificar o procedimento exato.</p>${list.length?list.map(p=>`<div class="ret-it"><div class="ret-i"><strong>${esc(p.nome)}</strong><small>Último procedimento registrado: ${implUltimo(p)?esc(fd(implUltimo(p))):'Não registrado'}</small><label for="impl-${esc(p.id)}">Etapa atual</label><select id="impl-${esc(p.id)}" data-impl-etapa="${esc(p.id)}">${IMPL_ETAPAS.map(t=>`<option value="${esc(t)}"${(p.implEtapa||IMPL_ETAPAS[0])===t?' selected':''}>${esc(t)}</option>`).join('')}</select></div><div class="ret-act"><button class="ghost sm" data-act="open" data-id="${esc(p.id)}">Ver ficha</button></div></div>`).join(''):'<p class="note">Nenhum paciente sinalizado em implantodontia. Ative o acompanhamento no cadastro do paciente.</p>'}</section>`;
 }
 
+const PROT_ETAPAS=['Avaliação e planejamento','Moldagem','Prova com cera','Prova com dentes','Acrilização','Entrega','Ajustes e acompanhamento','Tratamento concluído'];
+function protHtml(){
+ const list=(db.p||[]).filter(p=>!p.arq&&p.protAtivo).sort((a,b)=>String(a.nome).localeCompare(String(b.nome),'pt-BR'));
+ return `<div class="ov-page-head"><div><h1>Prótese</h1><p class="sub">Acompanhamento das etapas dos tratamentos protéticos.</p></div><span class="badge">${list.length} pacientes</span></div>
+ <section class="card ret-card"><h2>Etapas e cor dos dentes</h2><p class="sub">Atualize manualmente a etapa, a cor escolhida e a data do último procedimento protético. A data é preenchida automaticamente ao mudar a etapa e pode ser corrigida.</p>
+ ${list.length?list.map(p=>`<div class="ret-it"><div class="ret-i" style="flex:1;min-width:240px"><strong>${esc(p.nome)}</strong><small>Último procedimento protético: ${p.protUltimaData?esc(fd(p.protUltimaData)):'Não registrado'}</small><div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:8px"><label style="flex:1;min-width:170px">Etapa atual<select data-prot-etapa="${esc(p.id)}">${PROT_ETAPAS.map(t=>`<option value="${esc(t)}"${(p.protEtapa||PROT_ETAPAS[0])===t?' selected':''}>${esc(t)}</option>`).join('')}</select></label><label style="flex:1;min-width:130px">Cor dos dentes<input type="text" maxlength="60" placeholder="Ex.: A2, B1, BL2" value="${esc(p.protCor||'')}" data-prot-cor="${esc(p.id)}"></label><label style="flex:1;min-width:145px">Data do procedimento<input type="date" value="${esc(p.protUltimaData||'')}" data-prot-data="${esc(p.id)}"></label></div></div><div class="ret-act"><button class="ghost sm" data-act="open" data-id="${esc(p.id)}">Ver ficha</button></div></div>`).join(''):'<p class="note">Nenhum paciente sinalizado para prótese. Marque o acompanhamento na aba Agendamentos do prontuário.</p>'}</section>`;
+}
 function retPend(){return retLista().out.filter(x=>!retRecente(x.p)).length}
 function retMsg(p,last){
   const cl=Object.assign({},CL_DEF,db.cl||{}),pn=String(p.nome||'').trim().split(/\s+/)[0]||'paciente',u=last?last.slice(5,7)+'/'+last.slice(0,4):'';
@@ -138,7 +145,7 @@ function lembretesHtml(){
   </div>`}`;
 }
 function home(){
-  const n=view.h||'ag',fn={ortho:orthoHtml,impl:implHtml,inicio:agHtml,pac:homePac,pf:pfListHtml,ag:agHtml,lem:lembretesHtml,vd:vdHtml,dt:dtHtml,cm:comHtml,pr:prHtml,mt:mtHtml,hc:hcHtml,bk:bkHtml,cfg:cfgHtml,conta:pmContaHtml}[n]||homePac;
+  const n=view.h||'ag',fn={ortho:orthoHtml,impl:implHtml,prot:protHtml,inicio:agHtml,pac:homePac,pf:pfListHtml,ag:agHtml,lem:lembretesHtml,vd:vdHtml,dt:dtHtml,cm:comHtml,pr:prHtml,mt:mtHtml,hc:hcHtml,bk:bkHtml,cfg:cfgHtml,conta:pmContaHtml}[n]||homePac;
   const content=fn();
   return `<div class="ov-content-inner">${content}</div>`;
 }

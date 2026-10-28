@@ -39,6 +39,7 @@ function ovSidebar(active){
       ${item('pac','Pacientes')}
       ${pmSee('lem')?`<button class="ov-nav-btn${active==='ortho'?' on':''}" data-act="orthonav"><span class="ico">◷</span><span>Ortodontia</span></button>`:''}
       ${pmSee('lem')?`<button class="ov-nav-btn${active==='impl'?' on':''}" data-act="implnav"><span class="ico">◈</span><span>Implantodontia</span></button>`:''}
+      ${pmSee('lem')?`<button class="ov-nav-btn${active==='prot'?' on':''}" data-act="protnav"><span class="ico">◇</span><span>Prótese</span></button>`:''}
       ${item('lem','Lembretes')}
       ${item('dt','Dentistas')}
       ${item('cm','Comissões')}

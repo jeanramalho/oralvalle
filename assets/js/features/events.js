@@ -81,6 +81,10 @@ document.addEventListener('change',e=>{
   const t=e.target;
   if(t.dataset&&t.dataset.dup==='1'&&cur()){t.value=cur()[t.dataset.k]||'';t.dataset.dup='';t.style.borderColor='';toast('Valor duplicado desfeito. Mantido o dado original.',3000);return}
   if(t.dataset&&(t.dataset.k||t.dataset.a||t.dataset.c||t.dataset.tr)&&cur()){save();toastSaved('✓ Alterações salvas')}
+  if(t.dataset&&t.dataset.prot==='1'&&cur()){cur().protAtivo=t.checked;save();toast(t.checked?'Acompanhamento de prótese ativado':'Acompanhamento de prótese desativado');return}
+  if(t.dataset&&t.dataset.protEtapa){const p=db.p.find(x=>x.id===t.dataset.protEtapa);if(p&&p.protAtivo){p.protEtapa=t.value;p.protUltimaData=tdy();save();render();toast('Etapa e data atualizadas')}return}
+  if(t.dataset&&t.dataset.protCor){const p=db.p.find(x=>x.id===t.dataset.protCor);if(p&&p.protAtivo){p.protCor=t.value.trim().slice(0,60);save();toast('Cor registrada')}return}
+  if(t.dataset&&t.dataset.protData){const p=db.p.find(x=>x.id===t.dataset.protData);if(p&&p.protAtivo){p.protUltimaData=t.value;save();toast('Data atualizada')}return}
   if(t.dataset&&t.dataset.impl==='1'&&cur()){cur().implAtivo=t.checked;save();toast(t.checked?'Acompanhamento de implantodontia ativado':'Acompanhamento de implantodontia desativado');return}
   if(t.dataset&&t.dataset.implEtapa){const p=db.p.find(x=>x.id===t.dataset.implEtapa);if(p&&p.implAtivo){p.implEtapa=t.value;save();toast('Etapa atualizada')}return}
   if(t.dataset&&t.dataset.ortho==='1'&&cur()){cur().orthoMensal=t.checked;save();toast(t.checked?'Retorno ortodôntico mensal ativado':'Retorno ortodôntico mensal desativado',2500);return}
