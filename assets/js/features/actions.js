@@ -167,6 +167,21 @@ const A={
   retok:(b,d)=>{const p=db.p.find(x=>x.id===d.id);if(!p)return;p.retCont=tdy();save();render();toast('Contato registrado',2000)},
   retall:()=>{view.retAll=!view.retAll;render()},
   cfgretmsg:()=>{db.cl=db.cl||{};db.cl.retMsg=RET_MSG_DEF;save();render();toast('Mensagem padrão restaurada',2500)},
+  rmorc:(b,d,p)=>{
+    if(!p)return;
+    const o=(p.orcs||[]).find(x=>String(x.id)===String(d.o));if(!o)return;
+    const vinculados=(p.trat||[]).filter(t=>String(t.oid)===String(o.id));
+    if((o.itens||[]).some(i=>i.vid)||vinculados.some(t=>t.vid)){
+      toast('Não é possível excluir uma proposta com procedimentos já baixados ou vendidos.',4500);return;
+    }
+    arm('orc:'+o.id,()=>{
+      if(!confirm('Excluir definitivamente este orçamento e sua proposta financeira? Os tratamentos vinculados serão mantidos, mas sem vínculo com a proposta.'))return;
+      vinculados.forEach(t=>{t.oid=null;t.oiid=null});
+      p.orcs=p.orcs.filter(x=>String(x.id)!==String(o.id));
+      if(view.orcOpen)delete view.orcOpen[o.id];
+      save();render();toast('Orçamento e proposta excluídos.');
+    });
+  },
   otoggle:(b,d)=>{view.orcOpen=view.orcOpen||{};view.orcOpen[d.o]=!view.orcOpen[d.o];view.obx=null;view.obxAll=null;render()},
   oball:(b,d,p)=>{
     const o=getO(p,d.o),pend=o.itens.filter(it=>!it.vid);

@@ -176,7 +176,7 @@ function orcHtml(o){
   <div class="row" style="align-items:flex-start"><div><label>Desconto (R$)</label><input data-o="${o.id}" data-f="desc" inputmode="decimal" value="${esc(o.desc)}"></div><div><label>Válido até</label><input type="date" data-o="${o.id}" data-f="val" value="${esc(o.val)}"></div></div>
   <label>Condições de pagamento</label><input data-o="${o.id}" data-f="cond" placeholder="Ex.: entrada + 3x no cartão" value="${esc(o.cond)}">
   <div data-sum>${orcSum(o)}</div>
-  <div class="row" style="margin-top:12px;flex-wrap:wrap"><button class="ghost sm" data-act="copy" data-o="${o.id}">Copiar texto</button><button class="ghost sm" data-act="owa" data-o="${o.id}">WhatsApp</button><button class="sm" data-act="pdf" data-o="${o.id}">Baixar PDF</button><button class="ghost sm" data-act="print" data-o="${o.id}">Imprimir</button></div></div>`:''}</div>`;
+  <div class="row" style="margin-top:12px;flex-wrap:wrap"><button class="ghost sm" data-act="copy" data-o="${o.id}">Copiar texto</button><button class="ghost sm" data-act="owa" data-o="${o.id}">WhatsApp</button><button class="sm" data-act="pdf" data-o="${o.id}">Baixar PDF</button><button class="ghost sm" data-act="print" data-o="${o.id}">Imprimir</button><button class="danger sm" data-act="rmorc" data-o="${o.id}">${delArm==='orc:'+o.id?'Confirmar exclusão':'Excluir orçamento / proposta'}</button></div></div>`:''}</div>`;
 }
 const prList=()=>`<datalist id="prl">${db.pr.map(x=>`<option value="${esc(x.nome)}">`).join('')}</datalist>`;
 function tratStatus(x){return x.status==='Concluído'?['Concluído','stt-ok']:x.status==='Cancelado'?['Cancelado','']:['Pendente','stt-wr'];}
