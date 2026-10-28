@@ -675,3 +675,12 @@ input[type=date],input[type=time]{min-height:44px;-webkit-min-logical-width:0}
     margin:4px 0 0 22px;
   }
 }
+
+/* Oral Valle 047 — tipografia neutra nos acompanhamentos e dentistas */
+.ret-card > .ov-care-collapse.ret-it > summary,
+.ret-card > .ov-care-collapse.ret-it > summary strong,
+.dt-collapsible > summary.dt-head,
+.dt-collapsible > summary.dt-head .dt-nm,
+.dt-collapsible > summary.dt-head strong { color:var(--ink) !important; }
+.ret-card > .ov-care-collapse.ret-it > summary::marker { color:var(--mut); }
+.dt-collapsible .dt-chevron { color:var(--mut); }
