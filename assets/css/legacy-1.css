@@ -684,3 +684,20 @@ input[type=date],input[type=time]{min-height:44px;-webkit-min-logical-width:0}
 .dt-collapsible > summary.dt-head strong { color:var(--ink) !important; }
 .ret-card > .ov-care-collapse.ret-it > summary::marker { color:var(--mut); }
 .dt-collapsible .dt-chevron { color:var(--mut); }
+
+/* Oral Valle 051 — Estoque: cores do tema e leitura em telas pequenas */
+html[data-ov-mode] .ov-mt-stock{color:var(--ink)}
+html[data-ov-mode] .ov-mt-stock span{color:var(--mut)}
+html[data-ov-mode] .ov-mt-table th,
+html[data-ov-mode] .ov-mt-table td{color:var(--ink);border-bottom-color:var(--ln)}
+html[data-ov-mode] .ov-mt-table tbody tr:nth-child(odd){background:var(--sf)}
+html[data-ov-mode] .ov-mt-table tbody tr:nth-child(even){background:var(--bg)}
+@media(max-width:600px){
+  .ov-mt-card{min-width:0;max-width:100%}
+  .ov-mt-table-wrap{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .ov-mt-table:not(:has(tbody input)){min-width:0;width:100%;table-layout:fixed}
+  .ov-mt-table:not(:has(tbody input)) th:nth-child(n+3){display:none}
+  .ov-mt-table:not(:has(tbody input)) th:first-child{width:26%}
+  .ov-mt-table:not(:has(tbody input)) td[colspan]{white-space:normal;overflow-wrap:anywhere;line-height:1.45}
+  .ov-mt-table:not(:has(tbody input)) th,.ov-mt-table:not(:has(tbody input)) td{padding:9px 8px}
+}
