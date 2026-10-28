@@ -10,7 +10,7 @@ const PM_TABS=['dados','anam','odo','orc','trat','pag','agd','arquivos'];
 const PM_ORDER=['ag','pac','lem','dt','cm','vd','pf','hc','pr','mt','bk'];
 const PM_LV={none:0,view:1,edit:2};
 const PM_LAB={none:'Oculto',view:'Só ver',edit:'Ver e alterar'};
-const PM_SAFE=new Set(['actab','logout','nav','svw','ovFinDetail','ovFinPdf','pPage','vPage','otoggle','retall','lemtab','orthowa','implnav','lemgo','cmdent','cmback','agf','agdate','agtoday','arqt','dent','open','back','tab','copy','owa','print','pdf','printevol','printficha','rxpdf','rxprint','atpdf','atprint','atreset','prprint','prshare','bktxt','bkcopy','bksave','pfOpen','prsearch','avsok','avsgo','avsperm','avstest','savebtn','acpw']);
+const PM_SAFE=new Set(['actab','logout','nav','svw','ovFinDetail','ovFinPdf','pPage','vPage','otoggle','retall','lemtab','orthowa','implnav','protnav','lemgo','cmdent','cmback','agf','agdate','agtoday','arqt','dent','open','back','tab','copy','owa','print','pdf','printevol','printficha','rxpdf','rxprint','atpdf','atprint','atreset','prprint','prshare','bktxt','bkcopy','bksave','pfOpen','prsearch','avsok','avsgo','avsperm','avstest','savebtn','acpw']);
 const PM_FREE_IDS=new Set(['q','pfQ','pendOnly','cmm']);
 const pmKeys=()=>PM_MODS.flatMap(g=>g[1].map(x=>x[0]));
 function pmUser(){return ME?(AUTH.users.find(x=>x.id===ME.id)||ME):null}
@@ -35,7 +35,7 @@ const pmTabOk=k=>{const u=pmUser();return !u||u.admin||pmTabLvl(k)>=1};
 function pmCur(){
   const u=pmUser();if(!u||u.admin)return 2;
   if(view.id)return pmTabLvl(view.tab);
-  return pmLvl((view.h==='ortho'||view.h==='impl')?'lem':view.h||'pac');
+  return pmLvl((view.h==='ortho'||view.h==='impl'||view.h==='prot')?'lem':view.h||'pac');
 }
 function pmFirst(){return PM_ORDER.find(k=>pmLvl(k)>=1)||'conta'}
 function sanitizeView(){
@@ -44,7 +44,7 @@ function sanitizeView(){
     if(!(pmLvl('pac')>=1||(view.h==='pf'&&pmLvl('pf')>=1))){view.id=null}
     else{const t=PM_TABS.filter(pmTabOk);if(!t.length)view.id=null;else if(t.indexOf(view.tab)<0)view.tab=t[0]}
   }
-  const h=(view.h==='ortho'||view.h==='impl')?'lem':view.h||'pac';
+  const h=(view.h==='ortho'||view.h==='impl'||view.h==='prot')?'lem':view.h||'pac';
   if(h!=='conta'&&pmLvl(h)<1)view.h=pmFirst();
 }
 function pmAllowed(act,d){
