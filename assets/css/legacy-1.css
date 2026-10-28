@@ -701,3 +701,27 @@ html[data-ov-mode] .ov-mt-table tbody tr:nth-child(even){background:var(--bg)}
   .ov-mt-table:not(:has(tbody input)) td[colspan]{white-space:normal;overflow-wrap:anywhere;line-height:1.45}
   .ov-mt-table:not(:has(tbody input)) th,.ov-mt-table:not(:has(tbody input)) td{padding:9px 8px}
 }
+
+/* Oral Valle 052 — correção definitiva das linhas do estoque no modo claro.
+   A regra antiga usa cores pretas fixas; esta substitui inclusive em celulares. */
+html:not([data-ov-mode="dark"]) .ov-mt-table,
+html:not([data-ov-mode="dark"]) .ov-mt-table thead,
+html:not([data-ov-mode="dark"]) .ov-mt-table tbody,
+html:not([data-ov-mode="dark"]) .ov-mt-table tbody tr,
+html:not([data-ov-mode="dark"]) .ov-mt-table tbody tr:nth-child(odd),
+html:not([data-ov-mode="dark"]) .ov-mt-table tbody tr:nth-child(even),
+html:not([data-ov-mode="dark"]) .ov-mt-table th,
+html:not([data-ov-mode="dark"]) .ov-mt-table td {
+  background-color:#fff !important;
+  color:#303943 !important;
+  border-color:#dfe3e7 !important;
+}
+html[data-ov-mode="dark"] .ov-mt-table tbody tr:nth-child(odd){background:#202426 !important}
+html[data-ov-mode="dark"] .ov-mt-table tbody tr:nth-child(even){background:#171a1c !important}
+html[data-ov-mode="dark"] .ov-mt-table td,
+html[data-ov-mode="dark"] .ov-mt-table th{color:#f1f2f3 !important;border-color:#3b4145 !important}
+@media(max-width:600px){
+  .ov-mt-table-wrap{overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
+  .ov-mt-table{min-width:620px}
+  .ov-mt-table td,.ov-mt-table th{white-space:normal}
+}
