@@ -407,3 +407,10 @@ section.ret-card:has(> details.ov-care-collapse) > h2 {
 @media(max-width:600px){
   .ret-card > details.ov-care-collapse.ret-it > summary {min-height:60px !important;}
 }
+
+/* Patch 017: setas no padrão da lista de pacientes */
+.ret-card > details.ov-care-collapse.ret-it > summary {position:relative; padding-right:46px !important;}
+.ret-card > details.ov-care-collapse.ret-it > summary .ov-care-arrow {position:absolute;right:17px;top:50%;transform:translateY(-50%);font-size:25px;line-height:1;color:var(--mut);font-weight:400;transition:transform .16s;}
+.ret-card > details.ov-care-collapse.ret-it[open] > summary .ov-care-arrow {transform:translateY(-50%) rotate(90deg);}
+.dt-collapsible > summary.dt-head .dt-chevron.ov-patient-arrow {margin-left:auto;font-size:25px;line-height:1;font-weight:400;color:var(--mut);transform:none;transition:transform .16s;}
+.dt-collapsible[open] > summary.dt-head .dt-chevron.ov-patient-arrow {transform:rotate(90deg);}
