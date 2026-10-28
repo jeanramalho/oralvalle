@@ -20,6 +20,8 @@ const A={
   logout:()=>doLogout(),
   pPage:(b,d)=>{view.pPage=Math.max(0,Number(d.p)||0);render();},
   vPage:(b,d)=>{view.vPage=Math.max(0,Number(d.p)||0);render();},
+  agexpand:(b,d)=>{view.agExpanded=String(d.id);render();},
+  agcollapse:()=>{view.agExpanded='';render();},
   agencerrar:(b,d)=>{
     const a=db.ag.find(x=>String(x.id)===String(d.id));if(!a)return;
     const resposta=prompt('Dar baixa no agendamento:\n1 - Compareceu (verde)\n2 - Faltou (vermelho)\n3 - Desmarcou (vermelho)\n\nDigite 1, 2 ou 3:');
@@ -48,7 +50,19 @@ const A={
   cfgiconrm:()=>{if(db.cl){db.cl.icone='';delete db.cl.iconeW;delete db.cl.iconeH}save();render();toast('Ícone personalizado removido',2500)},
   agpick:(b,d)=>{const p=db.p.find(x=>x.id===d.id);if(!p)return;$('apn').value=p.nome;$('ap').value=p.id;const bx=$('apsug');bx.hidden=true;bx.innerHTML='';agAuto(p.id)},
   agstatus:(b,d)=>{const a=db.ag.find(x=>x.id===d.id);if(!a)return;a.st=a.st==='Confirmado'?'Compareceu':'Confirmado';save();render();},
-  agedit:(b,d)=>{const a=db.ag.find(x=>x.id===d.id);if(!a)return;const h=prompt('Novo horário (HH:MM):',a.hora);if(h===null)return;if(!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(h)){toast('Informe o horário no formato HH:MM');return}const dur=prompt('Duração em minutos:',String(a.dur||30));if(dur===null)return;const n=Number(dur);if(!Number.isFinite(n)||n<5||n>480){toast('Duração inválida');return}const test={...a,hora:h,dur:n};if(confl(test)){toast('Esse horário conflita com outro atendimento do dentista ou consultório.');return}a.hora=h;a.dur=n;save();render();toast('Horário atualizado');},
+  agedit:(b,d)=>{
+    const a=db.ag.find(x=>String(x.id)===String(d.id));if(!a)return;
+    const data=prompt('Data da consulta (AAAA-MM-DD):',a.data);if(data===null)return;
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(data)||Number.isNaN(Date.parse(data+'T12:00:00'))){toast('Data inválida. Use AAAA-MM-DD.',3500);return}
+    const h=prompt('Horário da consulta (HH:MM):',a.hora);if(h===null)return;
+    if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(h)){toast('Informe o horário no formato HH:MM.',3500);return}
+    const dur=prompt('Duração em minutos:',String(a.dur||30));if(dur===null)return;
+    const n=Number(dur);if(!Number.isFinite(n)||n<5||n>480){toast('Duração inválida.',3500);return}
+    const test={...a,data,hora:h,dur:n};
+    if(confl(test)){toast('Esse horário conflita com outro atendimento do dentista ou consultório.',4500);return}
+    a.data=data;a.hora=h;a.dur=n;
+    view.agDate=data;view.agExpanded='';save();render();toast('Agendamento atualizado.');
+  },
   agslot:(b,d)=>{const h=$('ah'),c=$('acadeira');if(!h||!c){toast('Cadastre um paciente para poder agendar',3000);return}h.value=d.h;c.value=d.c;h.dataset.touched='1';$('ad').value=view.agDate||tdy();const f=h.closest('.card');if(f)f.scrollIntoView({behavior:'smooth',block:'center'});toast('Preenchido: '+d.h+' no Consultório '+d.c+'. Escolha o paciente e agende.',3200)},
   actab:(b,d)=>{view.acTab=['acesso','usuarios','recuperacao'].includes(d.t)?d.t:'acesso';view.newrec=view.acTab==='recuperacao'?view.newrec:'';render()},
   acpw:async()=>{const a=$('acp0').value,n=$('acp1').value,n2=$('acp2').value,e=pwOk(n,n2);if(e){toast(e,3000);return}
