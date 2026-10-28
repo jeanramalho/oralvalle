@@ -119,7 +119,7 @@ function orcSum(o){
 function obLaunch(p,it,vv,rc,forma,data,rep){
   const proc=it.proc||'',mm=comCalc(it.dt,proc,vv,qOf(it));
   const v={id:uid(),pid:p.id,dt:it.dt,proc,valor:r2(vv),mat:mm.mat,lab:mm.lab,rep:r2(rep),data,pg:[]};
-  if(rc>0)v.pg.push({id:uid(),data,valor:r2(rc),forma});
+  if(rc>0)v.pg.push(ovFeeMake(rc,forma,data));
   it.vid=v.id;
   (p.trat||[]).forEach(t=>{if(t.oiid===it.id&&!t.vid){t.vid=v.id;t.status='Concluído';t.rep=v.rep;t.data=v.data}});
   (p.evol=p.evol||[]).push({id:uid(),data,n:it.dente?String(it.dente):'',txt:(proc||'Atendimento')+' — realizado por '+dName(it.dt)+'.',auto:true,vid:v.id});

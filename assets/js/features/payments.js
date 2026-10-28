@@ -3,7 +3,7 @@ const pgSt=v=>{const sd=saldoV(v),rc=recebido(v);return sd<=0?['Pago','stt-ok']:
 const pgPlano=v=>(Array.isArray(v.plano)?v.plano:[]).slice().sort((a,b)=>String(a.venc).localeCompare(String(b.venc)));
 const pgParPg=(v,par)=>par.pgid?v.pg.find(x=>x.id===par.pgid):null;
 function pgAddMes(iso,n){const [y,m,d]=iso.split('-').map(Number);const t=new Date(y,m-1+n,1);const last=new Date(t.getFullYear(),t.getMonth()+1,0).getDate();t.setDate(Math.min(d,last));return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')}
-const pgFormas=sel=>FORMAS.map(f=>`<option${f===sel?' selected':''}>${f}</option>`).join('');
+const pgFormas=sel=>ovFeeOptions(sel);
 function pgPlanoHtml(v){
   const pl=pgPlano(v);if(!pl.length)return '';
   const hoje=tdy();
@@ -18,7 +18,7 @@ function pgPlanoHtml(v){
 }
 function pgCard(v,i){
   const rc=recebido(v),sd=saldoV(v),st=pgSt(v),val=num(v.valor),pct=val>0?Math.min(100,Math.round(rc/val*100)):0,hoje=tdy();
-  const pays=v.pg.slice().sort((a,b)=>String(a.data).localeCompare(String(b.data))).map(x=>`<div class="pg"><span>📅 <b>${fd(x.data)}</b> · ${esc(x.forma||'')}</span><span>${brl(x.valor)} <button class="danger sm" data-act="rmpg" data-id="${v.id}" data-pg="${x.id}" aria-label="Remover recebimento">${delArm===x.id?'Confirmar':'×'}</button></span></div>`).join('');
+  const pays=v.pg.slice().sort((a,b)=>String(a.data).localeCompare(String(b.data))).map(x=>`<div class="pg"><span>📅 <b>${fd(x.data)}</b> · ${esc(x.forma||'')}${ovFeeSummary(x)}</span><span>${brl(x.valor)} <button class="danger sm" data-act="rmpg" data-id="${v.id}" data-pg="${x.id}" aria-label="Remover recebimento">${delArm===x.id?'Confirmar':'×'}</button></span></div>`).join('');
   const form=sd>0?`<div class="pg-form"><h3>Dar baixa neste atendimento</h3>
     <div class="row" style="align-items:flex-end"><div><label style="margin-top:0">Valor recebido (R$)</label><input data-pgv="${v.id}" inputmode="decimal" value="${sd.toFixed(2).replace('.',',')}"></div><div><label style="margin-top:0">Data do pagamento</label><input type="date" data-pgd="${v.id}" value="${hoje}"></div></div>
     <div class="row" style="align-items:flex-end;margin-top:8px"><div><label style="margin-top:0">Forma</label><select data-pgf="${v.id}">${pgFormas()}</select></div><button class="sm" data-act="pgrcv" data-id="${v.id}">Receber</button></div>
@@ -48,14 +48,14 @@ Object.assign(A,{
     const q=a=>document.querySelector(`[${a}="${d.id}"]`),val=num(q('data-pgv').value),data=q('data-pgd').value||tdy(),forma=q('data-pgf').value;
     if(!(val>0)){toast('Informe o valor recebido');return}
     if(val>saldoV(v)+0.005){toast('Valor maior que o que falta ('+brl(saldoV(v))+')',3000);return}
-    v.pg.push({id:uid(),data,valor:r2(val),forma});save();render();toast(saldoV(v)<=0?'Pago por completo em '+fd(data):'Recebimento parcial registrado em '+fd(data),2600)},
+    v.pg.push(ovFeeMake(val,forma,data));save();render();toast(saldoV(v)<=0?'Pago por completo em '+fd(data):'Recebimento parcial registrado em '+fd(data),2600)},
   pgall:(b,d,p)=>{
     let val=num($('pgGV').value);const data=$('pgGD').value||tdy(),forma=$('pgGF').value;
     if(!(val>0)){toast('Informe o valor recebido');return}
     const vs=db.vd.filter(v=>v.pid===p.id&&saldoV(v)>0).sort((a,b)=>String(a.data).localeCompare(String(b.data)));
     const max=vs.reduce((s,v)=>s+saldoV(v),0);
     if(val>max+0.005){toast('Valor maior que o total a receber ('+brl(max)+')',3000);return}
-    vs.forEach(v=>{if(val<=0.004)return;const u=Math.min(val,saldoV(v));v.pg.push({id:uid(),data,valor:r2(u),forma});val=r2(val-u)});
+    vs.forEach(v=>{if(val<=0.004)return;const u=Math.min(val,saldoV(v));v.pg.push(ovFeeMake(u,forma,data));val=r2(val-u)});
     save();render();toast('Recebimento registrado em '+fd(data),2600)},
   pgplan:(b,d)=>{
     const v=db.vd.find(x=>x.id===d.id);if(!v)return;
@@ -69,5 +69,7 @@ Object.assign(A,{
     const v=db.vd.find(x=>x.id===d.id),par=v&&(v.plano||[]).find(x=>x.id===d.par);if(!par)return;
     const data=document.querySelector(`[data-pgpd="${d.par}"]`).value||tdy(),forma=document.querySelector(`[data-pgpf="${d.par}"]`).value;
     const val=Math.min(num(par.valor),saldoV(v));if(!(val>0)){toast('Este atendimento já está quitado');return}
-    const id=uid();v.pg.push({id,data,valor:r2(val),forma});par.pgid=id;save();render();toast('Parcela recebida em '+fd(data),2400)}
+    const id=uid();v.pg.push(ovFeeMake(val,forma,data,id));par.pgid=id;save();render();toast('Parcela recebida em '+fd(data),2400)}
 });
+
+A.ovFeeSave=ovFeeSaveAction;

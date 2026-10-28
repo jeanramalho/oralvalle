@@ -277,7 +277,7 @@ const A={
     if(rc>vv){toast('O valor recebido é maior que o valor da venda');return}
     const proc=$('vpr').value.trim(),mm=comCalc(dtid,proc,vv,(view.pre&&view.pre.qtd)||1),data=$('vdt').value||tdy(),pid=$('vp').value;
     const v={id:uid(),pid,dt:dtid,proc,valor:r2(vv),mat:mm.mat,lab:mm.lab,rep:r2(num($('vr').value)),data,pg:[]};
-    if(rc>0)v.pg.push({id:uid(),data,valor:r2(rc),forma:$('vfm').value});
+    if(rc>0){const override=document.getElementById('ovFeeOverride');const pct=override?Number(override.value):ovFeePct($('vfm').value);if(!Number.isFinite(pct)||pct<0||pct>100){toast('Taxa inválida');return}v.pg.push(ovFeeMake(rc,$('vfm').value,data,null,pct))}
     const lk=view.link;
     if(lk&&lk.pid===pid){
       if(lk.oid){db.p.forEach(p=>p.orcs.forEach(o=>o.itens.forEach(i=>{if(i.id===lk.ii)i.vid=v.id})));db.p.forEach(p=>(p.trat||[]).forEach(t=>{if(t.oiid===lk.ii&&!t.vid){t.vid=v.id;t.status='Concluído';t.rep=v.rep;t.data=v.data}}))}
@@ -303,7 +303,7 @@ const A={
     const v=db.vd.find(x=>x.id===d.id),inp=document.querySelector(`[data-rcv="${d.id}"]`),f=document.querySelector(`[data-rcvf="${d.id}"]`),val=num(inp.value);
     if(!(val>0)){toast('Informe o valor recebido');return}
     if(val>saldoV(v)+0.005){toast('Valor maior que o saldo ('+brl(saldoV(v))+')',3000);return}
-    v.pg.push({id:uid(),data:tdy(),valor:r2(val),forma:f.value});save();render();toast('Recebimento registrado')},
+    v.pg.push(ovFeeMake(val,f.value,tdy()));save();render();toast('Recebimento registrado')},
   rmpg:(b,d)=>arm(d.pg,()=>{const v=db.vd.find(x=>x.id===d.id);v.pg=v.pg.filter(p=>p.id!==d.pg);save();render()}),
   adddt:()=>{const n=$('dn').value.trim();if(!n){toast('Digite o nome do dentista');return}
     db.dt.push({id:uid(),nome:n,modo:$('dm').value,pct:($('dp').value||'0').replace(',','.'),base:$('dbs').value,ativo:true});save();render();toast('Dentista cadastrado')},
