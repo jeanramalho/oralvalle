@@ -1,4 +1,20 @@
 /* ===== ações ===== */
+/* Janelas próprias da agenda, compatíveis com celular e desktop. */
+function ovAgDialog(title, content, onSubmit) {
+  document.querySelector('.ov-ag-modal-backdrop')?.remove();
+  const backdrop=document.createElement('div');
+  backdrop.className='ov-ag-modal-backdrop';
+  backdrop.innerHTML=`<section class="ov-ag-modal" role="dialog" aria-modal="true" aria-labelledby="ovAgTitle"><div class="ov-ag-modal-head"><h3 id="ovAgTitle">${title}</h3><button type="button" class="ov-ag-modal-close" aria-label="Fechar">✕</button></div><form class="ov-ag-modal-form">${content}<div class="ov-ag-modal-footer"><button type="button" class="ghost ov-ag-cancel">Cancelar</button><button type="submit">Salvar</button></div></form></section>`;
+  document.body.appendChild(backdrop);
+  const close=()=>{document.removeEventListener('keydown',onKey);backdrop.remove()};
+  const onKey=e=>{if(e.key==='Escape')close()};
+  document.addEventListener('keydown',onKey);
+  backdrop.addEventListener('click',e=>{if(e.target===backdrop||e.target.closest('.ov-ag-modal-close,.ov-ag-cancel'))close()});
+  backdrop.querySelector('form').addEventListener('submit',e=>{e.preventDefault();if(onSubmit(new FormData(e.currentTarget))!==false)close()});
+  backdrop.querySelector('input,select,button')?.focus();
+  return backdrop;
+}
+
 const A={
   agrentadd:()=>{
     const date=view.agDate||tdy(),chair=$('agRentChair').value,start=$('agRentStart').value,end=$('agRentEnd').value;
@@ -24,11 +40,12 @@ const A={
   agcollapse:()=>{view.agExpanded='';render();},
   agencerrar:(b,d)=>{
     const a=db.ag.find(x=>String(x.id)===String(d.id));if(!a)return;
-    const resposta=prompt('Dar baixa no agendamento:\n1 - Compareceu (verde)\n2 - Faltou (vermelho)\n3 - Desmarcou (vermelho)\n\nDigite 1, 2 ou 3:');
-    if(resposta===null)return;
-    const status={'1':'Compareceu','2':'Faltou','3':'Cancelado'}[resposta.trim()];
-    if(!status){toast('Escolha 1, 2 ou 3 para dar baixa.',3000);return;}
-    a.st=status;save();render();toast(status==='Cancelado'?'Consulta desmarcada':status==='Faltou'?'Falta registrada':'Comparecimento registrado');
+    const options=[['Compareceu','Compareceu — verde'],['Faltou','Faltou — vermelho'],['Cancelado','Desmarcou — vermelho']];
+    const html=`<p class="ov-ag-modal-note">Selecione o resultado do atendimento:</p><div class="ov-ag-status-options">${options.map(([v,label])=>`<label><input type="radio" name="status" value="${v}" ${v==='Compareceu'?'checked':''}><span>${label}</span></label>`).join('')}</div>`;
+    ovAgDialog('Dar baixa no agendamento',html,form=>{
+      const status=String(form.get('status')||'');if(!options.some(x=>x[0]===status))return false;
+      a.st=status;view.agExpanded='';save();render();toast(status==='Cancelado'?'Consulta desmarcada':status==='Faltou'?'Falta registrada':'Comparecimento registrado');
+    });
   },
   agfalta:(b,d)=>{const a=db.ag.find(x=>x.id===d.id);if(!a)return;a.st='Faltou';save();render();toast('Falta registrada')},
   agcancel:(b,d)=>{const a=db.ag.find(x=>x.id===d.id);if(!a)return;a.st='Cancelado';save();render();toast('Agendamento cancelado')},
@@ -52,16 +69,16 @@ const A={
   agstatus:(b,d)=>{const a=db.ag.find(x=>x.id===d.id);if(!a)return;a.st=a.st==='Confirmado'?'Compareceu':'Confirmado';save();render();},
   agedit:(b,d)=>{
     const a=db.ag.find(x=>String(x.id)===String(d.id));if(!a)return;
-    const data=prompt('Data da consulta (AAAA-MM-DD):',a.data);if(data===null)return;
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(data)||Number.isNaN(Date.parse(data+'T12:00:00'))){toast('Data inválida. Use AAAA-MM-DD.',3500);return}
-    const h=prompt('Horário da consulta (HH:MM):',a.hora);if(h===null)return;
-    if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(h)){toast('Informe o horário no formato HH:MM.',3500);return}
-    const dur=prompt('Duração em minutos:',String(a.dur||30));if(dur===null)return;
-    const n=Number(dur);if(!Number.isFinite(n)||n<5||n>480){toast('Duração inválida.',3500);return}
-    const test={...a,data,hora:h,dur:n};
-    if(confl(test)){toast('Esse horário conflita com outro atendimento do dentista ou consultório.',4500);return}
-    a.data=data;a.hora=h;a.dur=n;
-    view.agDate=data;view.agExpanded='';save();render();toast('Agendamento atualizado.');
+    const html=`<label>Data da consulta<input name="data" type="date" required value="${esc(a.data)}"></label><label>Horário<input name="hora" type="time" required value="${esc(a.hora)}"></label><label>Duração (minutos)<input name="dur" type="number" min="5" max="480" step="5" required value="${Number(a.dur||30)}"></label>`;
+    ovAgDialog('Editar consulta',html,form=>{
+      const data=String(form.get('data')||''),hora=String(form.get('hora')||''),dur=Number(form.get('dur'));
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(data)||Number.isNaN(Date.parse(data+'T12:00:00'))){toast('Data inválida.',3500);return false}
+      if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(hora)){toast('Horário inválido.',3500);return false}
+      if(!Number.isFinite(dur)||dur<5||dur>480){toast('Duração inválida.',3500);return false}
+      const test={...a,data,hora,dur};
+      if(confl(test)){toast('Esse horário conflita com outro atendimento ou aluguel.',4500);return false}
+      a.data=data;a.hora=hora;a.dur=dur;view.agDate=data;view.agExpanded='';save();render();toast('Agendamento atualizado.');
+    });
   },
   agslot:(b,d)=>{const h=$('ah'),c=$('acadeira');if(!h||!c){toast('Cadastre um paciente para poder agendar',3000);return}h.value=d.h;c.value=d.c;h.dataset.touched='1';$('ad').value=view.agDate||tdy();const f=h.closest('.card');if(f)f.scrollIntoView({behavior:'smooth',block:'center'});toast('Preenchido: '+d.h+' no Consultório '+d.c+'. Escolha o paciente e agende.',3200)},
   actab:(b,d)=>{view.acTab=['acesso','usuarios','recuperacao'].includes(d.t)?d.t:'acesso';view.newrec=view.acTab==='recuperacao'?view.newrec:'';render()},
