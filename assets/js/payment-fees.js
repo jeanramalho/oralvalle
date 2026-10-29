@@ -36,12 +36,12 @@ document.addEventListener('DOMContentLoaded',()=>ovFeeUpdatePreview(true));
 function ovFinanceSettings(){
  const cfg=db.financeiroConfig||{};
  const opts=[['Dinheiro','Dinheiro'],['Pix','PIX'],['Boleto','Boleto'],['Financiamento','Financiamento'],['Débito','Cartão de débito'],['Crédito à vista','Crédito à vista'],['Crédito parcelado','Crédito parcelado']];
- const card=(key,title,body)=>`<section class="card cfg-card" id="fin-${key}" style="margin-bottom:12px"><h2>${title}</h2>${body}</section>`;
+ const card=(key,title,body)=>`<section class="card cfg-card" id="fin-${key}" ${key!=='Dinheiro'?'hidden':''} style="margin-bottom:12px"><h2>${title}</h2>${body}</section>`;
  const field=(key,label,kind='number',defaultValue='0')=>`<label>${label}<input type="${kind}" ${kind==='number'?'min="0" step="0.01" inputmode="decimal"':''} data-fin-key="${key}" value="${esc(cfg[key]??defaultValue)}"></label>`;
  const mode=(key)=>`<label>Baixa no Contas a Receber<select data-fin-key="${key}_baixa"><option value="manual" ${cfg[key+'_baixa']!=='auto'?'selected':''}>Manual — confirmar recebimento</option><option value="auto" ${cfg[key+'_baixa']==='auto'?'selected':''}>Automática — na data prevista</option></select></label>`;
  const days=(key,label='Recebo em (dias)')=>field(key+'_dias',label,'number','0');
  const rate=(key)=>`<label>Taxa (%)<input type="number" min="0" max="100" step="0.01" data-fee-rate="${esc(key)}" value="${ovFeePct(key)}"></label>`;
- let html=`<p class="note">Configure taxas e prazos. As taxas são aplicadas às novas vendas pelo mecanismo atual. Os prazos e modos de baixa ficam registrados para a integração com o Contas a Receber; esta versão não executa baixas automáticas.</p><div class="row" style="gap:8px;flex-wrap:wrap">${opts.map(([k,l])=>`<a class="ghost sm" href="#fin-${k.replace(/[^a-z]/gi,'')}">${l}</a>`).join('')}</div>`;
+ let html=`<p class="note">Configure taxas e prazos. As taxas são aplicadas às novas vendas pelo mecanismo atual. Os prazos e modos de baixa ficam registrados para a integração com o Contas a Receber; esta versão não executa baixas automáticas.</p><div class="ov-fin-tabs" role="tablist" aria-label="Formas de pagamento">${[...opts,['Conciliacao','Conciliação']].map(([k,l],i)=>`<button type="button" class="ov-fin-tab${i===0?' is-active':''}" role="tab" aria-selected="${i===0?'true':'false'}" data-fin-tab="${k}">${l}</button>`).join('')}</div>`;
  html+=card('Dinheiro','Dinheiro',mode('dinheiro'));
  html+=card('Pix','PIX',rate('Pix')+mode('pix'));
  html+=card('Boleto','Boleto',field('boleto_custo','Custo por operação (R$)')+days('boleto_vencimento','Vence em (dias)')+days('boleto')+mode('boleto'));
@@ -58,3 +58,11 @@ function ovFinanceSaveAction(){
  for(const el of document.querySelectorAll('.cfg-financeiro [data-fee-rate]')){const n=Number(el.value);if(el.value===''||!Number.isFinite(n)||n<0||n>100){toast('Taxas devem ficar entre 0% e 100%');return}rates[el.dataset.feeRate]=n}
  db.financeiroConfig=next;db.taxasPagamento=rates;save();toast('Configurações financeiras salvas');render();
 }
+
+/* Navegação compacta: uma categoria financeira por vez. */
+document.addEventListener('click',function(e){
+ const tab=e.target.closest('.ov-fin-tab');if(!tab)return;
+ const root=tab.closest('.cfg-financeiro');if(!root)return;
+ root.querySelectorAll('.ov-fin-tab').forEach(b=>{const active=b===tab;b.classList.toggle('is-active',active);b.setAttribute('aria-selected',String(active))});
+ root.querySelectorAll('.cfg-card').forEach(card=>{card.hidden=card.id!=='fin-'+tab.dataset.finTab});
+});
