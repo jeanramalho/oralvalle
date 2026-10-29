@@ -189,7 +189,13 @@
     return JSON.stringify({ app: 'consultorio', v: 2, exp: new Date().toISOString(), data });
   }
   bkHtml = function () {
-    return `<section><h2>Backup e restauração</h2><p>Exportação dos dados autorizados, incluindo anexos. Para uma cópia administrativa completa ou volumes grandes, utilize pg_dump.</p>
+    return `<section><h2>Backup e restauração</h2>
+      <div class="card" style="margin-bottom:16px"><h3>Backup automático criptografado</h3>
+      <p class="note">Rotina preparada no GitHub Actions para executar diariamente às 02:00 (horário de Brasília, UTC−3), com retenção de 30 dias. <strong>Status: não verificado.</strong> Esta tela não recebe confirmação automática do GitHub; não considere o backup ativo antes de conferir uma execução concluída.</p>
+      <p class="note">No repositório GitHub, abra Actions → Backup criptografado do Supabase → Run workflow. Configure os segredos <code>SUPABASE_DB_URL</code> e <code>BACKUP_AGE_RECIPIENT</code> nas configurações do repositório. Guarde a chave privada age em local seguro, fora do sistema.</p>
+      <p class="note">Após executar, confira o resultado e baixe o artefato criptografado. Teste periodicamente a restauração em ambiente separado. O backup do banco não inclui automaticamente os arquivos do Supabase Storage.</p>
+      <a class="ghost" href="https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/manually-running-a-workflow" target="_blank" rel="noopener noreferrer">Como executar e conferir no GitHub</a></div>
+      <p>Exportação dos dados autorizados, incluindo anexos. Para uma cópia administrativa completa ou volumes grandes, utilize pg_dump.</p>
       <button data-act="bksave"${backingUp ? ' disabled' : ''}>${backingUp ? 'Preparando backup...' : 'Baixar backup com anexos'}</button>
       <button class="ghost" data-act="bktxt"${backingUp ? ' disabled' : ''}>Mostrar texto do backup</button>
       ${backupText ? `<textarea readonly aria-label="Backup completo">${esc(backupText)}</textarea><button data-act="bkcopy">Copiar backup preparado</button>` : ''}
