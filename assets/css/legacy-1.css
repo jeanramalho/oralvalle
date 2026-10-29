@@ -740,3 +740,9 @@ html[data-ov-mode="dark"] .ov-mt-table th{color:#f1f2f3 !important;border-color:
 .pf-observations label{flex:none;margin:0;font-size:13px;font-weight:500;white-space:nowrap}
 .pf-observations input{flex:1;min-width:0;width:auto;height:30px;min-height:30px;margin:0;padding:4px 9px;font-size:13px;box-sizing:border-box}
 @media(max-width:540px){.pf-observations{gap:8px;padding:7px 10px}.pf-observations label{font-size:12px}}
+
+/* Somente celular: observação compacta em repouso, legível ao tocar. */
+@media (max-width:540px){
+ .pf-observations textarea[data-pf-obs]{flex:1;min-width:0;width:0;height:32px;min-height:32px;max-height:32px;box-sizing:border-box;resize:none;overflow:hidden;white-space:nowrap;padding:5px 9px;margin:0;font:inherit;font-size:13px;line-height:20px;transition:none}
+ .pf-observations textarea[data-pf-obs]:focus{height:90px;min-height:90px;max-height:90px;white-space:pre-wrap;overflow:auto;overflow-wrap:anywhere}
+}
