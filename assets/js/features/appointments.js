@@ -97,48 +97,44 @@ function agHtml(){
     const confirmed=a.st==='Confirmado';const sub=[dName(a.dt),a.proc].filter(Boolean).join(' · ');
     return `<div class="ag-appointment ${confirmed?'is-confirmed':''}"><div class="ag-appointment-main"><div class="ag-l1"><strong>${esc(a.hora)}–${hm(mins(a.hora)+(a.dur||30))}</strong><span>·</span>${agPatient(a)}${a.tipo?`<span class="ag-tipo t1">${esc(a.tipo)}</span>`:''}</div><span class="ag-status">${esc(a.st||'Agendado')}</span></div><div class="ag-meta ag-l2">${a.tipo?`<span class="ag-tipo t2">${esc(a.tipo)}</span> `:''}${esc(sub)}</div><div class="ag-actions">${!confirmed?`<button class="sm ag-confirm" data-act="agstatus" data-id="${a.id}">Confirmar</button>`:''}<button class="ghost sm" data-act="agedit" data-id="${esc(a.id)}">Editar</button><button class="ghost sm" data-act="agencerrar" data-id="${a.id}">Dar baixa</button><button class="danger sm" data-act="rmag" data-id="${a.id}" title="Remover" aria-label="Remover">✕</button></div></div>`;
   };
-  // Escala única para os dois consultórios: horários e cartões permanecem alinhados.
-  const ROW=100, FREE=24;
-  const allRows=list.filter(a=>['1','2'].includes(String(a.cadeira||'1')));
-  let T0=SLOT0,T1=SLOT1+STEP;
-  allRows.forEach(a=>{const start=mins(a.hora),end=start+Math.max(1,Number(a.dur)||30);T0=Math.min(T0,Math.floor(start/STEP)*STEP);T1=Math.max(T1,Math.ceil(end/STEP)*STEP)});
-  T1=Math.min(T1,24*60);
-  const slotCount=Math.ceil((T1-T0)/STEP);
-  const heights=Array(slotCount).fill(FREE);
-  // Aumenta somente os intervalos necessários para acomodar cada consulta.
-  // O mesmo dimensionamento é aplicado às duas colunas.
-  allRows.forEach(a=>{
-    const start=mins(a.hora),end=start+Math.max(1,Number(a.dur)||30);
-    const first=Math.max(0,Math.floor((start-T0)/STEP));
-    const last=Math.min(slotCount-1,Math.floor((end-0.001-T0)/STEP));
-    if(last<first)return;
-    const portion=(idx)=>Math.max(0,Math.min(end,T0+(idx+1)*STEP)-Math.max(start,T0+idx*STEP))/STEP;
-    let available=0,weight=0;
-    for(let i=first;i<=last;i++){const f=portion(i);available+=heights[i]*f;weight+=f*f}
-    const needed=(agClosed(a)&&!agExpanded(a)?36:ROW)-available;
-    if(needed>0&&weight>0)for(let i=first;i<=last;i++)heights[i]+=needed*portion(i)/weight;
-  });
-  const tops=[];let totalHeight=0;
-  heights.forEach(h=>{tops.push(totalHeight);totalHeight+=h});
-  const yOf=t=>{
-    const k=Math.max(0,Math.min(slotCount-1,Math.floor((t-T0)/STEP)));
-    return tops[k]+Math.max(0,Math.min(1,(t-T0-k*STEP)/STEP))*heights[k];
-  };
+  // Cada consultório possui sua própria sequência de linhas. Consultas em horários
+  // intermediários entram como linhas reais, sem criar lacunas artificiais.
   const chairCard=(chair,label)=>{
     const rows=list.filter(a=>String(a.cadeira||'1')===chair);
     const rental=agRental(date,chair);
-    const grid=[];
-    const occ=m=>agRentalOverlaps(date,chair,m,m+STEP)||rows.some(a=>{const s0=mins(a.hora),e0=s0+(a.dur||30);return s0<m+STEP&&e0>m});
-    for(let i=0;i<slotCount;i++){
-      const m=T0+i*STEP,h=heights[i],o=occ(m);
-      grid.push(o?`<div class="slot has" style="height:${h}px"><div class="slot-h">${hm(m)}</div><div class="slot-b"></div></div>`:`<div class="slot thin" style="height:${h}px"><div class="slot-h">${hm(m)}</div><div class="slot-b"><button type="button" class="slot-free" data-act="agslot" data-h="${hm(m)}" data-c="${chair}">Livre</button></div></div>`);
+    const STEP_MIN=30, first=7*60, last=20*60;
+    const events=rows.map(a=>({a,s:mins(a.hora),e:mins(a.hora)+Math.max(1,Number(a.dur)||30)})).sort((a,b)=>a.s-b.s);
+    const groups=[];
+    events.forEach(ev=>{
+      const prev=groups[groups.length-1];
+      if(prev&&ev.s<prev.end){prev.events.push(ev);prev.end=Math.max(prev.end,ev.e)}
+      else groups.push({start:ev.s,end:ev.e,events:[ev]});
+    });
+    const limits=new Set();
+    for(let m=first;m<=last;m+=STEP_MIN)limits.add(m);
+    groups.forEach(g=>{limits.add(g.start);limits.add(g.end)});
+    if(rental){limits.add(mins(rental.inicio));limits.add(mins(rental.fim))}
+    const ticks=[...limits].filter(m=>m>=0&&m<=1440).sort((a,b)=>a-b);
+    const html=[];
+    let groupIdx=0;
+    for(let i=0;i<ticks.length-1;i++){
+      const t=ticks[i],next=ticks[i+1];
+      if(next<=t)continue;
+      while(groupIdx<groups.length&&groups[groupIdx].end<=t)groupIdx++;
+      const g=groups[groupIdx];
+      // Um único cartão por faixa de consulta: sem linhas atravessando o cartão.
+      if(g&&g.start===t){
+        const cards=g.events.map(ev=>`<div class="ag-block ag-flow-block">${apCard(ev.a)}</div>`).join('');
+        html.push(`<div class="ag-flow-row ag-flow-booked"><div class="ag-flow-time">${hm(g.start)}${g.end!==g.start?'–'+hm(g.end):''}</div><div class="ag-flow-content">${cards}</div></div>`);
+        continue;
+      }
+      if(g&&t>g.start&&t<g.end)continue;
+      const rented=rental&&t<mins(rental.fim)&&next>mins(rental.inicio);
+      const regular=t>=first&&t<=last;
+      if(!regular&&!rented)continue;
+      html.push(`<div class="ag-flow-row ag-flow-free"><div class="ag-flow-time">${hm(t)}</div><div class="ag-flow-content">${rented?'<span class="ag-flow-rented">🔒 Consultório alugado</span>':`<button type="button" class="slot-free" data-act="agslot" data-h="${hm(t)}" data-c="${chair}">Livre</button>`}</div></div>`);
     }
-    /* consultas lado a lado quando houver encaixe no mesmo horário */
-    const items=[];let lanesEnd=[],cl=[],clEnd=0;
-    const flush=()=>{cl.forEach(x=>{x.n=lanesEnd.length});items.push(...cl);cl=[];lanesEnd=[]};
-    rows.forEach(a=>{const s0=mins(a.hora),s=s0,e=Math.max(s0+(a.dur||30),s0+STEP);if(cl.length&&s>=clEnd)flush();let l=lanesEnd.findIndex(x=>x<=s);if(l<0){l=lanesEnd.length;lanesEnd.push(e)}else lanesEnd[l]=e;clEnd=cl.length?Math.max(clEnd,e):e;cl.push({a,s,e,l})});flush();
-    const rentalBlock=rental?`<div class="ag-rental-block" style="top:${yOf(mins(rental.inicio))+1}px;height:${Math.max(28,yOf(mins(rental.fim))-yOf(mins(rental.inicio))-2)}px"><strong>🔒 CONSULTÓRIO ALUGADO</strong><span>${esc(rental.inicio)}–${esc(rental.fim)}</span></div>`:'';
-    const blocks=items.map(x=>`<div class="ag-block${x.n>1?' ag-narrow':''}" style="top:${yOf(x.s)+1}px;height:${agClosed(x.a)&&!agExpanded(x.a)?Math.max(30,yOf(x.e)-yOf(x.s)-2):Math.max(34,yOf(x.e)-yOf(x.s)-2)}px;left:${x.l/x.n*100}%;width:${100/x.n}%">${apCard(x.a)}</div>`).join('');
-    return `<section class="card" style="margin:0"><div class="ag"><span><strong>${label}</strong></span><span class="badge">${rows.length} atendimento${rows.length===1?'':'s'}</span></div><div class="slots ag-tgrid">${grid.join('')}<div class="ag-layer">${rentalBlock}${blocks}</div></div></section>`};
+    return `<section class="card" style="margin:0"><div class="ag"><span><strong>${label}</strong></span><span class="badge">${rows.length} atendimento${rows.length===1?'':'s'}</span></div><div class="ag-flow-list">${html.join('')}</div></section>`;
+  };
   return avsCardHtml()+dateNav+rentalPanel+form+`<div class="ov-agenda-chairs">${chairCard('1','Consultório 1')}${chairCard('2','Consultório 2')}</div>`;
 }
