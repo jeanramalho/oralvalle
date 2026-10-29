@@ -569,3 +569,7 @@ body,button,input,select,textarea,summary{font-family:Figtree,system-ui,-apple-s
 .ag-flow-list .ag-flow-time{box-sizing:border-box;white-space:nowrap;padding-right:10px;overflow:hidden;text-overflow:clip}
 .ag-flow-list .ag-flow-content{min-width:0}
 @media(max-width:480px){.ag-flow-list .ag-flow-row{grid-template-columns:96px minmax(0,1fr)!important}}
+
+/* Nexodent 113: aproximar os cartões do horário, mantendo a coluna legível. */
+.ag-flow-list .ag-flow-row{grid-template-columns:72px minmax(0,1fr)!important}
+@media(max-width:480px){.ag-flow-list .ag-flow-row{grid-template-columns:72px minmax(0,1fr)!important}}
