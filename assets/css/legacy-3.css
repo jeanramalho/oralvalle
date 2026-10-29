@@ -573,3 +573,15 @@ body,button,input,select,textarea,summary{font-family:Figtree,system-ui,-apple-s
 /* Nexodent 113: aproximar os cartões do horário, mantendo a coluna legível. */
 .ag-flow-list .ag-flow-row{grid-template-columns:72px minmax(0,1fr)!important}
 @media(max-width:480px){.ag-flow-list .ag-flow-row{grid-template-columns:72px minmax(0,1fr)!important}}
+
+/* Nexodent 115: nome legível na agenda do celular, sem mudar dimensões dos cartões. */
+@media screen and (max-width:760px){
+  .ag-block .ag-appointment:not(.ag-compact):not(.ag-closed-expanded) .ag-l1 > strong,
+  .ag-block .ag-appointment:not(.ag-compact):not(.ag-closed-expanded) .ag-l1 > span:not(.ag-patient):not(.ag-tipo){display:none!important}
+  .ag-block .ag-appointment:not(.ag-compact):not(.ag-closed-expanded) .ag-l1 .ag-tipo.t1{display:none!important}
+  .ag-block .ag-appointment:not(.ag-compact):not(.ag-closed-expanded) .ag-l1 .ag-patient{
+    display:block!important;flex:1 1 auto!important;min-width:0!important;
+    max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;
+    white-space:nowrap!important;text-align:left!important;
+  }
+}
