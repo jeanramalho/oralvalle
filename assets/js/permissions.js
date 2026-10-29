@@ -53,6 +53,7 @@ function pmAllowed(act,d){
   if(act==='nav')return d.t==='inicio'||d.t==='conta'||pmLvl(d.t)>=1;
   if(act==='open')return pmLvl('pac')>=1;
   if(act==='pfOpen')return pmLvl('pf')>=1;
+  if(act==='pfFollow')return pmLvl('pf')>=2;
   if(act==='tab')return pmTabOk(d.t);
   if(act.slice(0,3)==='cfg'||act==='acadd'||act==='acrm'||act==='acrec'||act==='pmset')return false;
   if(PM_SAFE.has(act))return true;
