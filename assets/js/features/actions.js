@@ -63,7 +63,7 @@ const A={
   rxreset:(b,d,p)=>{const st=view.rx;if(!st||!p)return;if(db.rxm)delete db.rxm[st.model];st.texto=rxGen(p,st.model);st.edited=false;save();render();toast('Modelo original restaurado',2500)},
   cfglogorm:()=>{if(db.cl){db.cl.logo='';delete db.cl.logoW;delete db.cl.logoH;db.cl.semLogo=false}save();render();toast('Logo padrão restaurada',2500)},
   cfgnologo:()=>{if(!confirm('Remover todas as logos e deixar o sistema sem nenhuma imagem de logo?'))return;db.cl=db.cl||{};db.cl.logo='';db.cl.icone='';db.cl.semLogo=true;delete db.cl.logoW;delete db.cl.logoH;delete db.cl.iconeW;delete db.cl.iconeH;save();render();toast('Todas as logos foram removidas',2500)},
-  cfgcolorreset:()=>{db.cl=db.cl||{};db.cl.corTema='#ff7a00';save();applyTheme();render();toast('Cor laranja padrão restaurada',2200)},
+  cfgcolorreset:()=>{window.oralValleSetLocalAccent('#ff7a00');applyTheme();render();toast('Cor laranja padrão restaurada',2200)},
   cfgiconrm:()=>{if(db.cl){db.cl.icone='';delete db.cl.iconeW;delete db.cl.iconeH}save();render();toast('Ícone personalizado removido',2500)},
   agpick:(b,d)=>{const p=db.p.find(x=>x.id===d.id);if(!p)return;$('apn').value=p.nome;$('ap').value=p.id;const bx=$('apsug');bx.hidden=true;bx.innerHTML='';agAuto(p.id)},
   agstatus:(b,d)=>{const a=db.ag.find(x=>x.id===d.id);if(!a)return;a.st=a.st==='Confirmado'?'Compareceu':'Confirmado';save();render();},
