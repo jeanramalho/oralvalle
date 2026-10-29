@@ -32,7 +32,7 @@ function lockShow(mode,msg,code){
     el.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'){const p=el.querySelector('[data-primary]');if(p)p.click()}})}
   const app=$('app');app.innerHTML='';app.style.display='none';
   const err=msg?`<div class="lk-err" role="alert">${esc(msg)}</div>`:'';
-  const _c=topCl(),logo=`<div class="lk-brand">${_c.logo?`<img src="${esc(_c.logo)}" alt="" style="display:block;margin:0 auto 6px;max-height:64px;max-width:200px;object-fit:contain">`:''}<strong>${esc(_c.marca)}</strong><span>${esc(_c.sub)}</span></div>`;
+  const logo=`<div class="lk-brand nexo-login-brand"><img src="./assets/img/nexodent-symbol.png" alt="" class="nexo-login-symbol"><strong>Nexodent</strong><span>Sistema de Gestão Odontológica</span></div>`;
   let body='';
   if(mode==='setup')body=`<h1>Criar acesso</h1><p class="lk-t">Primeiro acesso. Crie o usuário administrador do sistema.</p>${err}
     <label for="lknome">Seu nome</label><input id="lknome" autocomplete="name">
