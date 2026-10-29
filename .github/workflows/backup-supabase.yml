@@ -70,10 +70,10 @@ jobs:
       - name: Instalar ferramentas
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq postgresql-client age
+          sudo apt-get install -y -qq age
 
-          echo "Versao do PostgreSQL:"
-          pg_dump --version
+          echo "Versao do PostgreSQL usado no backup:"
+          docker run --rm postgres:17 pg_dump --version
 
           echo "Versao do age:"
           age --version
@@ -94,12 +94,16 @@ jobs:
 
           echo "Iniciando exportacao do banco..."
 
-          pg_dump \
-            --dbname="$DATABASE_URL" \
-            --format=custom \
-            --no-owner \
-            --no-acl \
-            --file="$DUMP"
+          docker run --rm \
+            --env DATABASE_URL \
+            --volume "$RUNNER_TEMP/backup:/backup" \
+            postgres:17 \
+            pg_dump \
+              --dbname="$DATABASE_URL" \
+              --format=custom \
+              --no-owner \
+              --no-acl \
+              --file=/backup/oralvalle.dump
 
           test -s "$DUMP"
 
