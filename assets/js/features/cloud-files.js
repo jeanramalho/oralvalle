@@ -182,11 +182,15 @@
     };
   }
   let backupText = '';
+  let preparedBackup = '';
   let backingUp = false;
   async function prepareBackup() {
     await OralCloudSync.flush();
     const data = await OralCloudData.exportData(db);
-    return JSON.stringify({ app: 'consultorio', v: 2, exp: new Date().toISOString(), data });
+    if (!Array.isArray(data?.p)) throw new Error('Exportação incompleta: lista de pacientes ausente.');
+    const text = JSON.stringify({ app: 'consultorio', v: 2, exp: new Date().toISOString(), data });
+    if (!text || new Blob([text]).size < 100) throw new Error('Backup vazio ou incompleto. Nenhum arquivo foi criado.');
+    return text;
   }
   bkHtml = function () {
     return `<section><h2>Backup e restauração</h2>
@@ -196,7 +200,8 @@
       <p class="note">Após executar, confira o resultado e baixe o artefato criptografado. Teste periodicamente a restauração em ambiente separado. O backup do banco não inclui automaticamente os arquivos do Supabase Storage.</p>
       <a class="ghost" href="https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/manually-running-a-workflow" target="_blank" rel="noopener noreferrer">Como executar e conferir no GitHub</a></div>
       <p>Exportação dos dados autorizados, incluindo anexos. Para uma cópia administrativa completa ou volumes grandes, utilize pg_dump.</p>
-      <button data-act="bksave"${backingUp ? ' disabled' : ''}>${backingUp ? 'Preparando backup...' : 'Baixar backup com anexos'}</button>
+      <button data-act="bksave"${backingUp ? ' disabled' : ''}>${backingUp ? 'Preparando backup...' : 'Preparar backup com anexos'}</button>
+      ${preparedBackup ? `<button data-act="bkdownload">Salvar backup preparado (${(new Blob([preparedBackup]).size / 1048576).toFixed(1)} MB)</button>` : ''}
       <button class="ghost" data-act="bktxt"${backingUp ? ' disabled' : ''}>Mostrar texto do backup</button>
       ${backupText ? `<textarea readonly aria-label="Backup completo">${esc(backupText)}</textarea><button data-act="bkcopy">Copiar backup preparado</button>` : ''}
       <h2>Restaurar backup</h2><label for="rstf">Arquivo JSON</label><input id="rstf" type="file" accept=".json,application/json">
@@ -206,48 +211,53 @@
   };
   async function backup(showText) {
     if (backingUp) return;
-    // Solicitar a janela de salvamento durante o clique: navegadores bloqueiam
-    // pedidos feitos apenas depois de operações assíncronas demoradas.
-    let fileHandlePromise = null;
-    const filename = 'oralvalle-backup-' + tdy() + '.json';
-    if (!showText && typeof window.showSaveFilePicker === 'function' && window.isSecureContext) {
-      try {
-        fileHandlePromise = window.showSaveFilePicker({
-          suggestedName: filename,
-          types: [{ description: 'Backup JSON', accept: { 'application/json': ['.json'] } }]
-        });
-      } catch (error) { fileHandlePromise = Promise.reject(error); }
-    }
-    backingUp = true; render();
+    backingUp = true;
+    preparedBackup = '';
+    render();
     try {
       const text = await prepareBackup();
       if (showText) {
         backupText = text;
         toast('Texto do backup preparado.');
-      } else if (fileHandlePromise) {
-        const handle = await fileHandlePromise;
+      } else {
+        preparedBackup = text;
+        toast('Backup preparado. Clique em “Salvar backup preparado” para gravar no computador.', 7000);
+      }
+    } catch (error) { report(error); }
+    finally { backingUp = false; render(); }
+  }
+  A.bksave = () => backup(false);
+  A.bkdownload = async () => {
+    if (!preparedBackup) { toast('Prepare o backup primeiro.'); return; }
+    const text = preparedBackup;
+    const filename = 'oralvalle-backup-' + tdy() + '.json';
+    try {
+      if (typeof window.showSaveFilePicker === 'function' && window.isSecureContext) {
+        // Abrir a janela somente depois de o backup estar completo: nunca criar arquivo vazio.
+        const handle = await window.showSaveFilePicker({
+          suggestedName: filename,
+          types: [{ description: 'Backup JSON', accept: { 'application/json': ['.json'] } }]
+        });
         const stream = await handle.createWritable();
-        try { await stream.write(new Blob([text], { type: 'application/json' })); await stream.close(); }
-        catch (error) { await stream.abort().catch(() => {}); throw error; }
-        markBk(); toast('Backup salvo no computador.');
+        try {
+          await stream.write(new Blob([text], { type: 'application/json' }));
+          await stream.close();
+        } catch (error) { await stream.abort().catch(() => {}); throw error; }
+        toast('Backup salvo no computador. Confira o tamanho do arquivo.', 6000);
       } else {
         const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
         const link = document.createElement('a');
-        link.href = url;
-        link.download = filename;
-        link.style.display = 'none';
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
+        link.href = url; link.download = filename;
+        document.body.appendChild(link); link.click(); link.remove();
         setTimeout(() => URL.revokeObjectURL(url), 60000);
-        toast('Download solicitado. Confira os downloads do navegador; o salvamento não pode ser confirmado automaticamente.', 6000);
+        toast('Download solicitado. Confira o tamanho do arquivo na pasta Downloads.', 6000);
       }
+      markBk();
     } catch (error) {
-      if (error?.name === 'AbortError') toast('Salvamento cancelado. Nenhum arquivo foi confirmado.', 5000);
+      if (error?.name === 'AbortError') toast('Salvamento cancelado.', 5000);
       else report(error);
-    } finally { backingUp = false; render(); }
-  }
-  A.bksave = () => backup(false);
+    }
+  };
   A.bktxt = () => backup(true);
   A.bkcopy = () => { if (backupText) copy(backupText, 'Backup copiado.'); };
   restore = async function () {
@@ -274,5 +284,5 @@
     } catch (error) { report(error); }
   };
   window.OralCloudFiles = Object.freeze({ append, upload, signatureReady, signature,
-    reset() { generation++; cache.clear(); backupText = ''; urls.forEach(url => URL.revokeObjectURL(url)); urls.clear(); } });
+    reset() { generation++; cache.clear(); backupText = ''; preparedBackup = ''; urls.forEach(url => URL.revokeObjectURL(url)); urls.clear(); } });
 })();
