@@ -64,13 +64,8 @@ function topCl(){return Object.assign({},CL_DEF,db.cl||{})}
 function ovTop(){
   return `<header class="ov-top"><button type="button" class="ov-mobile-menu" aria-label="Abrir menu" aria-expanded="false" aria-controls="oral-mobile-nav">☰ <span>Menu</span></button>
     <div class="ov-brand">
-      ${(db.cl&&db.cl.semLogo)?``:(db.cl&&db.cl.icone)?`<img class="ov-icon-img" src="${esc(db.cl.icone)}" alt="Ícone da empresa">`:(db.cl&&db.cl.logo)?`<img class="ov-logo-img" src="${esc(db.cl.logo)}" alt="Logo">`:`<div class="ov-logo" aria-label="Logo padrão">
-        <svg viewBox="0 0 64 72" aria-hidden="true" focusable="false">
-          <path d="M32 5c-7-7-18-4-23 2-7 8-6 20-3 29 3 9 5 20 10 27 3 4 7 4 9-1l4-13c1-3 3-3 4 0l4 13c2 5 6 5 9 1 5-7 7-18 10-27 3-9 4-21-3-29-5-6-16-9-21-2z" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M22 13c4 3 8 3 10 0 2 3 6 3 10 0" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"/>
-        </svg>
-      </div>`}
-      <div><div class="ov-brand-name">${esc(topCl().marca)}</div><div class="ov-brand-sub">${esc(topCl().sub)}</div></div>
+      <img class="nexo-header-symbol" src="./assets/img/nexodent-symbol.png" alt="" />
+      <div class="nexo-header-name"><strong>Nexodent</strong><small>Sistema de Gestão Odontológica</small></div>
     </div>
     <div class="ov-user">
       <div class="ov-user-name">${esc(ME?ME.nome:'')} <span style="font-size:13px">⌄</span><small>${esc(topCl().marca)}</small></div>
