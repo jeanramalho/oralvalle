@@ -562,3 +562,10 @@ body,button,input,select,textarea,summary{font-family:Figtree,system-ui,-apple-s
 .ag-flow-list .ag-flow-content{min-width:0;overflow:visible}
 .ag-flow-list .ag-flow-block{position:relative!important;inset:auto!important;transform:none!important;box-sizing:border-box!important;padding:0!important;margin:0!important;max-width:100%!important}
 .ag-flow-list .ag-flow-block > .ag-appointment{position:relative!important;inset:auto!important;transform:none!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important;margin:0!important}
+
+/* Nexodent 112: reservar espaço real para intervalos como 10:30–11:00.
+   A coluna anterior (55px) deixava o texto invadir o cartão. */
+.ag-flow-list .ag-flow-row{grid-template-columns:100px minmax(0,1fr)!important}
+.ag-flow-list .ag-flow-time{box-sizing:border-box;white-space:nowrap;padding-right:10px;overflow:hidden;text-overflow:clip}
+.ag-flow-list .ag-flow-content{min-width:0}
+@media(max-width:480px){.ag-flow-list .ag-flow-row{grid-template-columns:96px minmax(0,1fr)!important}}
