@@ -1,0 +1,59 @@
+name: Backup individual criptografado por clínica
+
+on:
+  schedule:
+    - cron: '30 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup-individual-clinicas
+  cancel-in-progress: false
+
+jobs:
+  backup-individual:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+
+      - name: Validar configuração
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+          AGE_RECIPIENT: ${{ secrets.BACKUP_AGE_RECIPIENT }}
+        run: |
+          set -euo pipefail
+          test -n "$DATABASE_URL" || { echo "Falta SUPABASE_DB_URL"; exit 1; }
+          case "$AGE_RECIPIENT" in
+            age1*) ;;
+            *) echo "BACKUP_AGE_RECIPIENT ausente ou inválido"; exit 1 ;;
+          esac
+
+      - name: Instalar ferramentas
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq age
+          python -m pip install --disable-pip-version-check 'psycopg[binary]==3.2.9'
+          age --version
+          python --version
+
+      - name: Exportar e criptografar cada clínica
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+          AGE_RECIPIENT: ${{ secrets.BACKUP_AGE_RECIPIENT }}
+          BACKUP_OUTPUT_DIR: ${{ runner.temp }}/nexodent-clinic-backups
+        run: |
+          set -euo pipefail
+          umask 077
+          python scripts/backup_clinics.py
+
+      - name: Publicar somente arquivos criptografados
+        uses: actions/upload-artifact@v4
+        with:
+          name: nexodent-backups-individuais-${{ github.run_id }}
+          path: ${{ runner.temp }}/nexodent-clinic-backups/*.json.age
+          retention-days: 30
+          if-no-files-found: error
