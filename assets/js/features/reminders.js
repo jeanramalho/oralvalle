@@ -91,6 +91,17 @@ function retHtml(){
   ${out.length>8?`<button class="ghost sm" data-act="retall" style="margin-top:10px">${view.retAll?'Mostrar menos':'Mostrar todos ('+out.length+')'}</button>`:''}
   ${never.length?`<details style="margin-top:12px"><summary>Sem nenhuma consulta registrada (${never.length})</summary><p class="note" style="margin:6px 0 0">Cadastrados que nunca foram agendados. Não dá para saber há quanto tempo estão assim.</p>${never.map(p=>row(p,'')).join('')}</details>`:''}</section>`;
 }
+/* Aniversários: gerados diretamente do cadastro, sem criar lembretes duplicados. */
+function ovBirthdayToday(){
+  const md=tdy().slice(5);
+  return (db.p||[]).filter(p=>!p.arq&&/^\d{4}-\d{2}-\d{2}$/.test(String(p.nasc||''))&&p.nasc.slice(5)===md)
+    .sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR'));
+}
+function ovBirthdayHtml(){
+  const hoje=ovBirthdayToday();
+  return `<section class="card" style="margin-top:12px"><h2>🎂 Aniversariantes de hoje (${hoje.length})</h2><p class="note">Lista automática com base na data de nascimento cadastrada na ficha do paciente. Atualiza todos os dias.</p>
+  ${hoje.length?hoje.map(p=>`<div class="ret-it"><div class="ret-i"><strong>🎉 ${esc(p.nome||'Paciente')}</strong><small>Aniversário hoje · ${esc(fd(p.nasc))}${p.tel?' · '+esc(p.tel):''}</small></div><div class="ret-act"><button class="ghost sm" data-act="open" data-id="${esc(p.id)}">Ver ficha</button></div></div>`).join(''):'<p class="note">Nenhum paciente faz aniversário hoje.</p>'}</section>`;
+}
 function lembretesHtml(){
   const list=(db.lem||[]).slice().sort((a,b)=>{
     const da=(a.data||'9999-12-31')+' '+(a.hora||'23:59');
@@ -100,13 +111,13 @@ function lembretesHtml(){
   const hoje=tdy();
   const pend=list.filter(x=>!x.feito).length;
   const TIPOS=['Geral','Paciente','Financeiro','Agenda','Administrativo','Retorno'],rp=retPend(),op=orthoLista().length;
-  const tabs=[['todos','Todos',pend],['ret','Sem retorno',rp],['ortho','Ortodontia',op]].concat(TIPOS.map(t=>[t,t,list.filter(x=>!x.feito&&(x.tipo||'Geral')===t).length]));
+  const tabs=[['todos','Todos',pend],['aniversarios','🎂 Aniversários',ovBirthdayToday().length],['ret','Sem retorno',rp],['ortho','Ortodontia',op]].concat(TIPOS.map(t=>[t,t,list.filter(x=>!x.feito&&(x.tipo||'Geral')===t).length]));
   const T=tabs.some(x=>x[0]===view.lemTab)?view.lemTab:'todos';
   const shown=T==='todos'?list:list.filter(x=>(x.tipo||'Geral')===T),tipoSel=TIPOS.includes(T)?T:'Geral';
   const tabsHtml=`<div class="lem-tabs" role="tablist" aria-label="Assuntos dos lembretes">${tabs.map(x=>`<button type="button" role="tab" aria-selected="${T===x[0]}" class="${T===x[0]?'on':''}" data-act="lemtab" data-t="${x[0]}">${x[1]}${x[2]?` <span class="lem-n">${x[2]}</span>`:''}</button>`).join('')}</div>`;
   const retNote=`<div class="card" style="margin-bottom:12px;border-color:var(--ac)"><div class="row" style="align-items:center"><div style="flex:1"><strong>${rp} ${rp===1?'paciente sem retorno':'pacientes sem retorno'} há mais de ${retMeses()} meses</strong></div><button class="sm" data-act="lemtab" data-t="ret" style="flex:none">Ver lista</button></div></div>`;
   return `<div class="ov-page-head"><div><h1>Lembretes</h1><p class="sub">Anote tarefas, retornos e assuntos importantes da clínica.</p></div><span class="badge" style="font-size:14px;padding:7px 12px">${pend} pendente${pend===1?'':'s'}</span></div>
-  ${tabsHtml}${T==='ret'?retHtml():T==='ortho'?orthoHtml():`${T==='todos'&&rp?retNote:''}
+  ${tabsHtml}${T==='aniversarios'?ovBirthdayHtml():T==='ret'?retHtml():T==='ortho'?orthoHtml():`${T==='todos'?ovBirthdayHtml():''}${T==='todos'&&rp?retNote:''}
   <div class="ov-reminder-grid">
     <section class="ov-reminder-form">
       <h2>Novo lembrete</h2>

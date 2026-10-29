@@ -28,7 +28,7 @@ function ovIcon(name){
   };
   return P[name]?`<svg viewBox="0 0 24 24" aria-hidden="true">${P[name]}</svg>`:'•';
 }
-function lemPendN(){return (db.lem||[]).filter(x=>!x.feito).length}
+function lemPendN(){return (db.lem||[]).filter(x=>!x.feito).length+(typeof ovBirthdayToday==='function'?ovBirthdayToday().length:0)}
 function ovSidebar(active){
   const item=(id,label,ic)=>!pmSee(id)?'':`<button class="ov-nav-btn${active===id?' on':''}" data-act="nav" data-t="${id}"><span class="ico">${ovIcon(ic||id)}</span><span>${label}</span>${id==='lem'&&lemPendN()?`<span class="nav-dot" title="Lembretes pendentes" aria-label="${lemPendN()} lembrete(s) pendente(s)">${lemPendN()}</span>`:''}${id==='mt'&&mtAlertas().length?`<span class="nav-dot" title="Materiais vencidos ou próximos do vencimento">${mtAlertas().length}</span>`:''}</button>`;
   return pmCleanSide(`<aside class="ov-sidebar">
