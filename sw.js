@@ -2,7 +2,7 @@
 self.addEventListener('push', (event) => {
   let data = {};
   try { data = event.data ? event.data.json() : {}; } catch (_) { data = { body: event.data?.text() || '' }; }
-  const title = String(data.title || 'Oral Valle — Horário chegando');
+  const title = String(data.title || 'Nexodent — Horário chegando');
   const options = {
     body: String(data.body || 'Você tem um atendimento próximo.'),
     tag: String(data.tag || 'oralvalle-' + Date.now()),
