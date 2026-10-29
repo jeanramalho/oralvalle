@@ -555,3 +555,10 @@ body,button,input,select,textarea,summary{font-family:Figtree,system-ui,-apple-s
 .cfg-financeiro .ov-fin-tabs{display:flex;flex-wrap:nowrap;gap:5px;overflow-x:auto;max-width:100%;padding:2px 0 8px;margin:10px 0 12px;scrollbar-width:thin}
 .cfg-financeiro .ov-fin-tab{flex:0 0 auto;white-space:nowrap;padding:8px 10px;min-height:36px;font-family:Figtree,sans-serif;font-size:12px;font-weight:600;border-radius:8px;line-height:1.2}
 .cfg-financeiro .cfg-card[hidden]{display:none!important}
+
+/* Nexodent 111: agenda fluida — cartões no fluxo, sem sobrepor os horários. */
+.ag-flow-list .ag-flow-row{grid-template-columns:55px minmax(0,1fr)!important;column-gap:0;align-items:start}
+.ag-flow-list .ag-flow-time{position:relative;z-index:1;min-width:0;overflow:visible}
+.ag-flow-list .ag-flow-content{min-width:0;overflow:visible}
+.ag-flow-list .ag-flow-block{position:relative!important;inset:auto!important;transform:none!important;box-sizing:border-box!important;padding:0!important;margin:0!important;max-width:100%!important}
+.ag-flow-list .ag-flow-block > .ag-appointment{position:relative!important;inset:auto!important;transform:none!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important;margin:0!important}
