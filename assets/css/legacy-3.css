@@ -527,3 +527,19 @@ body,button,input,select,textarea,summary{font-family:Figtree,system-ui,-apple-s
 .ag-flow-block .ag-appointment{height:auto!important;min-height:64px!important}
 .ag-flow-block .ag-appointment.ag-compact{min-height:30px!important}
 .ag-flow-rented{font-size:11px;opacity:.8}
+
+/* Nexodent 084: nomes das listas clinicas iguais aos nomes em Pacientes.
+   Escopo restrito aos registros; nao altera titulos, botoes ou indicadores. */
+.ov-patients-page .ov-patient-row-name,
+.ret-card > details.ov-care-collapse.ret-it > summary strong,
+.dt-card .dt-nm,
+.dt-collapsible > summary.dt-head .dt-nm,
+.ret-card .ret-nm,
+.pcx-name {
+  font-family:Figtree,system-ui,-apple-system,"Segoe UI",sans-serif !important;
+  font-size:16px !important;
+  font-weight:500 !important;
+  line-height:1.4 !important;
+  letter-spacing:normal !important;
+  text-transform:none !important;
+}
