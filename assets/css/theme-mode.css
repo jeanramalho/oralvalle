@@ -62,3 +62,23 @@ html[data-ov-mode="dark"] textarea {color-scheme:dark}
 @media print {
   html[data-ov-mode] body,html[data-ov-mode] #printarea {background:white!important;color:black!important}
 }
+
+/* Nexodent 078 — modo claro: somente fundos das duas áreas principais.
+   Não modifica os cartões, botões, cabeçalho laranja ou modo escuro. */
+html[data-ov-mode="light"] body,
+html[data-ov-mode="light"] #app,
+html[data-ov-mode="light"] .ov-shell,
+html[data-ov-mode="light"] .ov-content,
+html[data-ov-mode="light"] .ov-content-inner,
+html[data-ov-mode="light"] .ov-main {
+  background-color:#ffffff !important;
+}
+html[data-ov-mode="light"] .ov-sidebar,
+html[data-ov-mode="light"] .ov-mobile-nav {
+  background-color:#ffffff !important;
+}
+/* Contraste dos textos diretamente sobre os fundos brancos. */
+html[data-ov-mode="light"] .ov-page-head h1,
+html[data-ov-mode="light"] .ov-sidebar .ov-nav-btn:not(.on):not(:hover) {
+  color:#303943;
+}
