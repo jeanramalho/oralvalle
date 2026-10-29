@@ -5,7 +5,7 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('change',e=>{
   const t=e.target;if(!t.matches('input[data-pf-follow]'))return;
-  const key=t.dataset.pfFollow;if(!['contatoRealizado','propostaMelhorada'].includes(key))return;
+  const key=t.dataset.pfFollow;if(!['contatoRealizado','segundoContato','propostaMelhorada'].includes(key))return;
   if(!pmAllowed('pfFollow',t.dataset)){t.checked=!t.checked;pmDeny();return}
   const p=db.p.find(x=>String(x.id)===String(t.dataset.pid));
   const o=p&&(p.orcs||[]).find(x=>String(x.id)===String(t.dataset.oid));
@@ -13,16 +13,7 @@ document.addEventListener('change',e=>{
   o[key]=t.checked;
   save();toast(t.checked?'Acompanhamento marcado':'Marcação removida',1600);
 });
-document.addEventListener('change',e=>{
-  const t=e.target;if(!t.matches('input[data-pf-follow]'))return;
-  const key=t.dataset.pfFollow;if(!['contatoRealizado','propostaMelhorada'].includes(key))return;
-  if(!pmAllowed('pfFollow',t.dataset)){t.checked=!t.checked;pmDeny();return}
-  const p=db.p.find(x=>String(x.id)===String(t.dataset.pid));
-  const o=p&&(p.orcs||[]).find(x=>String(x.id)===String(t.dataset.oid));
-  if(!o){t.checked=!t.checked;toast('Proposta não encontrada');return}
-  o[key]=t.checked;
-  save();toast(t.checked?'Acompanhamento marcado':'Marcação removida',1600);
-});
+
 document.addEventListener('input',e=>{
   const t=e.target,p=cur();
   if(t.id==='q'){q=t.value;view.pPage=0;render();setTimeout(()=>{const e=document.getElementById('q');if(e){e.focus();e.setSelectionRange(q.length,q.length)}},0);return}
