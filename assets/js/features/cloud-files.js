@@ -206,19 +206,46 @@
   };
   async function backup(showText) {
     if (backingUp) return;
+    // Solicitar a janela de salvamento durante o clique: navegadores bloqueiam
+    // pedidos feitos apenas depois de operações assíncronas demoradas.
+    let fileHandlePromise = null;
+    const filename = 'oralvalle-backup-' + tdy() + '.json';
+    if (!showText && typeof window.showSaveFilePicker === 'function' && window.isSecureContext) {
+      try {
+        fileHandlePromise = window.showSaveFilePicker({
+          suggestedName: filename,
+          types: [{ description: 'Backup JSON', accept: { 'application/json': ['.json'] } }]
+        });
+      } catch (error) { fileHandlePromise = Promise.reject(error); }
+    }
     backingUp = true; render();
     try {
       const text = await prepareBackup();
-      if (showText) backupText = text;
-      else {
+      if (showText) {
+        backupText = text;
+        toast('Texto do backup preparado.');
+      } else if (fileHandlePromise) {
+        const handle = await fileHandlePromise;
+        const stream = await handle.createWritable();
+        try { await stream.write(new Blob([text], { type: 'application/json' })); await stream.close(); }
+        catch (error) { await stream.abort().catch(() => {}); throw error; }
+        markBk(); toast('Backup salvo no computador.');
+      } else {
         const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
         const link = document.createElement('a');
-        link.href = url; link.download = 'oralvalle-backup-' + tdy() + '.json'; link.click();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        link.href = url;
+        link.download = filename;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+        toast('Download solicitado. Confira os downloads do navegador; o salvamento não pode ser confirmado automaticamente.', 6000);
       }
-      markBk(); toast('Backup com anexos preparado.');
-    } catch (error) { report(error); }
-    finally { backingUp = false; render(); }
+    } catch (error) {
+      if (error?.name === 'AbortError') toast('Salvamento cancelado. Nenhum arquivo foi confirmado.', 5000);
+      else report(error);
+    } finally { backingUp = false; render(); }
   }
   A.bksave = () => backup(false);
   A.bktxt = () => backup(true);
