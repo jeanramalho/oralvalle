@@ -447,6 +447,59 @@
       loaded(clinic);
       return captured;
   }
+  // Exportação progressiva: não mantém todos os anexos na memória.
+  async function exportToWritable(value, writable, progress) {
+    const captured = snapshot(value);
+    const clinic = cloud().clinicId;
+    return enqueue(async () => {
+      const current = loaded(clinic);
+      const revision = current.revision;
+      const encoder = new TextEncoder();
+      let bytes = 0;
+      async function write(text) {
+        const part = encoder.encode(text);
+        await writable.write(part);
+        bytes += part.byteLength;
+      }
+      await write('{"app":"consultorio","v":2,"exp":' + JSON.stringify(new Date().toISOString()) + ',"data":{');
+      let firstKey = true;
+      for (const [key, val] of Object.entries(captured)) {
+        if (!firstKey) await write(',');
+        firstKey = false;
+        await write(JSON.stringify(key) + ':');
+        if (key !== 'p' || !Array.isArray(val)) { await write(JSON.stringify(val)); continue; }
+        await write('[');
+        for (let i = 0; i < val.length; i++) {
+          if (i) await write(',');
+          const patient = { ...val[i] };
+          const parent = current.patients.get(JSON.stringify(patient.id));
+          if (parent) {
+            const descriptors = await pages('clinic_files_page', {
+              p_clinic: clinic, p_revision: revision, p_patient: parent
+            }, revision, 'patient_files');
+            const payload = { tables: { patients: [
+              { id: 'export-patients', parent_id: null, slot: 'p', position: -1, kind: 'array', dados: null },
+              { id: parent, parent_id: null, slot: 'p', position: 0, kind: 'object', dados: {} }
+            ], patient_files: [] } };
+            for (const descriptor of descriptors) {
+              const row = await rowChunks(clinic, revision, 'patient_files', descriptor.id);
+              payload.tables.patient_files.push(row);
+            }
+            const restored = inflate(payload).p;
+            if (restored?.[0]) Object.assign(patient, restored[0]);
+          }
+          await write(JSON.stringify(patient));
+          if (typeof progress === 'function') progress(i + 1, val.length, bytes);
+        }
+        await write(']');
+      }
+      const final = await rpc('clinic_load_start', { p_clinic: clinic });
+      if (final.revision !== revision) throw fail('40001', 'Dados alterados durante o backup. Tente novamente sem gravações simultâneas.');
+      loaded(clinic);
+      await write('}}');
+      return bytes;
+    });
+  }
   async function exportData(value) {
     const captured = snapshot(value);
     const clinic = cloud().clinicId;
@@ -563,6 +616,6 @@
     });
   }
   global.OralCloudData = Object.freeze({ load, loadPatient, patientLoaded, save, prepareDefaults, members, updateMember, pendingUsers, decideUser,
-    snapshot, files, file, changeFile, exportData, restoreData, queryPage, searchPatients,
+    snapshot, files, file, changeFile, exportData, exportToWritable, restoreData, queryPage, searchPatients,
     appointmentsForRange, salesForPeriod, currentRevision, reset });
 })(window);
