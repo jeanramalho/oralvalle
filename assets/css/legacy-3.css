@@ -501,3 +501,14 @@ section.ret-card:has(> details.ov-care-collapse) > h2 {
 .ov-top .nexo-header-name strong{display:block;margin:0;font-size:21px;line-height:1.15}
 .ov-top .nexo-header-name small{display:block;margin:0;font-size:10px;line-height:1.25;letter-spacing:0}
 @media(max-width:760px){.ov-top .ov-brand{gap:8px}.ov-top .nexo-header-symbol{flex-basis:43px;width:43px;height:43px}.ov-top .nexo-header-name strong{font-size:18px}.ov-top .nexo-header-name small{font-size:9px}}
+
+/* Nexodent 072 — tipografia consistente com a listagem de pacientes.
+   Preserva destaques de botoes, indicadores e titulos; uniformiza texto de listas. */
+:root{font-synthesis:none}
+body,button,input,select,textarea,summary{font-family:Figtree,system-ui,-apple-system,"Segoe UI",sans-serif}
+/* Cartoes de registros: mesmo peso visual da lista de pacientes. */
+.dt-card .dt-nm,.ret-card .ret-nm,.pcx-name,
+.dt-collapsible > summary.dt-head .dt-nm,
+.ret-card > .ov-care-collapse.ret-it > summary strong{
+  font-weight:500!important;
+}
