@@ -16,7 +16,7 @@ document.addEventListener('change',e=>{
 
 document.addEventListener('change',e=>{
   const t=e.target;
-  if(!t.matches('textarea[data-pf-obs]'))return;
+  if(!t.matches('[data-pf-obs]'))return;
   if(!pmAllowed('pfFollow',t.dataset)){pmDeny();return}
   const p=db.p.find(x=>String(x.id)===String(t.dataset.pid));
   const o=p&&(p.orcs||[]).find(x=>String(x.id)===String(t.dataset.oid));
