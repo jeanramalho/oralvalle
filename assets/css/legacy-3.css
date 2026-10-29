@@ -543,3 +543,10 @@ body,button,input,select,textarea,summary{font-family:Figtree,system-ui,-apple-s
   letter-spacing:normal !important;
   text-transform:none !important;
 }
+
+/* Nexodent 100: abas financeiras no padrão dos status das propostas */
+.ov-fin-tabs{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 16px}
+.ov-fin-tab{appearance:none;background:transparent;color:inherit;border:1px solid #777;border-radius:11px;padding:13px 17px;font:600 14px Figtree,inherit;cursor:pointer;text-decoration:none;min-height:46px}
+.ov-fin-tab.is-active{border-color:#f58200;background:rgba(245,130,0,.12);color:#ff8a18}
+.ov-fin-tab:hover{border-color:#f58200}
+.cfg-financeiro .cfg-card[hidden]{display:none!important}
