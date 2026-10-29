@@ -97,25 +97,48 @@ function agHtml(){
     const confirmed=a.st==='Confirmado';const sub=[dName(a.dt),a.proc].filter(Boolean).join(' · ');
     return `<div class="ag-appointment ${confirmed?'is-confirmed':''}"><div class="ag-appointment-main"><div class="ag-l1"><strong>${esc(a.hora)}–${hm(mins(a.hora)+(a.dur||30))}</strong><span>·</span>${agPatient(a)}${a.tipo?`<span class="ag-tipo t1">${esc(a.tipo)}</span>`:''}</div><span class="ag-status">${esc(a.st||'Agendado')}</span></div><div class="ag-meta ag-l2">${a.tipo?`<span class="ag-tipo t2">${esc(a.tipo)}</span> `:''}${esc(sub)}</div><div class="ag-actions">${!confirmed?`<button class="sm ag-confirm" data-act="agstatus" data-id="${a.id}">Confirmar</button>`:''}<button class="ghost sm" data-act="agedit" data-id="${esc(a.id)}">Editar</button><button class="ghost sm" data-act="agencerrar" data-id="${a.id}">Dar baixa</button><button class="danger sm" data-act="rmag" data-id="${a.id}" title="Remover" aria-label="Remover">✕</button></div></div>`;
   };
-  const ROW=96;
+  // Escala única para os dois consultórios: horários e cartões permanecem alinhados.
+  const ROW=100, FREE=24;
+  const allRows=list.filter(a=>['1','2'].includes(String(a.cadeira||'1')));
+  let T0=SLOT0,T1=SLOT1+STEP;
+  allRows.forEach(a=>{const start=mins(a.hora),end=start+Math.max(1,Number(a.dur)||30);T0=Math.min(T0,Math.floor(start/STEP)*STEP);T1=Math.max(T1,Math.ceil(end/STEP)*STEP)});
+  T1=Math.min(T1,24*60);
+  const slotCount=Math.ceil((T1-T0)/STEP);
+  const heights=Array(slotCount).fill(FREE);
+  // Aumenta somente os intervalos necessários para acomodar cada consulta.
+  // O mesmo dimensionamento é aplicado às duas colunas.
+  allRows.forEach(a=>{
+    const start=mins(a.hora),end=start+Math.max(1,Number(a.dur)||30);
+    const first=Math.max(0,Math.floor((start-T0)/STEP));
+    const last=Math.min(slotCount-1,Math.floor((end-0.001-T0)/STEP));
+    if(last<first)return;
+    const portion=(idx)=>Math.max(0,Math.min(end,T0+(idx+1)*STEP)-Math.max(start,T0+idx*STEP))/STEP;
+    let available=0,weight=0;
+    for(let i=first;i<=last;i++){const f=portion(i);available+=heights[i]*f;weight+=f*f}
+    const needed=(agClosed(a)&&!agExpanded(a)?36:ROW)-available;
+    if(needed>0&&weight>0)for(let i=first;i<=last;i++)heights[i]+=needed*portion(i)/weight;
+  });
+  const tops=[];let totalHeight=0;
+  heights.forEach(h=>{tops.push(totalHeight);totalHeight+=h});
+  const yOf=t=>{
+    const k=Math.max(0,Math.min(slotCount-1,Math.floor((t-T0)/STEP)));
+    return tops[k]+Math.max(0,Math.min(1,(t-T0-k*STEP)/STEP))*heights[k];
+  };
   const chairCard=(chair,label)=>{
     const rows=list.filter(a=>String(a.cadeira||'1')===chair);
     const rental=agRental(date,chair);
-    let T0=SLOT0,T1=SLOT1+STEP;
-    rows.forEach(a=>{const s=mins(a.hora),e=Math.max(s+(a.dur||30),s+STEP);T0=Math.min(T0,Math.floor(s/STEP)*STEP);T1=Math.max(T1,Math.ceil(e/STEP)*STEP)});
-    T1=Math.min(T1,24*60);
     const grid=[];
-    const FREE=22,occ=m=>agRentalOverlaps(date,chair,m,m+STEP)||rows.some(a=>{const s0=mins(a.hora),e0=s0+(a.dur||30);return s0<m+STEP&&e0>m});
-    const tops=[],hs=[];let acc=0;
-    for(let m=T0;m<T1;m+=STEP){const o=occ(m),active=rows.some(a=>!agClosed(a)&&mins(a.hora)<m+STEP&&mins(a.hora)+(a.dur||30)>m),h=o?(active?ROW:34):FREE;tops.push(acc);hs.push(h);acc+=h;
-      grid.push(o?`<div class="slot has" style="height:${h}px"><div class="slot-h">${hm(m)}</div><div class="slot-b"></div></div>`:`<div class="slot thin" style="height:${h}px"><div class="slot-h">${hm(m)}</div><div class="slot-b"><button type="button" class="slot-free" data-act="agslot" data-h="${hm(m)}" data-c="${chair}">Livre</button></div></div>`)}
-    const yOf=t=>{let k=Math.floor((t-T0)/STEP);k=Math.max(0,Math.min(hs.length-1,k));return tops[k]+((t-(T0+k*STEP))/STEP)*hs[k]};
+    const occ=m=>agRentalOverlaps(date,chair,m,m+STEP)||rows.some(a=>{const s0=mins(a.hora),e0=s0+(a.dur||30);return s0<m+STEP&&e0>m});
+    for(let i=0;i<slotCount;i++){
+      const m=T0+i*STEP,h=heights[i],o=occ(m);
+      grid.push(o?`<div class="slot has" style="height:${h}px"><div class="slot-h">${hm(m)}</div><div class="slot-b"></div></div>`:`<div class="slot thin" style="height:${h}px"><div class="slot-h">${hm(m)}</div><div class="slot-b"><button type="button" class="slot-free" data-act="agslot" data-h="${hm(m)}" data-c="${chair}">Livre</button></div></div>`);
+    }
     /* consultas lado a lado quando houver encaixe no mesmo horário */
     const items=[];let lanesEnd=[],cl=[],clEnd=0;
     const flush=()=>{cl.forEach(x=>{x.n=lanesEnd.length});items.push(...cl);cl=[];lanesEnd=[]};
     rows.forEach(a=>{const s0=mins(a.hora),s=s0,e=Math.max(s0+(a.dur||30),s0+STEP);if(cl.length&&s>=clEnd)flush();let l=lanesEnd.findIndex(x=>x<=s);if(l<0){l=lanesEnd.length;lanesEnd.push(e)}else lanesEnd[l]=e;clEnd=cl.length?Math.max(clEnd,e):e;cl.push({a,s,e,l})});flush();
     const rentalBlock=rental?`<div class="ag-rental-block" style="top:${yOf(mins(rental.inicio))+1}px;height:${Math.max(28,yOf(mins(rental.fim))-yOf(mins(rental.inicio))-2)}px"><strong>🔒 CONSULTÓRIO ALUGADO</strong><span>${esc(rental.inicio)}–${esc(rental.fim)}</span></div>`:'';
-    const blocks=items.map(x=>`<div class="ag-block${x.n>1?' ag-narrow':''}" style="top:${yOf(x.s)+1}px;height:${agClosed(x.a)&&!agExpanded(x.a)?Math.max(30,yOf(x.e)-yOf(x.s)-2):Math.max(ROW-2,yOf(x.e)-yOf(x.s)-2)}px;left:${x.l/x.n*100}%;width:${100/x.n}%">${apCard(x.a)}</div>`).join('');
+    const blocks=items.map(x=>`<div class="ag-block${x.n>1?' ag-narrow':''}" style="top:${yOf(x.s)+1}px;height:${agClosed(x.a)&&!agExpanded(x.a)?Math.max(30,yOf(x.e)-yOf(x.s)-2):Math.max(34,yOf(x.e)-yOf(x.s)-2)}px;left:${x.l/x.n*100}%;width:${100/x.n}%">${apCard(x.a)}</div>`).join('');
     return `<section class="card" style="margin:0"><div class="ag"><span><strong>${label}</strong></span><span class="badge">${rows.length} atendimento${rows.length===1?'':'s'}</span></div><div class="slots ag-tgrid">${grid.join('')}<div class="ag-layer">${rentalBlock}${blocks}</div></div></section>`};
   return avsCardHtml()+dateNav+rentalPanel+form+`<div class="ov-agenda-chairs">${chairCard('1','Consultório 1')}${chairCard('2','Consultório 2')}</div>`;
 }
