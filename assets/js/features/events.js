@@ -14,6 +14,16 @@ document.addEventListener('change',e=>{
   save();toast(t.checked?'Acompanhamento marcado':'Marcação removida',1600);
 });
 
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(!t.matches('textarea[data-pf-obs]'))return;
+  if(!pmAllowed('pfFollow',t.dataset)){pmDeny();return}
+  const p=db.p.find(x=>String(x.id)===String(t.dataset.pid));
+  const o=p&&(p.orcs||[]).find(x=>String(x.id)===String(t.dataset.oid));
+  if(!o){toast('Proposta não encontrada');return}
+  o.observacoesInternas=t.value;
+  save();toast('Observação salva',1600);
+});
 document.addEventListener('input',e=>{
   const t=e.target,p=cur();
   if(t.id==='q'){q=t.value;view.pPage=0;render();setTimeout(()=>{const e=document.getElementById('q');if(e){e.focus();e.setSelectionRange(q.length,q.length)}},0);return}
