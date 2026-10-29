@@ -347,7 +347,24 @@ const A={
   agbaixa:(b,d)=>{const a=db.ag.find(x=>x.id===d.id),m=procBy(a.proc);view.pre={pid:a.pid,dt:a.dt,proc:a.proc,valor:m&&m.preco?m.preco:'',ag:a.id};view.h='vd';view.sv='dia';render();topo()},
   agwa:(b,d)=>{const a=db.ag.find(x=>x.id===d.id),p=db.p.find(x=>x.id===a.pid);
     waOpen(p?p.tel:'','Olá, '+(p?p.nome.split(' ')[0]:'')+'! Confirmando sua consulta em '+fd(a.data)+' às '+a.hora+(a.dt?' com '+dName(a.dt):'')+'. Podemos confirmar?')},
-  bksave:async()=>{if(!dl)return;try{await dl.save({filename:'consultorio-backup-'+tdy()+'.json',data:bkData()});markBk();render();toast('Backup salvo')}catch(e){if(!e||e.code!=='declined')toast('Não foi possível salvar o arquivo. Use o texto do backup.',3500)}},
+  bksave:async()=>{
+    const filename='consultorio-backup-'+tdy()+'.json';
+    try{
+      // Navegadores comuns não disponibilizam a integração claude.use('downloads').
+      // O link temporário inicia um download nativo no computador ou celular.
+      const blob=new Blob([bkData()],{type:'application/json;charset=utf-8'});
+      const url=URL.createObjectURL(blob);
+      const link=document.createElement('a');
+      link.href=url;link.download=filename;link.style.display='none';
+      document.body.appendChild(link);
+      link.click();link.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),60000);
+      markBk();render();
+      toast('Download solicitado. Confira os downloads do navegador.',4500);
+    }catch(e){
+      toast('Não foi possível iniciar o download. Use o texto do backup.',4500);
+    }
+  },
   bktxt:()=>{view.bkt=!view.bkt;render()},
   bkcopy:()=>copy(bkData(),'Backup copiado. Cole em um lugar seguro.',()=>{markBk();render()}),
   bkrst:()=>restore()

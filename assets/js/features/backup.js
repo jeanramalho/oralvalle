@@ -6,7 +6,7 @@ function bkHtml(){
   const bk=db.meta.bk;
   return `<div class="card"><h2>Backup dos dados</h2><p class="sub" style="margin-bottom:8px">${bk?'Último backup: '+new Date(bk).toLocaleString('pt-BR'):'Nenhum backup feito ainda.'}</p>
   <p class="note" style="margin:0 0 12px">${db.p.length} paciente(s) e ${db.vd.length} venda(s) guardados neste navegador. Se limpar o navegador ou trocar de aparelho, tudo se perde. Faça backup toda semana. O arquivo contém CPF e dados de saúde: guarde em local seguro.</p>
-  ${dl?'<button data-act="bksave" style="width:100%;margin-bottom:8px">Salvar arquivo de backup</button>':''}
+  <button data-act="bksave" style="width:100%;margin-bottom:8px">Baixar arquivo de backup</button>
   <button class="ghost" data-act="bktxt" style="width:100%">${view.bkt?'Ocultar texto do backup':'Mostrar texto do backup'}</button>
   ${view.bkt?`<textarea readonly id="bkt" aria-label="Texto do backup" style="margin-top:8px;font:12px/1.3 monospace;min-height:120px">${esc(bkData())}</textarea><button class="sm" data-act="bkcopy" style="margin-top:8px">Copiar texto</button>`:''}</div>
   <div class="card"><h2>Importar pacientes de outro sistema</h2>
