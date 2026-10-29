@@ -493,3 +493,11 @@ section.ret-card:has(> details.ov-care-collapse) > h2 {
 .nexo-login-brand strong{display:block;font-size:29px;letter-spacing:-.7px}
 .nexo-login-brand span{display:block;font-size:12px}
 @media(max-width:760px){.nexo-header-symbol{height:40px;width:43px}.nexo-header-name strong{font-size:18px}.nexo-header-name small{font-size:9px}}
+
+/* Nexodent 068: alinhamento consistente da marca na barra superior. */
+.ov-top .ov-brand{display:flex;align-items:center;justify-content:flex-start;gap:10px;min-width:0}
+.ov-top .nexo-header-symbol{display:block;flex:0 0 54px;width:54px;height:54px;object-fit:contain;object-position:center}
+.ov-top .nexo-header-name{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:3px;min-width:0;line-height:1.1;text-align:left}
+.ov-top .nexo-header-name strong{display:block;margin:0;font-size:21px;line-height:1.15}
+.ov-top .nexo-header-name small{display:block;margin:0;font-size:10px;line-height:1.25;letter-spacing:0}
+@media(max-width:760px){.ov-top .ov-brand{gap:8px}.ov-top .nexo-header-symbol{flex-basis:43px;width:43px;height:43px}.ov-top .nexo-header-name strong{font-size:18px}.ov-top .nexo-header-name small{font-size:9px}}
