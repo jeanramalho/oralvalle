@@ -512,3 +512,18 @@ body,button,input,select,textarea,summary{font-family:Figtree,system-ui,-apple-s
 .ret-card > .ov-care-collapse.ret-it > summary strong{
   font-weight:500!important;
 }
+
+/* Agenda fluida: linhas independentes para cada consultório (v082). */
+.ag-flow-list{display:flex;flex-direction:column;min-width:0}
+.ag-flow-row{display:grid;grid-template-columns:55px minmax(0,1fr);align-items:start;min-width:0;border-bottom:1px solid var(--line,#343a3d)}
+.ag-flow-time{font-size:11px;padding:6px 4px 4px 0;white-space:nowrap;color:inherit}
+.ag-flow-content{min-width:0;padding:3px 0}
+.ag-flow-free{min-height:24px}
+.ag-flow-free .ag-flow-content{padding:2px 0}
+.ag-flow-booked{min-height:0}
+.ag-flow-booked .ag-flow-time{font-weight:700;color:var(--ac,#f28c28)}
+.ag-flow-booked .ag-flow-content{display:flex;flex-direction:column;gap:3px;padding:3px 0}
+.ag-flow-block{position:relative!important;top:auto!important;left:auto!important;width:100%!important;height:auto!important;min-height:0!important;min-width:0}
+.ag-flow-block .ag-appointment{height:auto!important;min-height:64px!important}
+.ag-flow-block .ag-appointment.ag-compact{min-height:30px!important}
+.ag-flow-rented{font-size:11px;opacity:.8}
