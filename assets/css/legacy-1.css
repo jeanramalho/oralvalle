@@ -733,3 +733,10 @@ html[data-ov-mode="dark"] .ov-mt-table th{color:#f1f2f3 !important;border-color:
 .pf-followup{display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;font-weight:500;margin:0;line-height:1.4}
 .pf-followup input{width:16px;height:16px;margin:0;accent-color:#f47b00;cursor:pointer;flex:none}
 .pf-followup:focus-within{outline:2px solid #f47b00;outline-offset:3px;border-radius:3px}
+
+/* Observações compactas, integradas à faixa de acompanhamento */
+.pf-entry .pf-followups{border-radius:0;padding-bottom:8px}
+.pf-observations{display:flex;align-items:center;gap:12px;min-width:0;padding:7px 16px;border:1px solid var(--ln,#ddd);border-top:0;border-radius:0 0 12px 12px;background:var(--sf,#fff);color:var(--ink,#222)}
+.pf-observations label{flex:none;margin:0;font-size:13px;font-weight:500;white-space:nowrap}
+.pf-observations input{flex:1;min-width:0;width:auto;height:30px;min-height:30px;margin:0;padding:4px 9px;font-size:13px;box-sizing:border-box}
+@media(max-width:540px){.pf-observations{gap:8px;padding:7px 10px}.pf-observations label{font-size:12px}}
