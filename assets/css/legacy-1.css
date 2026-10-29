@@ -725,3 +725,11 @@ html[data-ov-mode="dark"] .ov-mt-table th{color:#f1f2f3 !important;border-color:
   .ov-mt-table{min-width:620px}
   .ov-mt-table td,.ov-mt-table th{white-space:normal}
 }
+
+/* Acompanhamento rápido das propostas financeiras */
+.pf-entry{min-width:0;border-radius:12px;overflow:hidden}
+.pf-entry .pf-card{border-radius:12px 12px 0 0;border-bottom:0}
+.pf-followups{display:flex;gap:10px 20px;align-items:center;flex-wrap:wrap;padding:8px 16px 11px;border:1px solid var(--ln,#ddd);border-top:1px solid var(--ln,#ddd);border-radius:0 0 12px 12px;background:var(--sf,#fff);color:var(--ink,#222)}
+.pf-followup{display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;font-weight:500;margin:0;line-height:1.4}
+.pf-followup input{width:16px;height:16px;margin:0;accent-color:#f47b00;cursor:pointer;flex:none}
+.pf-followup:focus-within{outline:2px solid #f47b00;outline-offset:3px;border-radius:3px}
