@@ -585,3 +585,12 @@ body,button,input,select,textarea,summary{font-family:Figtree,system-ui,-apple-s
     white-space:nowrap!important;text-align:left!important;
   }
 }
+
+/* Nexodent 117 — propostas: três opções na mesma linha somente no celular. */
+@media screen and (max-width:600px){
+  .pf-view-tabs{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;flex-wrap:nowrap}
+  .pf-view-tabs .pf-view-tab{width:100%;min-width:0;padding:9px 3px;font-size:clamp(10px,2.8vw,13px);line-height:1.2;white-space:nowrap;text-align:center;border-radius:9px}
+  .pf-entry .pf-followups{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:8px 7px;align-items:center}
+  .pf-entry .pf-followup{display:flex;min-width:0;gap:4px;font-size:clamp(9px,2.55vw,12px);line-height:1.15;white-space:nowrap;align-items:center}
+  .pf-entry .pf-followup input{width:15px;height:15px;flex:0 0 15px}
+}
