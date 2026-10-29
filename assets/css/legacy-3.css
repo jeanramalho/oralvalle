@@ -594,3 +594,38 @@ body,button,input,select,textarea,summary{font-family:Figtree,system-ui,-apple-s
   .pf-entry .pf-followup{display:flex;min-width:0;gap:4px;font-size:clamp(9px,2.55vw,12px);line-height:1.15;white-space:nowrap;align-items:center}
   .pf-entry .pf-followup input{width:15px;height:15px;flex:0 0 15px}
 }
+
+/* Nexodent 118 — ajustes exclusivos para telas de celular. */
+@media screen and (max-width:600px){
+  /* Filtros em duas linhas equilibradas: Situacao / De, Ate / Paciente. */
+  .pf-filters{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:12px!important;
+    padding:14px!important;
+    align-items:end!important;
+  }
+  .pf-filters > div{min-width:0!important;grid-column:auto!important}
+  .pf-filters .pf-q{grid-column:auto!important}
+  .pf-filters label{display:block;max-width:100%;margin-bottom:5px!important}
+  .pf-filters select,.pf-filters input{
+    display:block;width:100%!important;min-width:0!important;max-width:100%!important;
+    box-sizing:border-box!important;font-size:14px!important;
+    text-overflow:ellipsis;
+  }
+  /* Acompanhamento com caixas de selecao maiores, sem quebrar a linha. */
+  .pf-entry .pf-followups{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.45fr)!important;
+    gap:5px!important;padding:10px 8px!important;align-items:center!important;
+  }
+  .pf-entry .pf-followup{
+    display:flex!important;align-items:center!important;gap:5px!important;
+    min-width:0!important;margin:0!important;font-size:clamp(10px,2.85vw,13px)!important;
+    line-height:1.2!important;white-space:nowrap!important;
+  }
+  .pf-entry .pf-followup input{
+    width:19px!important;height:19px!important;min-width:19px!important;
+    flex:0 0 19px!important;margin:0!important;
+  }
+}
