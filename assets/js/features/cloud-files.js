@@ -200,7 +200,7 @@
       <p class="note">Após executar, confira o resultado e baixe o artefato criptografado. Teste periodicamente a restauração em ambiente separado. O backup do banco não inclui automaticamente os arquivos do Supabase Storage.</p>
       <a class="ghost" href="https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/manually-running-a-workflow" target="_blank" rel="noopener noreferrer">Como executar e conferir no GitHub</a></div>
       <p>Exportação dos dados autorizados, incluindo anexos. Para uma cópia administrativa completa ou volumes grandes, utilize pg_dump.</p>
-      <button data-act="bksave"${backingUp ? ' disabled' : ''}>${backingUp ? 'Preparando backup...' : 'Preparar backup com anexos'}</button>
+      <button data-act="bksave"${backingUp ? ' disabled' : ''}>${backingUp ? 'Preparando backup...' : 'Baixar backup com anexos'}</button>
       ${preparedBackup ? `<button data-act="bkdownload">Salvar backup preparado (${(new Blob([preparedBackup]).size / 1048576).toFixed(1)} MB)</button>` : ''}
       <button class="ghost" data-act="bktxt"${backingUp ? ' disabled' : ''}>Mostrar texto do backup</button>
       ${backupText ? `<textarea readonly aria-label="Backup completo">${esc(backupText)}</textarea><button data-act="bkcopy">Copiar backup preparado</button>` : ''}
@@ -226,7 +226,47 @@
     } catch (error) { report(error); }
     finally { backingUp = false; render(); }
   }
-  A.bksave = () => backup(false);
+  A.bksave = async () => {
+    if (backingUp) return;
+    if (typeof window.showSaveFilePicker !== 'function' || !window.isSecureContext) {
+      toast('Para backup grande, abra o Nexodent no Chrome ou Edge atualizado (HTTPS).', 7000);
+      return;
+    }
+    let handle;
+    try {
+      handle = await window.showSaveFilePicker({
+        suggestedName: 'oralvalle-backup-' + tdy() + '.json',
+        types: [{ description: 'Backup JSON', accept: { 'application/json': ['.json'] } }]
+      });
+    } catch (error) {
+      if (error?.name !== 'AbortError') report(error);
+      return;
+    }
+    backingUp = true;
+    render();
+    let stream;
+    try {
+      await OralCloudSync.flush();
+      stream = await handle.createWritable();
+      let last = 0;
+      const bytes = await OralCloudData.exportToWritable(db, stream, (done, total) => {
+        const now = Date.now();
+        if (now - last > 1200 || done === total) {
+          last = now;
+          const label = document.querySelector('[data-act="bksave"]');
+          if (label) label.textContent = `Preparando ${done}/${total} pacientes...`;
+        }
+      });
+      if (bytes < 100) throw new Error('Backup vazio: operação cancelada.');
+      await stream.close();
+      stream = null;
+      markBk();
+      toast(`Backup salvo (${(bytes / 1048576).toFixed(1)} MB). Verifique o arquivo.`, 7000);
+    } catch (error) {
+      if (stream) await stream.abort().catch(() => {});
+      report(error);
+    } finally { backingUp = false; render(); }
+  };
   A.bkdownload = async () => {
     if (!preparedBackup) { toast('Prepare o backup primeiro.'); return; }
     const text = preparedBackup;
