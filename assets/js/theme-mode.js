@@ -2,6 +2,14 @@
 (function(){
  'use strict';
  const KEY='oralvalle:appearance:v1';
+ const ACCENT_KEY='nexodent:accent:device:v1';
+ window.oralValleLocalAccent=function(){
+   try {const c=localStorage.getItem(ACCENT_KEY);return /^#[0-9a-fA-F]{6}$/.test(c||'')?c:'#ff7a00'}catch(_){return '#ff7a00'}
+ };
+ window.oralValleSetLocalAccent=function(c){
+   if(!/^#[0-9a-fA-F]{6}$/.test(c||''))return;
+   try{localStorage.setItem(ACCENT_KEY,c)}catch(_){}
+ };
  function saved(){try{return localStorage.getItem(KEY)==='dark'?'dark':'light'}catch(_){return 'light'}}
  function apply(mode,persist){
    const value=mode==='dark'?'dark':'light';
