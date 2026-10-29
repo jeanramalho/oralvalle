@@ -39,6 +39,38 @@
     if (!response.ok || !result.success) throw new Error(result.error || 'Não foi possível registrar este aparelho.');
     return result;
   }
+  // Verificação silenciosa: nunca solicita permissão automaticamente.
+  async function checkPushStatus() {
+    if (!window.isSecureContext || !('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window))
+      return { active: false, label: 'Push indisponível neste modo' };
+    if (Notification.permission === 'denied') return { active: false, label: 'Notificações bloqueadas' };
+    if (Notification.permission !== 'granted') return { active: false, label: 'Notificações desativadas' };
+    try {
+      const registration = await navigator.serviceWorker.getRegistration('/sw.js');
+      const subscription = registration && await registration.pushManager.getSubscription();
+      return subscription ? { active: true, label: 'Push ativado neste aparelho' }
+        : { active: false, label: 'Push não cadastrado neste aparelho' };
+    } catch (_) { return { active: false, label: 'Não foi possível verificar o Push' }; }
+  }
+  let checking = false;
+  async function refreshPushStatus() {
+    if (checking) return;
+    const buttons = document.querySelectorAll('[data-act="pushactivate"]');
+    if (!buttons.length) return;
+    checking = true;
+    try {
+      const status = await checkPushStatus();
+      buttons.forEach(button => {
+        button.textContent = status.active ? '🟢 Push ativado' : '🔴 ' + status.label + ' · Ativar Push';
+        button.title = status.active ? 'Toque para renovar o cadastro neste aparelho' : 'Toque para ativar as notificações Push';
+        button.setAttribute('aria-label', status.label + (status.active ? '. Toque para renovar o cadastro.' : '. Toque para ativar.'));
+      });
+    } finally { checking = false; }
+  }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshPushStatus(); });
+  document.addEventListener('DOMContentLoaded', refreshPushStatus);
+  // O cartão da agenda é recriado ao navegar; verificar periodicamente quando visível.
+  setInterval(() => { if (!document.hidden) refreshPushStatus(); }, 12000);
   document.addEventListener('click', async function (event) {
     const button = event.target.closest('[data-act="pushactivate"]');
     if (!button) return;
@@ -49,7 +81,7 @@
       alert('Notificações Push cadastradas neste aparelho!');
     } catch (error) {
       alert('Não foi possível ativar Push: ' + error.message);
-    } finally { button.disabled = false; }
+    } finally { button.disabled = false; refreshPushStatus(); }
   }, true);
-  window.OralVallePush = { activatePush };
+  window.OralVallePush = { activatePush, checkPushStatus, refreshPushStatus };
 })();
