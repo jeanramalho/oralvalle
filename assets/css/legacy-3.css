@@ -483,3 +483,13 @@ section.ret-card:has(> details.ov-care-collapse) > h2 {
 .ov-ag-modal-footer{display:flex;justify-content:flex-end;gap:9px;margin-top:22px}
 .ov-ag-modal-footer button{width:auto!important;min-width:96px}
 @media(max-width:480px){.ov-ag-modal{padding:16px}.ov-ag-modal-footer button{flex:1}}
+
+/* Nexodent: identidade do SOFTWARE; documentos continuam com marca da clínica. */
+.nexo-header-symbol{height:52px;width:58px;object-fit:contain;flex:none}
+.nexo-header-name{display:flex;flex-direction:column;gap:2px;line-height:1.2}
+.nexo-header-name strong{font-size:22px;font-weight:800;letter-spacing:-.6px}
+.nexo-header-name small{font-size:10px;letter-spacing:.05em;opacity:.8}
+.nexo-login-brand .nexo-login-symbol{display:block;width:100px;height:105px;object-fit:contain;margin:0 auto 4px}
+.nexo-login-brand strong{display:block;font-size:29px;letter-spacing:-.7px}
+.nexo-login-brand span{display:block;font-size:12px}
+@media(max-width:760px){.nexo-header-symbol{height:40px;width:43px}.nexo-header-name strong{font-size:18px}.nexo-header-name small{font-size:9px}}
