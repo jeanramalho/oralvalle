@@ -10,10 +10,11 @@
     <meta name="format-detection" content="telephone=no" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Nexodent — Gestão Odontológica</title>
-               <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-    <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png" />
-    <link rel="shortcut icon" href="./favicon.ico" />
-    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+               <link rel="icon" type="image/svg+xml" href="./favicon.svg?v=068" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png?v=068" />
+    <link rel="shortcut icon" href="./favicon.ico?v=068" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png?v=068" />
+    <link rel="manifest" href="./manifest.webmanifest?v=068" />
     <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./assets/css/legacy-1.css" />
     <link rel="stylesheet" href="./assets/css/legacy-2.css" />
@@ -27,7 +28,6 @@
       #ov-startup-shell[hidden]{display:none!important}
       .ov-splash-logo{width:110px;height:110px;object-fit:contain;animation:ov-splash-breathe 1.8s ease-in-out infinite;filter:drop-shadow(0 4px 12px rgba(230,113,0,.13))}
       .nexo-splash-brand{display:flex;flex-direction:column;align-items:center;gap:2px}
-      .nexo-splash-word{width:min(320px,75vw);height:auto;object-fit:contain}
       .ov-splash-caption{position:absolute;bottom:max(20px,env(safe-area-inset-bottom));right:24px;left:24px;text-align:right;font-size:12px;letter-spacing:.01em}
       @keyframes ov-splash-breathe{0%,100%{opacity:.7;transform:scale(.97)}50%{opacity:1;transform:scale(1.03)}}
       @media(prefers-reduced-motion:reduce){.ov-splash-logo{animation:none}}
@@ -37,7 +37,7 @@
   <body>
     <!-- Tela neutra de abertura: somente a marca, sem informações clínicas. -->
     <div id="ov-startup-shell" role="status" aria-live="polite" aria-label="Carregando Nexodent">
-      <div class="nexo-splash-brand"><img class="ov-splash-logo" src="./assets/img/nexodent-symbol.png" alt="" /><img class="nexo-splash-word" src="./assets/img/nexodent-wordmark.png" alt="Nexodent" /></div>
+      <div class="nexo-splash-brand"><img class="ov-splash-logo" src="./assets/img/nexodent-symbol.png" alt="Nexodent" /></div>
       <span class="ov-splash-caption" id="ov-splash-message">Carregando seu sistema...</span>
     </div>
     <main id="app"></main>
