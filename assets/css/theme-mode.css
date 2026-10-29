@@ -9,3 +9,56 @@ html[data-ov-mode] label:has(> input[data-ov-theme-choice]){cursor:pointer}
 html[data-ov-mode="dark"] .dt-card,html[data-ov-mode="dark"] .oitem{background:#292e31;color:var(--ink)}
 html[data-ov-mode="light"] .dt-card,html[data-ov-mode="light"] .oitem{background:#f5f5f5;color:var(--ink)}
 html[data-ov-mode="dark"] #ov-startup-shell{background:#171a1c;color:#b5bdc4}
+
+/* Nexodent 076: aparência controla a superfície completa do aplicativo.
+   A identidade laranja e as cores de status permanecem intactas. */
+html[data-ov-mode="light"] {
+  --ov-bg:#f6f7f9;--ov-card:#ffffff;--ov-text:#303943;
+  --ov-muted:#687481;--ov-line:#dfe3e7;
+  --bg:#f6f7f9;--bg2:#eef1f4;--sf:#ffffff;
+  --card:#ffffff;--ink:#303943;--mut:#687481;--ln:#dfe3e7;
+}
+html[data-ov-mode="dark"] {
+  --ov-bg:#171a1c;--ov-card:#202426;--ov-text:#f1f2f3;
+  --ov-muted:#b5bdc4;--ov-line:#3b4145;
+  --bg:#171a1c;--bg2:#292e31;--sf:#202426;
+  --card:#202426;--ink:#f1f2f3;--mut:#b5bdc4;--ln:#3b4145;
+}
+html[data-ov-mode] body,
+html[data-ov-mode] #app,
+html[data-ov-mode] .ov-shell,
+html[data-ov-mode] .ov-main,
+html[data-ov-mode] .ov-content {background-color:var(--ov-bg);color:var(--ov-text)}
+html[data-ov-mode] .ov-sidebar,
+html[data-ov-mode] .ov-panel,
+html[data-ov-mode] .ov-tile.light,
+html[data-ov-mode] .ov-wa,
+html[data-ov-mode] .ov-banner,
+html[data-ov-mode] .ov-mobile-nav {background:var(--ov-card);color:var(--ov-text);border-color:var(--ov-line)}
+html[data-ov-mode] .ov-nav-btn {color:var(--ov-muted)}
+html[data-ov-mode="light"] .ov-nav-btn:hover {background:#fff4e9;color:#d66a00}
+html[data-ov-mode="light"] .ov-nav-btn.on {background:#fff1e2;color:#d66a00}
+html[data-ov-mode="dark"] .ov-nav-btn:hover {background:#30271e;color:#ff9b36}
+html[data-ov-mode="dark"] .ov-nav-btn.on {background:#3c2919;color:#ff9b36}
+html[data-ov-mode] .card,
+html[data-ov-mode] .pt,
+html[data-ov-mode] .chk,
+html[data-ov-mode] .ob-pay,
+html[data-ov-mode] .pf-card {background:var(--sf);color:var(--ink);border-color:var(--ln)}
+html[data-ov-mode="light"] .dt-card,
+html[data-ov-mode="light"] .oitem {background:#fff;color:var(--ink)}
+html[data-ov-mode="light"] .ov-mt-table,
+html[data-ov-mode="light"] .ov-mt-table th,
+html[data-ov-mode="light"] .ov-mt-table td {background:#fff;color:#303943;border-color:#dfe3e7}
+html[data-ov-mode="light"] .ov-mt-table tbody tr:nth-child(even) td {background:#f6f7f9}
+html[data-ov-mode="light"] input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+html[data-ov-mode="light"] select,
+html[data-ov-mode="light"] textarea {background:#fff;color:#303943;border-color:#cbd2d9;color-scheme:light}
+html[data-ov-mode="light"] input::placeholder,
+html[data-ov-mode="light"] textarea::placeholder {color:#87919c}
+html[data-ov-mode="dark"] input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+html[data-ov-mode="dark"] select,
+html[data-ov-mode="dark"] textarea {color-scheme:dark}
+@media print {
+  html[data-ov-mode] body,html[data-ov-mode] #printarea {background:white!important;color:black!important}
+}
