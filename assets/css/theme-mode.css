@@ -9,3 +9,13 @@ html[data-ov-mode] label:has(> input[data-ov-theme-choice]){cursor:pointer}
 html[data-ov-mode="dark"] .dt-card,html[data-ov-mode="dark"] .oitem{background:#292e31;color:var(--ink)}
 html[data-ov-mode="light"] .dt-card,html[data-ov-mode="light"] .oitem{background:#f5f5f5;color:var(--ink)}
 html[data-ov-mode="dark"] #ov-startup-shell{background:#171a1c;color:#b5bdc4}
+
+/* Nexodent 073 — modo escuro sem contornos claros nos cartões e opções.
+   Preserva divisórias funcionais, campos de formulário e foco acessível. */
+html[data-ov-mode="dark"] :is(.card,.pt,.chk,.ob-pay,.dt-card,.oitem,.pf-card,.ov-add,.ag-rental-item,.ret-card,.pcx-card,.ov-care-collapse,.ov-ag-status-options label){
+  border-color:transparent!important;
+  box-shadow:none;
+}
+html[data-ov-mode="dark"] :is(.card,.pt,.chk,.ob-pay,.dt-card,.oitem,.pf-card,.ov-add,.ret-card,.pcx-card){
+  background-color:var(--sf);
+}
