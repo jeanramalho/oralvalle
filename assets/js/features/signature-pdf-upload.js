@@ -11,7 +11,6 @@
   async function permission(){
     if(!cloudReady())return false;
     const id=OralCloud.clinicId;
-    if(state.clinic===id)return state.allowed;
     state.clinic=id;state.allowed=false;
     try{state.allowed=(await OralCloud.request('/rest/v1/rpc/nexodent_can_use_ecnpj',{method:'POST',body:{p_clinic:id}}))===true;}
     catch(e){console.warn('Permissão de upload indisponível:',e?.message||e);}
@@ -61,30 +60,25 @@
     if(!cloudReady())return html;
     // Renderização da aba ocorre de forma síncrona; a permissão será checada antes de abrir.
     const slot='<div id="nexo-signature-upload-slot"></div>';
-    const patientId=String(patient.id);
+    const patientId=String(patient?.id ?? '');
     return html.includes(slot)?html.replace(slot,'<div style="margin:14px 0;padding:12px;border:1px solid #f2b47e;border-radius:10px;background:#fff8f1"><strong>📄 Preparar PDF para assinatura</strong><p style="font-size:12px">Envio de teste ao Storage privado; vincula ao paciente após validação; não assina.</p><button type="button" data-act="nexopdfupload" data-patient-id="'+patientId+'" style="background:#e97713;color:white">📄 Enviar PDF para assinatura (administrador)</button></div>'):html;
   };
-  // Captura o clique independentemente do roteador global A, que pode não
-  // estar exposto em window quando este módulo é carregado.
-  document.addEventListener('click', async (event) => {
+  // Abre a janela imediatamente. A permissão administrativa é verificada
+  // novamente ao enviar, inclusive no servidor (Edge Function).
+  document.addEventListener('click', (event) => {
     const button = event.target?.closest?.('[data-act="nexopdfupload"]');
     if (!button) return;
     event.preventDefault();
     event.stopImmediatePropagation();
-    if (button.disabled) return;
-    button.disabled = true;
-    try {
-      if (!(await permission())) {
-        notify('Acesso exclusivo do administrador ativo.');
-        return;
-      }
-      const patientId=button.getAttribute('data-patient-id');
-      if(!/^[a-zA-Z0-9_-]{32}$/.test(patientId||'')){notify('Paciente não identificado.');return;}
-      modal(patientId);
-    } catch (error) {
-      notify('Não foi possível abrir o envio: ' + (error?.message || String(error)));
-    } finally {
-      button.disabled = false;
+    const patientId = button.getAttribute('data-patient-id');
+    if (!/^[a-zA-Z0-9_-]{32}$/.test(patientId || '')) {
+      notify('Paciente não identificado. Confira o cadastro antes de enviar o PDF.');
+      return;
     }
+    if (!cloudReady()) {
+      notify('Aguarde a conexão com o Supabase e tente novamente.');
+      return;
+    }
+    modal(patientId);
   }, true);
 })();
