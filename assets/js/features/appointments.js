@@ -88,7 +88,7 @@ function agHtml(){
   const agExpanded=a=>String(view.agExpanded||'')===String(a.id);
   const apCard=a=>{
     if(agClosed(a)){
-      const cls=['Faltou','Cancelado'].includes(a.st)?'ag-compact-red':'ag-compact-green';
+      const cls=a.st==='Faltou'?'ag-compact-red':a.st==='Cancelado'?'ag-compact-yellow':'ag-compact-orange';
       const label=a.st==='Faltou'?'Faltou':a.st==='Cancelado'?'Desmarcou':'Compareceu';
       return agExpanded(a)
         ? `<div class="ag-appointment ag-closed-expanded"><div class="ag-appointment-main"><strong>${esc(a.hora)}–${hm(mins(a.hora)+(a.dur||30))}</strong>${agPatient(a)}<span class="ag-status">${esc(label)}</span></div><div class="ag-actions"><button type="button" class="ghost sm" data-act="agedit" data-id="${esc(a.id)}">Editar</button><button type="button" class="ghost sm" data-act="agcollapse" data-id="${esc(a.id)}">Fechar</button><button type="button" class="danger sm" data-act="rmag" data-id="${esc(a.id)}" title="Remover somente este agendamento" aria-label="Remover agendamento">${delArm===a.id?'Confirmar':'✕'}</button></div></div>`
