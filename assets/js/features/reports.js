@@ -5,6 +5,18 @@
  'use strict';
  const can = k => typeof pmLvl==='function' && pmLvl(k)>=1;
  const commercial = () => window.NexoModules?.resolve('reports') !== false;
+ // Não apresentar/exportar dados de uma clínica após a troca de contexto.
+ let reportClinic = null;
+ function clinicReady(){
+  const id = window.OralCloud?.clinicId;
+  if (!window.OralCloud?.enabled) return true;
+  if (!id) return false;
+  if (reportClinic === null) reportClinic = id;
+  return reportClinic === id;
+ }
+ window.addEventListener('nexodent:modules-updated', e => {
+  if (e.detail?.clinicId && e.detail.clinicId !== reportClinic) reportClinic = e.detail.clinicId;
+ });
  const moduleAllowed = key => window.NexoModules?.resolve(key) !== false;
  const dateOK=(s,a,b)=>!!s && String(s).slice(0,10)>=a && String(s).slice(0,10)<=b;
  const n=v=>typeof num==='function'?num(v):(Number(v)||0);
@@ -37,6 +49,7 @@
  }
  function current(){let type=view.reportType||'finance';if(!allowed(type))type=Object.keys(kinds).find(allowed);return type}
  window.nexoReportsHtml=function(){
+  if(!clinicReady())return '<div class="card"><h2>Relatórios temporariamente indisponíveis</h2><p>Recarregue os dados da clínica selecionada antes de consultar relatórios.</p></div>';
   if(!commercial())return '<div class="card"><h2>Relatórios indisponíveis</h2><p>Este módulo não está incluído no plano da clínica.</p></div>';
   const type=current();if(!type)return '<div class="card"><h2>Sem acesso aos relatórios</h2><p>Solicite ao administrador as permissões necessárias.</p></div>';
   view.reportType=type;
@@ -58,12 +71,14 @@
  document.addEventListener('click',e=>{
   const apply=e.target.closest('#nx-r-apply'),pdf=e.target.closest('#nx-r-pdf');if(!apply&&!pdf)return;
   e.preventDefault();e.stopImmediatePropagation();
-  if(!commercial())return;
+  if(!clinicReady() || !commercial())return;
   const type=document.getElementById('nx-r-type')?.value;
   if(!allowed(type))return;
   const [a,b]=dates();if(!/^\d{4}-\d{2}-\d{2}$/.test(a)||!/^\d{4}-\d{2}-\d{2}$/.test(b)||a>b){alert('Informe um período válido, com a data inicial anterior ou igual à final.');return}
   view.reportType=type;view.reportFrom=a;view.reportTo=b;
   if(apply){render();return}
+  // Revalidar contexto e permissões imediatamente antes de exportar.
+  if(!clinicReady() || !allowed(type))return;
   const r=rows(type,a,b);
   const html=`<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>${safe(kinds[type])}</title><style>body{font:12px Arial;margin:24px;color:#222}h1{color:#bd6000}table{border-collapse:collapse;width:100%}th,td{padding:7px;text-align:left;border-bottom:1px solid #ddd}th{background:#f2eee9}@page{size:A4 landscape;margin:12mm}</style><h1>NexoDent — ${safe(kinds[type])}</h1><p>Período: ${safe(a)} a ${safe(b)} · Dados carregados no navegador; podem estar incompletos.</p><p>${safe(r.summary)}</p><table><thead><tr>${r.heads.map(h=>`<th>${safe(h)}</th>`).join('')}</tr></thead><tbody>${r.items.map(row=>`<tr>${row.map(v=>`<td>${safe(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></html>`;
   const w=window.open('','_blank');if(!w){alert('Permita janelas pop-up para imprimir o relatório.');return}w.document.write(html);w.document.close();w.focus();setTimeout(()=>w.print(),400);
