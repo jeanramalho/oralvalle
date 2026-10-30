@@ -108,3 +108,24 @@ html[data-ov-mode="light"] .ag-block .ag-appointment.ag-compact.ag-compact-red .
 html[data-ov-mode="light"] .ag-block .ag-appointment.ag-compact.ag-compact-green .ag-patient {color:#303943 !important;}
 html[data-ov-mode="light"] .ag-block .ag-appointment.ag-compact.ag-compact-red .ag-compact-dot {background-color:#dc3545 !important;opacity:1 !important;box-shadow:0 0 0 1px #b72a37 !important;}
 html[data-ov-mode="light"] .ag-block .ag-appointment.ag-compact.ag-compact-green .ag-compact-dot {background-color:#159657 !important;opacity:1 !important;box-shadow:0 0 0 1px #107a46 !important;}
+
+/* NexoDent 160 — contraste da agenda clara e status distintos. */
+html[data-ov-mode="light"] .ag-flow-list .ag-flow-row {border-bottom:1px solid #dce2e7!important;color:#26313b!important}
+html[data-ov-mode="light"] .ag-flow-list .ag-flow-time {color:#475569!important;opacity:1!important}
+html[data-ov-mode="light"] .ag-flow-list .ag-flow-free,html[data-ov-mode="light"] .ag-flow-list .ag-flow-free * {color:#586675!important;opacity:1!important}
+html[data-ov-mode="light"] .ag-flow-list .ag-flow-booked .ag-flow-time {color:#c45b00!important}
+html[data-ov-mode="light"] .ag-block .ag-appointment.ag-compact,
+html[data-ov-mode="light"] .ag-block .ag-appointment.ag-compact.ag-compact-red,
+html[data-ov-mode="light"] .ag-block .ag-appointment.ag-compact.ag-compact-yellow,
+html[data-ov-mode="light"] .ag-block .ag-appointment.ag-compact.ag-compact-orange {background:#fff!important;border:1px solid #cbd5df!important;color:#24313c!important;box-shadow:none!important}
+html[data-ov-mode="light"] .ag-block .ag-appointment.ag-compact .ag-patient,
+html[data-ov-mode="light"] .ag-block .ag-appointment.ag-compact .ag-patient-link,
+html[data-ov-mode="light"] .ag-block .ag-appointment.ag-compact .ag-compact-identity {color:#24313c!important;-webkit-text-fill-color:#24313c!important;opacity:1!important;text-shadow:none!important}
+html[data-ov-mode="light"] .ag-block .ag-appointment.ag-compact.ag-compact-red .ag-compact-dot {background:#dc3545!important;box-shadow:0 0 0 1px #b52a38!important;opacity:1!important}
+html[data-ov-mode="light"] .ag-block .ag-appointment.ag-compact.ag-compact-yellow .ag-compact-dot {background:#eab308!important;box-shadow:0 0 0 1px #b88b00!important;opacity:1!important}
+html[data-ov-mode="light"] .ag-block .ag-appointment.ag-compact.ag-compact-orange .ag-compact-dot {background:#f07800!important;box-shadow:0 0 0 1px #bd5e00!important;opacity:1!important}
+html[data-ov-mode="light"] .ag-date-panel,html[data-ov-mode="light"] .ag-date-panel .note,html[data-ov-mode="light"] .ag-rental-panel .note {color:#586675!important}
+html[data-ov-mode="light"] .ag-date-panel strong,html[data-ov-mode="light"] .ag-date-panel label,html[data-ov-mode="light"] .ag-rental-panel strong {color:#26313b!important}
+html[data-ov-mode="light"] .ov-ag-status-options label:has(input[value="Compareceu"]) input {accent-color:#f07800!important}
+html[data-ov-mode="light"] .ov-ag-status-options label:has(input[value="Faltou"]) input {accent-color:#dc3545!important}
+html[data-ov-mode="light"] .ov-ag-status-options label:has(input[value="Cancelado"]) input {accent-color:#eab308!important}
