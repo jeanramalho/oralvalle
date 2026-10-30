@@ -262,6 +262,7 @@
     OralCloudData.prepareDefaults(db);
     status('Conectado ao Supabase · ' + clinic.nome);
     startSync(clinic.clinic_id);
+    window.NexoModules?.refresh();
   }
 
   async function refreshAccessRequests() {
