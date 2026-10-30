@@ -8,7 +8,7 @@ const safe=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'
 const options=(arr,selected)=>arr.map(v=>`<option value="${safe(v)}" ${v===selected?'selected':''}>${safe(v)}</option>`).join('');
 const date=s=>s?String(s).slice(0,10):'';
 const stamp=()=>new Date().toISOString();
-let orders=[],loading=false,error='',loadedClinic=null,filter='ativos',search='',editing=null,busy=false;
+let orders=[],loading=false,error='',loadedClinic=null,filter='ativos',search='',editing=null,busy=false,loadAttemptedClinic=null;
 const cloud=()=>!!window.OralCloud?.enabled;
 const clinic=()=>window.OralCloud?.clinicId||null;
 const key=()=>`nexodent:lab:v1:${ME?.id||'local'}`;
@@ -22,7 +22,9 @@ async function fetchOrders(force=false){
  if(!allowed())return;
  const id=clinic();
  if(cloud()&&!id){orders=[];loadedClinic=null;error='Selecione uma clínica para consultar os trabalhos.';renderLab();return;}
- if(!force&&loadedClinic===(id||'local'))return;
+ if(loading)return;
+ if(!force&&(loadedClinic===(id||'local')||loadAttemptedClinic===(id||'local')))return;
+ loadAttemptedClinic=id||'local';
  loading=true;error='';renderLab();
  try{
   if(cloud()){
@@ -74,7 +76,7 @@ function style(){return `<style>
  </style>`;}
 window.nexoLabHtml=function(){
  if(!allowed())return '<div class="card">Você não possui permissão para consultar os trabalhos de laboratório.</div>';
- if(loadedClinic!==(clinic()||'local')&&!loading)setTimeout(()=>fetchOrders(),0);
+ if(loadedClinic!==(clinic()||'local')&&!loading&&loadAttemptedClinic!==(clinic()||'local'))setTimeout(()=>fetchOrders(),0);
  const items=orders.filter(o=>filter==='todos'||(filter==='observacao'?o.status==='Em observação':filter==='atrasados'?o.due_at&&date(o.due_at)<new Date().toISOString().slice(0,10)&&!['Entregue','Cancelado'].includes(o.status):!['Entregue','Cancelado'].includes(o.status))).filter(o=>!search||[patientName(o.patient_id),o.laboratory,o.work_description,o.teeth].some(t=>String(t||'').toLowerCase().includes(search.toLowerCase())));
  return `${style()}<div class="nxlab-top"><div><h2>Laboratório</h2><p>Controle de trabalhos, etapas, prazos e comunicação.</p></div><div class="nxlab-actions">${canEdit()?'<button data-lab="new">+ Novo trabalho</button>':''}<button class="ghost" data-lab="refresh">Atualizar</button></div></div>
  ${error?`<p class="nxlab-error">${safe(error)}</p>`:''}${loading?'<p>Carregando trabalhos...</p>':''}
@@ -95,7 +97,7 @@ async function persist(o){
 function readForm(){const v=id=>($id(id)?.value||'').trim();return {patient_id:v('nxlab-patient'),laboratory:v('nxlab-lab'),work_description:v('nxlab-work'),shade:v('nxlab-shade'),teeth:v('nxlab-teeth'),sent_at:v('nxlab-sent')||null,due_at:v('nxlab-due')||null,received_at:v('nxlab-received')||null,stage:v('nxlab-stage'),status:v('nxlab-status'),observation_reason:v('nxlab-observation'),instructions:v('nxlab-instructions')};}
 async function execute(action,id){
  if(busy)return;
- if(action==='refresh'){loadedClinic=null;await fetchOrders(true);return;}
+ if(action==='refresh'){loadedClinic=null;loadAttemptedClinic=null;await fetchOrders(true);return;}
  if(action==='details'){view.labDetails=view.labDetails===id?null:id;renderLab();return;}
  if(!canEdit())return;
  if(action==='new'){editing='new';renderLab();return;}
@@ -126,6 +128,6 @@ async function execute(action,id){
 document.addEventListener('click',e=>{const btn=e.target.closest('[data-lab]');if(btn){e.preventDefault();execute(btn.dataset.lab,btn.dataset.id);}});
 document.addEventListener('change',e=>{if(e.target.id==='nxlab-filter'){filter=e.target.value;renderLab();}if(e.target.id==='nxlab-search'){search=e.target.value;renderLab();}});
 document.addEventListener('keydown',e=>{if(e.target.id==='nxlab-search'&&e.key==='Enter'){search=e.target.value;renderLab();}});
-window.addEventListener('nexodent:clinic-data-loaded',()=>{loadedClinic=null;if(isLab())fetchOrders(true);});
+window.addEventListener('nexodent:clinic-data-loaded',()=>{loadedClinic=null;loadAttemptedClinic=null;if(isLab())fetchOrders(true);});
 window.addEventListener('focus',()=>{if(isLab())fetchOrders(true);});
 })();
