@@ -18,6 +18,13 @@
  function update(){const p=patient(),sel=document.getElementById('nexo-wa-template'),msg=document.getElementById('nexo-wa-msg');if(!p||!sel||!msg)return;const first=String(p.nome||'').trim().split(/\s+/)[0]||'paciente';msg.value=renderTemplate(sel.value,first)}
  document.addEventListener('change',e=>{if(e.target.id==='nexo-wa-template')update()});
  document.addEventListener('click',e=>{
+  // Interrompe ações manuais de WhatsApp quando a permissão comercial for negada.
+  // Trata-se de proteção de interface, não de autorização de API.
+  const waAction=e.target.closest('#wa-settings-save,#wa-settings-reset,#nexo-wa-open,#nexo-wa-copy');
+  if(waAction && window.NexoModules?.isAllowed('wa') === false){
+    e.preventDefault(); e.stopImmediatePropagation();
+    alert('O módulo WhatsApp está desativado para esta clínica.'); return;
+  }
  if(e.target.closest('#wa-settings-save')){const next={};document.querySelectorAll('[data-wa-key]').forEach(el=>next[el.dataset.waKey]=el.value);try{localStorage.setItem(STORAGE,JSON.stringify(next));alert('Mensagens salvas neste navegador.')}catch(_){alert('Não foi possível salvar neste navegador.')}return}
  if(e.target.closest('#wa-settings-reset')){if(!confirm('Restaurar todas as mensagens padrão?'))return;localStorage.removeItem(STORAGE);if(typeof render==='function')render();return}
  const b=e.target.closest('#nexo-wa-open,#nexo-wa-copy');if(!b)return;const p=patient(),msg=document.getElementById('nexo-wa-msg');if(!p||!msg)return;const value=msg.value.trim();if(!value){alert('Escreva uma mensagem primeiro.');return}if(b.id==='nexo-wa-copy'){if(typeof copy==='function')copy(value);else navigator.clipboard.writeText(value);return}const digits=String(p.tel||'').replace(/\D/g,'');if(digits.length!==10&&digits.length!==11&&!(digits.startsWith('55')&&(digits.length===12||digits.length===13))){alert('Cadastre um telefone válido com DDD nos dados do paciente.');return}waOpen(p.tel,value)});
