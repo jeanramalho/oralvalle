@@ -5,6 +5,7 @@
  'use strict';
  const can = k => typeof pmLvl==='function' && pmLvl(k)>=1;
  const commercial = () => window.NexoModules?.resolve('reports') !== false;
+ const moduleAllowed = key => window.NexoModules?.resolve(key) !== false;
  const dateOK=(s,a,b)=>!!s && String(s).slice(0,10)>=a && String(s).slice(0,10)<=b;
  const n=v=>typeof num==='function'?num(v):(Number(v)||0);
  const cash=v=>typeof brl==='function'?brl(v):Number(v||0).toFixed(2);
@@ -28,7 +29,12 @@
   return {heads:['Paciente','Data de cadastro'],items:pts.map(p=>[p.nome||'',String(p.created_at||p.createdAt||p.dataCadastro||p.data_cadastro).slice(0,10)]),summary:`${pts.length} paciente(s) com data de cadastro no período. Cadastros sem data não são contabilizados.`};
  }
  const kinds={finance:'Financeiro',dentists:'Dentistas e comissões',procedures:'Procedimentos',patients:'Novos pacientes'};
- function allowed(type){if(!commercial())return false;if(type==='patients')return can('pac');if(type==='dentists')return can('vd')&&can('cm');return can('vd')}
+ function allowed(type){
+  if(!commercial() || !Object.prototype.hasOwnProperty.call(kinds,type))return false;
+  if(type==='patients')return can('pac');
+  if(type==='dentists')return moduleAllowed('finance') && moduleAllowed('commissions') && can('vd') && can('cm');
+  return moduleAllowed('finance') && can('vd');
+ }
  function current(){let type=view.reportType||'finance';if(!allowed(type))type=Object.keys(kinds).find(allowed);return type}
  window.nexoReportsHtml=function(){
   if(!commercial())return '<div class="card"><h2>Relatórios indisponíveis</h2><p>Este módulo não está incluído no plano da clínica.</p></div>';
@@ -44,6 +50,11 @@
   </div><div class="card"><h2>${safe(kinds[type])}</h2><p class="note">${safe(report.summary)}</p><p class="note">${report.items.length} registro(s) · ${safe(a)} a ${safe(b)} · Os valores de comissões representam valores associados às vendas, não necessariamente pagamentos efetuados.</p>
   <div style="overflow:auto"><table style="width:100%;border-collapse:collapse"><thead><tr>${report.heads.map(x=>`<th style="text-align:left;padding:10px;border-bottom:1px solid #ddd">${safe(x)}</th>`).join('')}</tr></thead><tbody>${report.items.map(r=>`<tr>${r.map(x=>`<td style="padding:9px;border-bottom:1px solid #eee">${safe(x)}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${report.heads.length}" style="padding:14px">Nenhum registro encontrado.</td></tr>`}</tbody></table></div></div>`;
  };
+ // Reavaliar relatórios já exibidos quando o administrador alterar o plano ou
+ // as permissões. Isto é controle de interface; a proteção de dados exige RLS.
+ window.addEventListener('nexodent:modules-updated',()=>{
+  if(window.view?.h==='reports' && typeof window.render==='function')window.render();
+ });
  document.addEventListener('click',e=>{
   const apply=e.target.closest('#nx-r-apply'),pdf=e.target.closest('#nx-r-pdf');if(!apply&&!pdf)return;
   e.preventDefault();e.stopImmediatePropagation();
