@@ -11,14 +11,17 @@
  const safe=v=>typeof esc==='function'?esc(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const patient=id=>typeof pName==='function'?pName(id):'—';
  const dentist=id=>typeof dName==='function'?dName(id):'—';
- const today=()=>new Date().toLocaleDateString('en-CA');
+ const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
  function dates(){const a=document.getElementById('nx-r-from')?.value||view.reportFrom||today().slice(0,7)+'-01';const b=document.getElementById('nx-r-to')?.value||view.reportTo||today();return [a,b]}
  function rows(type,a,b){
   const sales=(db.vd||[]).filter(v=>dateOK(v.data,a,b));
   // Recebimentos do período devem considerar TODAS as vendas carregadas,
   // inclusive as realizadas antes do início do filtro.
-  const pay=(db.vd||[]).flatMap(v=>(v.pg||[]).filter(x=>dateOK(x.data,a,b)).map(x=>({v,x})));
-  if(type==='finance')return {heads:['Data','Paciente','Procedimento','Venda','Recebido','Pendente'],items:sales.map(v=>[v.data,patient(v.pid),v.proc||'',cash(v.valor),cash(typeof recebido==='function'?recebido(v):0),cash(typeof saldoV==='function'?saldoV(v):0)]),summary:`Vendas realizadas no período: ${cash(sales.reduce((t,v)=>t+n(v.valor),0))} · Recebimentos registrados no período (inclusive de vendas anteriores): ${cash(pay.reduce((t,z)=>t+n(z.x.valor),0))} · Saldo atual das vendas realizadas no período: ${cash(sales.reduce((t,v)=>t+(typeof saldoV==='function'?saldoV(v):0),0))}`};
+  const pay=(db.vd||[]).flatMap(v=>(Array.isArray(v.pg)?v.pg:[]).filter(x=>dateOK(x.data,a,b)).map(x=>({v,x})));
+  const receivedPeriod=pay.reduce((t,z)=>t+n(z.x.valor),0);
+  const salesTotal=sales.reduce((t,v)=>t+n(v.valor),0);
+  const balance=sales.reduce((t,v)=>t+(typeof saldoV==='function'?saldoV(v):0),0);
+  if(type==='finance')return {heads:['Data da venda','Paciente','Procedimento','Venda','Recebido até hoje','Saldo atual'],items:sales.map(v=>[v.data,patient(v.pid),v.proc||'',cash(v.valor),cash(typeof recebido==='function'?recebido(v):0),cash(typeof saldoV==='function'?saldoV(v):0)]),summary:`Vendas realizadas no período: ${cash(salesTotal)} · Recebimentos registrados no período (inclusive de vendas anteriores): ${cash(receivedPeriod)} · Saldo atual das vendas realizadas no período: ${cash(balance)}. As colunas Recebido até hoje e Saldo atual refletem a situação atual de cada venda, não somente os pagamentos do período.`};
   if(type==='dentists')return {heads:['Data','Dentista','Procedimento','Produção','Comissão'],items:sales.map(v=>[v.data,dentist(v.dt),v.proc||'',cash(v.valor),cash(v.rep)]),summary:`Produção: ${cash(sales.reduce((t,v)=>t+n(v.valor),0))} · Comissões geradas: ${cash(sales.reduce((t,v)=>t+n(v.rep),0))}`};
   if(type==='procedures')return {heads:['Procedimento','Quantidade','Valor de vendas'],items:Object.values(sales.reduce((acc,v)=>{const key=v.proc||'Não informado';const x=acc[key]||(acc[key]={name:key,count:0,total:0});x.count++;x.total+=n(v.valor);return acc},{})).sort((x,y)=>y.total-x.total).map(x=>[x.name,x.count,cash(x.total)]),summary:`${sales.length} venda(s) no período`};
   const pts=(db.p||[]).filter(p=>dateOK(p.created_at||p.createdAt||p.dataCadastro||p.data_cadastro,a,b));
@@ -47,7 +50,7 @@
   if(!commercial())return;
   const type=document.getElementById('nx-r-type')?.value;
   if(!allowed(type))return;
-  const [a,b]=dates();if(a>b){alert('A data inicial deve ser anterior à data final.');return}
+  const [a,b]=dates();if(!/^\d{4}-\d{2}-\d{2}$/.test(a)||!/^\d{4}-\d{2}-\d{2}$/.test(b)||a>b){alert('Informe um período válido, com a data inicial anterior ou igual à final.');return}
   view.reportType=type;view.reportFrom=a;view.reportTo=b;
   if(apply){render();return}
   const r=rows(type,a,b);
