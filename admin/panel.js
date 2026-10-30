@@ -111,6 +111,33 @@
     try{await rpc('nexodent_admin_create_payment',{p_clinic:clinic,p_amount_cents:Math.round(amount*100),p_due_date:due});await loadCommercial()}catch(e){alert(e.message)}
   });
 
+
+  async function loadMonitoring(){
+    const set=(id,value)=>{ $(id).textContent=value; };
+    set('health-site',navigator.onLine?'Página carregada; navegador online':'Página carregada; navegador offline');
+    set('health-auth','Verificando…');set('health-alerts','Verificando…');
+    $('admin-alerts').replaceChildren();
+    try {
+      const rows=await rpc('nexodent_admin_alerts',{p_days:Number($('alert-days').value)});
+      set('health-auth','Sessão autorizada para consultas administrativas');
+      set('health-alerts','Consulta concluída');
+      const names={suspended:'Suspensa',overdue:'Vencida / em atraso',expiring:'Próxima do vencimento',other:'Verificar situação'};
+      for(const item of rows||[]){
+        const tr=document.createElement('tr');
+        for(const value of [item.clinic_name,names[item.alert_type]||item.alert_type,formatDate(item.expires_at),String(item.grace_days??0)+' dias']){
+          const td=document.createElement('td');td.textContent=value??'—';tr.appendChild(td);
+        }
+        $('admin-alerts').appendChild(tr);
+      }
+      if(!rows?.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=4;td.textContent='Nenhum alerta no período selecionado.';tr.appendChild(td);$('admin-alerts').appendChild(tr);}
+    }catch(e){
+      set('health-auth','Não foi possível confirmar');set('health-alerts','Falha: '+e.message);
+    }
+    set('health-time','Última verificação: '+new Date().toLocaleString('pt-BR'));
+  }
+  $('check-health').addEventListener('click',loadMonitoring);
+  $('alert-days').addEventListener('change',loadMonitoring);
+
   async function load() {
     const result = await OralCloud.request('/rest/v1/rpc/nexodent_admin_overview', {method:'POST',body:{}});
     $('total').textContent = result.total_clinicas;
@@ -120,6 +147,7 @@
     window.nexoClinics = result.clinicas || [];
     renderClinics();
     await loadCommercial();
+    await loadMonitoring();
     try {
       const history = await OralCloud.request('/rest/v1/rpc/nexodent_admin_subscription_history',{method:'POST',body:{}});
       $('audit').replaceChildren();
