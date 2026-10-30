@@ -83,3 +83,10 @@ html[data-ov-mode="light"] .ov-page-head h1,
 html[data-ov-mode="light"] .ov-sidebar .ov-nav-btn:not(.on):not(:hover) {
   color:#303943;
 }
+
+/* NexoDent 155: reforço da aparência clara, inclusive controles nativos. */
+:root,html,body { color-scheme:only light !important; }
+html[data-ov-mode="light"] { color-scheme:only light !important; }
+html[data-ov-mode="light"] .ov-ag-modal { background:#fff !important; color:#303943 !important; border-color:#dfe3e7 !important; }
+html[data-ov-mode="light"] .ov-ag-modal-form>label>input { background:#fff !important; color:#303943 !important; border-color:#cbd2d9 !important; color-scheme:only light !important; }
+html[data-ov-mode="light"] .ag-block .ag-appointment.ag-compact:not(.ag-compact-green):not(.ag-compact-red) { background:#f6f7f9 !important; color:#303943 !important; border-color:#dfe3e7 !important; }
