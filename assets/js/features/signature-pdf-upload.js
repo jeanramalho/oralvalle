@@ -58,7 +58,7 @@
   if(typeof old!=='function')return;
   window.tabArquivos=function(patient){
     const html=old(patient);
-    if(!cloudReady()||!/^[a-zA-Z0-9_-]{32}$/.test(String(patient?.id||'')))return html;
+    if(!cloudReady())return html;
     // Renderização da aba ocorre de forma síncrona; a permissão será checada antes de abrir.
     const slot='<div id="nexo-signature-upload-slot"></div>';
     const patientId=String(patient.id);
