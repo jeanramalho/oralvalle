@@ -24,6 +24,7 @@
       current = null;
       loadedClinic = clinicId || null;
       applyNavigation();
+      window.dispatchEvent(new CustomEvent('nexodent:modules-updated', { detail: { clinicId: clinicId || null } }));
     }
     if (!clinicId || !window.OralCloud?.request || pendingClinic === clinicId) return;
     const seq = ++generation;
@@ -38,7 +39,10 @@
         window.dispatchEvent(new CustomEvent('nexodent:modules-updated', { detail: { clinicId } }));
       }
     } catch (err) {
-      if (seq === generation) console.warn('[NexoDent] Falha ao atualizar permissões comerciais; mantendo último estado conhecido para esta clínica.', err);
+      if (seq === generation) {
+        lastRefresh = Date.now() - 45000; // nova tentativa em ~15 segundos
+        console.warn('[NexoDent] Falha ao atualizar permissões comerciais.', err);
+      }
     } finally {
       if (pendingClinic === clinicId) pendingClinic = null;
     }
@@ -54,8 +58,9 @@
   function moduleForNavigation(section) { return navigationModules[section] || null; }
   // Disponível aos recursos de interface; não substitui autorização no servidor.
   function isAllowed(key) {
-    // Relatórios comerciais aguardam a autorização da clínica atual.
-    if (key === 'reports' && window.OralCloud?.enabled &&
+    // Recursos comerciais não devem ser liberados antes de confirmar a clínica.
+    // Áreas clínicas essenciais não usam esta regra.
+    if (['finance','commissions','wa','reports'].includes(key) && window.OralCloud?.enabled &&
         (!current || loadedClinic !== window.OralCloud?.clinicId)) return false;
     return resolve(key) !== false;
   }
