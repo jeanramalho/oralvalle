@@ -12,7 +12,38 @@ function dtHtml(){
     <input data-cpo="${d.id}" placeholder="Observação (opcional): Pix, dinheiro, referente a…" style="margin-top:8px" aria-label="Observação do pagamento">
     <button data-act="cpay" data-id="${d.id}" style="width:100%;margin-top:8px">Dar baixa no pagamento</button><p class="note" style="margin:6px 0 0">O valor vem preenchido com o saldo; mude se pagou só uma parte.</p>`:'<p class="note" style="margin:8px 0 0">Nada a pagar agora.</p>'}
     ${(()=>{const pg=db.cp.filter(c=>c.dt===d.id).sort((a,b)=>String(b.data).localeCompare(String(a.data)));return pg.length?`<details style="margin-top:10px"><summary>Pagamentos registrados (${pg.length}) · ${brl(t.p)}</summary>${pg.map(c=>`<div class="pg"><span>${fd(c.data)}${c.obs?' · '+esc(c.obs):''}</span><span>${brl(c.valor)} <button class="danger sm" data-act="rmcp" data-id="${c.id}" aria-label="Remover pagamento">${delArm===c.id?'Confirmar':'×'}</button></span></div>`).join('')}</details>`:''})()}</div>
+    ${ME?.admin && window.OralCloud?.enabled && window.OralCloud?.clinicId && d.ativo!==false ? `<div class="card" style="margin-top:12px;border:1px solid var(--ac);padding:12px"><strong>🔐 Vínculo profissional</strong><p class="note">Vincule este dentista à sua própria conta autenticada. Não altera evoluções existentes.</p><button type="button" class="sm" data-nexo-link-self="${esc(d.id)}">Vincular à minha conta</button></div>` : ''}
     <div class="row dt-act"><button class="ghost sm" data-act="dtarq" data-id="${d.id}">${d.ativo===false?'Reativar':'Arquivar'}</button>${mv?'':`<button class="danger sm" data-act="rmdt" data-id="${d.id}">${delArm===d.id?'Toque de novo para excluir':'Excluir'}</button>`}</div>${mv?'<p class="note" style="margin:8px 0 0">Tem movimento registrado: só pode ser arquivado.</p>':''}</details>`}).join(''):'<div class="empty">Nenhum dentista cadastrado.</div>')+
   '<p class="note">Mudar a regra de um dentista vale só para as próximas vendas. As vendas já lançadas mantêm a comissão que foi calculada na hora.</p>';
 }
 
+
+/* Vinculação segura via RPC, sem chaves de serviço e sem acesso direto à tabela. */
+document.addEventListener('click', async function nexodentLinkMyDentist(event) {
+  const button = event.target.closest('[data-nexo-link-self]');
+  if (!button) return;
+  event.preventDefault();
+  event.stopPropagation();
+  if (!ME?.admin || !ME?.id || !window.OralCloud?.enabled || !OralCloud.clinicId) {
+    toast('Entre como administrador para vincular o dentista.'); return;
+  }
+  const dentistId = button.getAttribute('data-nexo-link-self');
+  const dentist = db.dt.find(item => item.id === dentistId && item.ativo !== false);
+  if (!dentist) { toast('Dentista ativo não encontrado.'); return; }
+  if (!confirm(`Vincular ${dentist.nome} à sua conta (${ME.nome})? Cada conta pode ter apenas um dentista.`)) return;
+  button.disabled = true;
+  try {
+    await OralCloud.request('/rest/v1/rpc/nexodent_link_dentist', {
+      method: 'POST', body: { p_clinic: OralCloud.clinicId, p_user_id: ME.id, p_dentist_id: dentistId }
+    });
+    const mine = await OralCloud.request('/rest/v1/rpc/nexodent_my_dentist', {
+      method: 'POST', body: { p_clinic: OralCloud.clinicId }
+    });
+    if (!Array.isArray(mine) || !mine.some(item => item.dentist_id === dentistId)) {
+      throw new Error('Vínculo não confirmado pela consulta ao Supabase.');
+    }
+    toast('Dentista vinculado à sua conta com sucesso.');
+  } catch (error) {
+    toast('Vínculo não realizado: ' + (error?.message || 'erro desconhecido'));
+  } finally { button.disabled = false; }
+}, true);
