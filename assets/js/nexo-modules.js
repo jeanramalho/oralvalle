@@ -47,7 +47,7 @@
   // Áreas clínicas essenciais (pacientes, prontuários e agenda) não são bloqueadas
   // automaticamente por razões comerciais.
   const navigationModules = Object.freeze({
-    vd:'finance', pf:'finance', cm:'commissions', wa:'wa'
+    vd:'finance', pf:'finance', cm:'commissions', wa:'wa', reports:'reports'
     // 'sigdoc' contém documentos clínicos essenciais: não bloquear.
     // 'bk' é Backup, não Relatórios: não associar ao módulo reports.
   });
