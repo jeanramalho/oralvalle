@@ -1,13 +1,13 @@
 /* As permissões locais controlam a interface, não substituem autorização de servidor. */
 const PM_MODS=[
- ['Clínica',[['ag','Agenda'],['pac','Pacientes'],['lem','Lembretes'],['dt','Dentistas'],['cm','Comissões'],['vd','Vendas e pagamentos recebidos']]],
+ ['Clínica',[['ag','Agenda'],['pac','Pacientes'],['lem','Lembretes'],['wa','WhatsApp'],['dt','Dentistas'],['cm','Comissões'],['vd','Vendas e pagamentos recebidos']]],
  ['Negociação',[['pf','Proposta financeira']]],
  ['Precificação',[['hc','Custo hora clínica'],['pr','Procedimentos'],['mt','Tabela de materiais']]],
  ['Controle',[['bk','Backup e importação de dados']]],
  ['Dentro da ficha do paciente',[['pac.dados','Dados cadastrais'],['pac.anam','Anamnese'],['pac.odo','Evolução'],['pac.orc','Orçamentos'],['pac.trat','Tratamentos'],['pac.pag','Pagamentos'],['pac.agd','Agendamentos'],['pac.arquivos','Radiografias e documentos']]]
 ];
 const PM_TABS=['dados','anam','odo','orc','trat','pag','agd','arquivos'];
-const PM_ORDER=['ag','pac','lem','dt','cm','vd','pf','hc','pr','mt','bk'];
+const PM_ORDER=['ag','pac','lem','wa','dt','cm','vd','pf','hc','pr','mt','bk'];
 const PM_LV={none:0,view:1,edit:2};
 const PM_LAB={none:'Oculto',view:'Só ver',edit:'Ver e alterar'};
 const PM_SAFE=new Set(['actab','logout','nav','svw','ovFinDetail','ovFinPdf','pPage','vPage','otoggle','retall','lemtab','orthowa','implnav','protnav','lemgo','cmdent','cmback','agf','agdate','agtoday','arqt','dent','open','back','tab','copy','owa','print','pdf','printevol','printficha','rxpdf','rxprint','atpdf','atprint','atreset','prprint','prshare','bktxt','bkcopy','bksave','pfOpen','prsearch','avsok','avsgo','avsperm','avstest','savebtn','acpw']);
