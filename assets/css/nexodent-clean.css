@@ -1,0 +1,40 @@
+/* NexoDent 148 — refinamento visual. Somente apresentação; não altera fluxos. */
+html[data-ov-mode] {
+  --nexo-accent:#dc781c;
+  --nexo-accent-soft:rgba(220,120,28,.09);
+}
+html[data-ov-mode="dark"] { --nexo-accent-soft:rgba(255,166,83,.09); }
+/* Superfícies discretas e tipografia mais leve */
+html[data-ov-mode] body { font-family:Figtree,system-ui,Arial,sans-serif; letter-spacing:-.008em; }
+html[data-ov-mode] .card,
+html[data-ov-mode] .ov-panel,
+html[data-ov-mode] .pf-card,
+html[data-ov-mode] .dt-card { box-shadow:0 2px 12px rgba(0,0,0,.035); border-radius:12px; }
+html[data-ov-mode] h1,html[data-ov-mode] h2,html[data-ov-mode] h3 { letter-spacing:-.025em; }
+/* Navegação: destaque sutil apenas na página selecionada */
+html[data-ov-mode] .ov-nav-btn { border-radius:9px; font-weight:500; transition:background-color .15s ease,color .15s ease; }
+html[data-ov-mode="dark"] .ov-nav-btn.on { background:rgba(226,127,38,.13);color:#ffb36c; }
+html[data-ov-mode="light"] .ov-nav-btn.on { background:#fff3e9;color:#b55b12; }
+/* Botões secundários deixam de competir com ações principais.
+   Não modifica .danger, botões de confirmação nem atributos de função. */
+html[data-ov-mode] button:not(.danger):not(.primary):not(.btn-primary):not([type="submit"]):not([style*="background"]):not([style*="background-color"]),
+html[data-ov-mode] .btn:not(.danger):not(.primary):not(.btn-primary):not([style*="background"]) {
+  border-radius:9px;
+}
+html[data-ov-mode] button,html[data-ov-mode] .btn { transition:filter .15s ease,background-color .15s ease,border-color .15s ease; }
+html[data-ov-mode] button:hover:not(:disabled) { filter:brightness(1.045); }
+/* Campos mais organizados, sem alterar dimensões e validações */
+html[data-ov-mode] input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+html[data-ov-mode] select,html[data-ov-mode] textarea { border-radius:9px; box-shadow:none; }
+html[data-ov-mode] input:focus-visible,html[data-ov-mode] select:focus-visible,
+html[data-ov-mode] textarea:focus-visible,html[data-ov-mode] button:focus-visible {
+  outline:2px solid var(--nexo-accent);outline-offset:2px;
+}
+/* Separadores e abas visualmente mais tranquilos */
+html[data-ov-mode] .tabs { gap:4px; }
+html[data-ov-mode] .tabs button { border-radius:8px; }
+/* Tabelas: leitura limpa, sem alterar estrutura */
+html[data-ov-mode] table { border-collapse:separate;border-spacing:0; }
+html[data-ov-mode] th { font-weight:600; }
+@media(prefers-reduced-motion:reduce){html[data-ov-mode] button,html[data-ov-mode] .ov-nav-btn{transition:none}}
+@media print {html[data-ov-mode] .card,html[data-ov-mode] .ov-panel {box-shadow:none}}
