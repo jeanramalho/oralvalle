@@ -1,4 +1,5 @@
-/* NexoDent 177: leitura isolada de permissões comerciais.
+/* NexoDent 184: correção de classificação de Documentos e Backup.
+ * Leitura isolada de permissões comerciais.
  * Não é um mecanismo de bloqueio: o servidor precisa validar cada operação.
  */
 (function () {
@@ -46,8 +47,9 @@
   // Áreas clínicas essenciais (pacientes, prontuários e agenda) não são bloqueadas
   // automaticamente por razões comerciais.
   const navigationModules = Object.freeze({
-    vd:'finance', pf:'finance', cm:'commissions', wa:'wa',
-    sigdoc:'documents', bk:'reports'
+    vd:'finance', pf:'finance', cm:'commissions', wa:'wa'
+    // 'sigdoc' contém documentos clínicos essenciais: não bloquear.
+    // 'bk' é Backup, não Relatórios: não associar ao módulo reports.
   });
   function moduleForNavigation(section) { return navigationModules[section] || null; }
   // Disponível aos recursos de interface; não substitui autorização no servidor.
