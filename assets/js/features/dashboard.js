@@ -47,6 +47,7 @@ function ovSidebar(active){
       ${item('cm','Comissões')}
       ${item('vd','Pagamentos Recebidos','pg')}
       ${item('vd','Vendas')}
+      ${pmSee('vd')||pmSee('cm')||pmSee('pac')?`<button class="ov-nav-btn${active==='reports'?' on':''}" data-act="nav" data-t="reports"><span class="ico">▥</span><span>Relatórios</span></button>`:''}
     </nav>
     <div class="ov-section">Negociação</div>
     <nav class="ov-nav">
