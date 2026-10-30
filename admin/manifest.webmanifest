@@ -19,5 +19,6 @@
       "type": "image/png",
       "purpose": "any"
     }
-  ]
+  ],
+  "id": "/nexo-admin-app"
 }
