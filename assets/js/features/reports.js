@@ -12,7 +12,7 @@
   if (!window.OralCloud?.enabled) return true;
   if (!id) return false;
   if (reportClinic === null) reportClinic = id;
-  if (reportClinic !== id) return false; // Exige reinicialização após troca de clínica
+  if (reportClinic !== id) return false;
   return true;
  }
  window.addEventListener('nexodent:modules-updated', e => {
@@ -22,7 +22,7 @@
  const moduleAllowed = key => window.NexoModules?.isAllowed(key) !== false;
  const dateOK=(s,a,b)=>!!s && String(s).slice(0,10)>=a && String(s).slice(0,10)<=b;
  const validDate=s=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(s))return false;const d=new Date(s+'T12:00:00Z');return !Number.isNaN(d.getTime()) && d.toISOString().slice(0,10)===s;};
- const n=v=>{const value=typeof num==='function'?num(v):Number(v);return Number.isFinite(Number(value))?Number(value):0};
+ const n=v=>typeof num==='function'?num(v):(Number(v)||0);
  const cash=v=>typeof brl==='function'?brl(v):Number(v||0).toFixed(2);
  const safe=v=>typeof esc==='function'?esc(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const patient=id=>typeof pName==='function'?pName(id):'—';
@@ -57,7 +57,6 @@
   const type=current();if(!type)return '<div class="card"><h2>Sem acesso aos relatórios</h2><p>Solicite ao administrador as permissões necessárias.</p></div>';
   view.reportType=type;
   const [a,b]=[view.reportFrom||today().slice(0,7)+'-01',view.reportTo||today()];
-  if(!validDate(a)||!validDate(b)||a>b)return '<div class="card"><h2>Período inválido</h2><p>Selecione uma data inicial anterior ou igual à final.</p></div>';
   const report=rows(type,a,b);
   return `<div class="ov-page-head"><div><h1>Relatórios</h1><p class="sub">Dados carregados da clínica · somente leitura. Totais podem estar incompletos se o carregamento for parcial.</p></div></div>
   <div class="card" style="display:flex;flex-wrap:wrap;gap:12px;align-items:end">
