@@ -56,7 +56,7 @@ function evolHtml(p,only){
     if(e.data!==d){d=e.data;h+=`<div class="evd">${fd(d)}</div>`}
     idx++;
     h+=`<div class="ag evi" style="align-items:flex-start;gap:12px;padding:12px;margin:6px 0;border:1px solid var(--line);border-radius:10px;background:var(--card)">
-      <span style="flex:1;min-width:0"><small class="note" style="display:block;margin:0 0 4px">Registro ${idx}${e.n?' · '+(dLab(e.n)==='dentes'?'Dentes ':'Dente ')+esc(e.n):' · Geral'}${e.auto?' · Baixa do atendimento':''}</small><span style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(e.txt||'')}</span></span>
+      <span style="flex:1;min-width:0"><small class="note" style="display:block;margin:0 0 4px">Registro ${idx}${e.n?' · '+(dLab(e.n)==='dentes'?'Dentes ':'Dente ')+esc(e.n):' · Geral'}${e.auto?' · Baixa do atendimento':''}${e.entry_origin==='administrative_entry'?' · Inserido pela equipe administrativa':''}${e.entered_at?' · Lançado em '+esc(new Date(e.entered_at).toLocaleString('pt-BR')):''}</small><span style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(e.txt||'')}</span></span>
       <button class="danger sm" data-act="rmevol" data-id="${e.id}">${delArm===e.id?'Confirmar':'Excluir'}</button></div>`;
   });
   return h;
