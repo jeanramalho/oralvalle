@@ -92,6 +92,14 @@
   const localToast = toast;
   const localPermissionCard = pmCardHtml;
 
+  // O backend pode sinalizar conflito pela mensagem CLOUD_CONFLICT, sem SQLSTATE 40001.
+  // Nunca repetir uma gravação contra uma revisão desatualizada automaticamente.
+  function isRevisionConflict(error) {
+    const details = [error?.code, error?.message, error?.details, error?.hint]
+      .filter(Boolean).join(' ');
+    return error?.code === '40001' || /CLOUD_CONFLICT|clinic revision changed/i.test(details);
+  }
+
   function status(message, error = false) {
     let panel = $('cloudStatus');
     if (!panel) {
@@ -112,10 +120,11 @@
       backup.onclick = () => downloadBackup();
       const retry = document.createElement('button');
       retry.className = 'sm';
-      retry.textContent = failure?.code === '40001' || failure?.needsReload ? 'Recarregar dados' : 'Tentar novamente';
+      retry.textContent = isRevisionConflict(failure) || failure?.needsReload ? 'Recarregar dados' : 'Tentar novamente';
       retry.onclick = async () => {
-        if (failure?.code === '40001' || failure?.needsReload) {
-          if (!confirm('As alterações locais ainda não foram gravadas. Baixe um backup antes. Recarregar descarta as alterações pendentes e lê o banco novamente.')) return;
+        if (isRevisionConflict(failure) || failure?.needsReload) {
+          if (!confirm('Há alterações locais NÃO gravadas. Vamos baixar uma cópia antes de recarregar. A recarga descarta as alterações locais atuais; será necessário reaplicá-las manualmente. Deseja continuar?')) return;
+          downloadBackup();
           pending = null;
           failure = null;
           try { await openClinic(OralCloud.keep); } catch (error) { status(error.message, true); }
@@ -161,7 +170,7 @@
         } catch (error) {
           if (!pending) pending = snapshot;
           failure = error;
-          status(error.code === '40001'
+          status(isRevisionConflict(error)
             ? 'Outro usuário alterou a clínica. Suas alterações não foram sobrescritas: baixe o backup e recarregue.'
             : 'Não foi possível gravar no Supabase: ' + error.message, true);
           throw error;
