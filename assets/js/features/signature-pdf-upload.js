@@ -4,7 +4,7 @@
  */
 (()=>{
   'use strict';
-  const FN='nexodent-upload-assinatura-pdf';
+  const FN='nexodent-upload-signature-pdf';
   const TYPES=[['ANAMNESE','Anamnese'],['CONSENTIMENTO','Termo de consentimento'],['CONTRATO','Contrato'],['PLANO_TRATAMENTO','Plano de tratamento'],['ORCAMENTO','Orçamento'],['EVOLUCAO','Evolução clínica'],['OUTRO','Outro documento']];
   const state={clinic:null,allowed:false,pending:false};
   function cloudReady(){return !!(window.OralCloud?.enabled&&OralCloud.clinicId&&OralCloud.session&&OralCloud.config?.url);}
