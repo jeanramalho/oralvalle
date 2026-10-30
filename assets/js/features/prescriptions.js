@@ -66,7 +66,7 @@ function rxHtml(p){
   ${av.length?`<div class="rx-aviso">${av.map(x=>'<div>⚠ '+esc(x)+'</div>').join('')}</div>`:''}
   <label for="rxTexto">Prescrição${custom?' (seu modelo salvo)':''} - pode editar</label><textarea id="rxTexto" rows="10" spellcheck="false" placeholder="Selecione um modelo acima ou escreva uma prescrição personalizada.">${esc(st.texto)}</textarea>
   <p class="note" style="margin:6px 0 0">Doses sugeridas de uso comum. Confira e ajuste conforme o caso antes de emitir.</p>
-  <div class="row" style="margin-top:12px;flex-wrap:wrap"><button class="sm" data-act="rxpdf">Baixar PDF</button><button class="ghost sm" data-act="rxprint">Abrir para imprimir</button><button class="ghost sm" data-act="rxsave">Salvar no prontuário</button></div>
+  <div class="row" style="margin-top:12px;flex-wrap:wrap"><button class="sm" data-act="rxsign">✍ Assinar documento</button><button class="ghost sm" data-act="rxicp">🔐 Preparar para ICP-Brasil</button><button class="sm" data-act="rxpdf">Baixar PDF</button><button class="ghost sm" data-act="rxprint">Abrir para imprimir</button><button class="ghost sm" data-act="rxsave">Salvar no prontuário</button></div>
   <div class="row" style="margin-top:8px;flex-wrap:wrap"><button class="ghost sm" data-act="rxmodel">Salvar como meu modelo</button>${custom?'<button class="ghost sm" data-act="rxreset">Voltar ao modelo original</button>':''}</div></section>`;
 }
 async function rxDoc(p){

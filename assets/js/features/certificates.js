@@ -17,7 +17,7 @@ function atHtml(p){
   <div class="row" style="align-items:flex-start"><div><label for="atDent">Dentista</label><select id="atDent">${dentOpts(st.dt,'Sem dentista')}</select></div><div><label for="atData">Data</label><input id="atData" type="date" value="${esc(st.data)}"></div><div><label for="atDias">Dias de afastamento</label><input id="atDias" inputmode="numeric" value="${esc(st.dias)}" placeholder="0"></div></div>
   <label for="atTexto">Texto do atestado - pode editar</label><textarea id="atTexto" rows="6" spellcheck="false">${esc(st.texto)}</textarea>
   ${st.edited?'<button class="ghost sm" data-act="atreset" style="margin-top:8px">Voltar ao texto padrão</button>':''}
-  <div class="row" style="margin-top:12px;flex-wrap:wrap"><button class="sm" data-act="atpdf">Baixar PDF</button><button class="ghost sm" data-act="atprint">Abrir para imprimir</button><button class="ghost sm" data-act="atsave">Salvar no prontuário</button></div></section>`;
+  <div class="row" style="margin-top:12px;flex-wrap:wrap"><button class="sm" data-act="atsign">✍ Assinar documento</button><button class="ghost sm" data-act="aticp">🔐 Preparar para ICP-Brasil</button><button class="sm" data-act="atpdf">Baixar PDF</button><button class="ghost sm" data-act="atprint">Abrir para imprimir</button><button class="ghost sm" data-act="atsave">Salvar no prontuário</button></div></section>`;
 }
 async function atDoc(p){
   if(!(await ensureJsPDF())){toast('Não foi possível carregar o gerador de PDF. Verifique a conexão e tente novamente.',3500);return null}
