@@ -24,10 +24,10 @@
         const td=document.createElement('td'); td.textContent=value??'';tr.appendChild(td);
       }
       const td=document.createElement('td');
-      if(r.status==='pending') for(const [label,decision] of [['Aprovar análise','approved'],['Recusar','rejected']]) {
+      if(r.status==='pending') for(const [label,decision] of [['Aprovar teste','approved'],['Recusar','rejected']]) {
         const button=document.createElement('button');button.textContent=label;button.className=decision==='rejected'?'secondary':'';
         button.addEventListener('click',async()=>{
-          if(!confirm('Confirma esta decisão? A aprovação nesta etapa NÃO libera acesso nem inicia o teste.'))return;
+          if(!confirm('Confirma? A aprovação permite ao titular ativar seu teste em /ativar-teste/ após confirmar o e-mail.'))return;
           button.disabled=true;
           try {await OralCloud.request('/rest/v1/rpc/nexodent_admin_review_trial',{method:'POST',body:{p_id:r.id,p_decision:decision}});await load()}
           catch(err){alert(err.message);button.disabled=false}
