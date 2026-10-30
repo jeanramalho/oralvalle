@@ -15,8 +15,10 @@
  function dates(){const a=document.getElementById('nx-r-from')?.value||view.reportFrom||today().slice(0,7)+'-01';const b=document.getElementById('nx-r-to')?.value||view.reportTo||today();return [a,b]}
  function rows(type,a,b){
   const sales=(db.vd||[]).filter(v=>dateOK(v.data,a,b));
-  const pay=sales.flatMap(v=>(v.pg||[]).filter(x=>dateOK(x.data,a,b)).map(x=>({v,x})));
-  if(type==='finance')return {heads:['Data','Paciente','Procedimento','Venda','Recebido','Pendente'],items:sales.map(v=>[v.data,patient(v.pid),v.proc||'',cash(v.valor),cash(typeof recebido==='function'?recebido(v):0),cash(typeof saldoV==='function'?saldoV(v):0)]),summary:`Vendas: ${cash(sales.reduce((t,v)=>t+n(v.valor),0))} · Recebimentos no período: ${cash(pay.reduce((t,z)=>t+n(z.x.valor),0))} · Saldo das vendas: ${cash(sales.reduce((t,v)=>t+(typeof saldoV==='function'?saldoV(v):0),0))}`};
+  // Recebimentos do período devem considerar TODAS as vendas carregadas,
+  // inclusive as realizadas antes do início do filtro.
+  const pay=(db.vd||[]).flatMap(v=>(v.pg||[]).filter(x=>dateOK(x.data,a,b)).map(x=>({v,x})));
+  if(type==='finance')return {heads:['Data','Paciente','Procedimento','Venda','Recebido','Pendente'],items:sales.map(v=>[v.data,patient(v.pid),v.proc||'',cash(v.valor),cash(typeof recebido==='function'?recebido(v):0),cash(typeof saldoV==='function'?saldoV(v):0)]),summary:`Vendas realizadas no período: ${cash(sales.reduce((t,v)=>t+n(v.valor),0))} · Recebimentos registrados no período (inclusive de vendas anteriores): ${cash(pay.reduce((t,z)=>t+n(z.x.valor),0))} · Saldo atual das vendas realizadas no período: ${cash(sales.reduce((t,v)=>t+(typeof saldoV==='function'?saldoV(v):0),0))}`};
   if(type==='dentists')return {heads:['Data','Dentista','Procedimento','Produção','Comissão'],items:sales.map(v=>[v.data,dentist(v.dt),v.proc||'',cash(v.valor),cash(v.rep)]),summary:`Produção: ${cash(sales.reduce((t,v)=>t+n(v.valor),0))} · Comissões geradas: ${cash(sales.reduce((t,v)=>t+n(v.rep),0))}`};
   if(type==='procedures')return {heads:['Procedimento','Quantidade','Valor de vendas'],items:Object.values(sales.reduce((acc,v)=>{const key=v.proc||'Não informado';const x=acc[key]||(acc[key]={name:key,count:0,total:0});x.count++;x.total+=n(v.valor);return acc},{})).sort((x,y)=>y.total-x.total).map(x=>[x.name,x.count,cash(x.total)]),summary:`${sales.length} venda(s) no período`};
   const pts=(db.p||[]).filter(p=>dateOK(p.created_at||p.createdAt||p.dataCadastro||p.data_cadastro,a,b));
@@ -31,12 +33,12 @@
   view.reportType=type;
   const [a,b]=[view.reportFrom||today().slice(0,7)+'-01',view.reportTo||today()];
   const report=rows(type,a,b);
-  return `<div class="ov-page-head"><div><h1>Relatórios</h1><p class="sub">Dados da clínica · somente leitura</p></div></div>
+  return `<div class="ov-page-head"><div><h1>Relatórios</h1><p class="sub">Dados carregados da clínica · somente leitura. Totais podem estar incompletos se o carregamento for parcial.</p></div></div>
   <div class="card" style="display:flex;flex-wrap:wrap;gap:12px;align-items:end">
    <label>Relatório<select id="nx-r-type">${Object.entries(kinds).filter(([k])=>allowed(k)).map(([k,v])=>`<option value="${k}" ${k===type?'selected':''}>${safe(v)}</option>`).join('')}</select></label>
    <label>De<input id="nx-r-from" type="date" value="${safe(a)}"></label><label>Até<input id="nx-r-to" type="date" value="${safe(b)}"></label>
    <button type="button" id="nx-r-apply">Consultar</button><button type="button" class="ghost" id="nx-r-pdf">Imprimir / salvar PDF</button>
-  </div><div class="card"><h2>${safe(kinds[type])}</h2><p class="note">${safe(report.summary)}</p><p class="note">${report.items.length} registro(s) · ${safe(a)} a ${safe(b)}</p>
+  </div><div class="card"><h2>${safe(kinds[type])}</h2><p class="note">${safe(report.summary)}</p><p class="note">${report.items.length} registro(s) · ${safe(a)} a ${safe(b)} · Os valores de comissões representam valores associados às vendas, não necessariamente pagamentos efetuados.</p>
   <div style="overflow:auto"><table style="width:100%;border-collapse:collapse"><thead><tr>${report.heads.map(x=>`<th style="text-align:left;padding:10px;border-bottom:1px solid #ddd">${safe(x)}</th>`).join('')}</tr></thead><tbody>${report.items.map(r=>`<tr>${r.map(x=>`<td style="padding:9px;border-bottom:1px solid #eee">${safe(x)}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${report.heads.length}" style="padding:14px">Nenhum registro encontrado.</td></tr>`}</tbody></table></div></div>`;
  };
  document.addEventListener('click',e=>{
@@ -49,7 +51,7 @@
   view.reportType=type;view.reportFrom=a;view.reportTo=b;
   if(apply){render();return}
   const r=rows(type,a,b);
-  const html=`<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>${safe(kinds[type])}</title><style>body{font:12px Arial;margin:24px;color:#222}h1{color:#bd6000}table{border-collapse:collapse;width:100%}th,td{padding:7px;text-align:left;border-bottom:1px solid #ddd}th{background:#f2eee9}@page{size:A4 landscape;margin:12mm}</style><h1>NexoDent — ${safe(kinds[type])}</h1><p>Período: ${safe(a)} a ${safe(b)}</p><p>${safe(r.summary)}</p><table><thead><tr>${r.heads.map(h=>`<th>${safe(h)}</th>`).join('')}</tr></thead><tbody>${r.items.map(row=>`<tr>${row.map(v=>`<td>${safe(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></html>`;
+  const html=`<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>${safe(kinds[type])}</title><style>body{font:12px Arial;margin:24px;color:#222}h1{color:#bd6000}table{border-collapse:collapse;width:100%}th,td{padding:7px;text-align:left;border-bottom:1px solid #ddd}th{background:#f2eee9}@page{size:A4 landscape;margin:12mm}</style><h1>NexoDent — ${safe(kinds[type])}</h1><p>Período: ${safe(a)} a ${safe(b)} · Dados carregados no navegador; podem estar incompletos.</p><p>${safe(r.summary)}</p><table><thead><tr>${r.heads.map(h=>`<th>${safe(h)}</th>`).join('')}</tr></thead><tbody>${r.items.map(row=>`<tr>${row.map(v=>`<td>${safe(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></html>`;
   const w=window.open('','_blank');if(!w){alert('Permita janelas pop-up para imprimir o relatório.');return}w.document.write(html);w.document.close();w.focus();setTimeout(()=>w.print(),400);
  },true);
 })();
