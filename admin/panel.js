@@ -112,6 +112,30 @@
   });
 
 
+  const moduleNames={agenda:'Agenda',pacientes:'Pacientes',financeiro:'Financeiro',comissoes:'Comissões',whatsapp:'WhatsApp',documentos:'Documentos',relatorios:'Relatórios'};
+  async function loadModules(){
+    const select=$('module-clinic'),previous=select.value;
+    select.replaceChildren();
+    for(const c of window.nexoClinics||[]){const opt=document.createElement('option');opt.value=c.id;opt.textContent=c.nome;select.appendChild(opt);}
+    if([...select.options].some(o=>o.value===previous))select.value=previous;
+    const name=id=>(window.nexoClinics||[]).find(c=>c.id===id)?.nome||id;
+    try{
+      const data=await rpc('nexodent_admin_module_overview');
+      $('module-overrides').replaceChildren();$('module-audit').replaceChildren();
+      for(const item of data.overrides||[]){const tr=document.createElement('tr');for(const value of [name(item.clinic_id),moduleNames[item.module_key]||item.module_key,item.enabled?'Liberado':'Restrito',formatDateTime(item.changed_at)]){const td=document.createElement('td');td.textContent=value;tr.appendChild(td)}$('module-overrides').appendChild(tr)}
+      for(const item of data.audit||[]){const tr=document.createElement('tr');for(const value of [formatDateTime(item.changed_at),name(item.clinic_id),moduleNames[item.module_key]||item.module_key,item.new_enabled?'Liberado':'Restrito',item.reason]){const td=document.createElement('td');td.textContent=value;tr.appendChild(td)}$('module-audit').appendChild(tr)}
+      $('module-message').textContent='Preferências carregadas. Restrições ainda não são aplicadas ao NexoDent.';
+    }catch(e){$('module-message').textContent='Não foi possível carregar as preferências: '+e.message;}
+  }
+  $('module-save').addEventListener('click',async()=>{
+    const clinic=$('module-clinic').value,reason=$('module-reason').value.trim();
+    if(!clinic||reason.length<5){alert('Selecione uma clínica e informe justificativa de pelo menos 5 caracteres.');return;}
+    if(!confirm('Salvar preferência comercial? Ela ainda não bloqueia o acesso no NexoDent.'))return;
+    const button=$('module-save');button.disabled=true;
+    try{await rpc('nexodent_admin_set_module_override',{p_clinic:clinic,p_module:$('module-key').value,p_enabled:$('module-enabled').value==='true',p_reason:reason});$('module-reason').value='';await loadModules();}
+    catch(e){alert('Erro ao salvar: '+e.message)}finally{button.disabled=false}
+  });
+
   async function loadMonitoring(){
     const set=(id,value)=>{ $(id).textContent=value; };
     set('health-site',navigator.onLine?'Página carregada; navegador online':'Página carregada; navegador offline');
@@ -147,6 +171,7 @@
     window.nexoClinics = result.clinicas || [];
     renderClinics();
     await loadCommercial();
+    await loadModules();
     await loadMonitoring();
     try {
       const history = await OralCloud.request('/rest/v1/rpc/nexodent_admin_subscription_history',{method:'POST',body:{}});
