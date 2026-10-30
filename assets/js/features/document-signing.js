@@ -22,7 +22,7 @@
    canvas.addEventListener('pointermove',e=>{if(!down)return;const [x,y]=point(e);ctx.lineTo(x,y);ctx.stroke();drawn=true});
    canvas.addEventListener('pointerup',()=>down=false);canvas.addEventListener('pointercancel',()=>down=false);
    box.querySelector('[data-clear]').onclick=()=>{ctx.clearRect(0,0,600,180);drawn=false};box.querySelector('[data-close]').onclick=()=>cover.remove();
-   box.querySelector('[data-save]').onclick=()=>{
+   box.querySelector('[data-save]').onclick=async()=>{
      if(!drawn||!box.querySelector('input').checked){alert('O profissional deve assinar e confirmar a autorização.');return}
      const pdf=result.doc;const page=pdf.getNumberOfPages();pdf.setPage(page);
      // Área adicional exclusiva para a assinatura, sem sobrepor o texto clínico.
@@ -32,7 +32,23 @@
      pdf.addImage(canvas.toDataURL('image/png'),'PNG',15,55,160,48);
      pdf.text('Registrada em: '+new Date().toLocaleString('pt-BR'),15,113);
      pdf.setFontSize(9);pdf.text('Assinatura manuscrita inserida como imagem. NÃO é assinatura digital ICP-Brasil.',15,124);
-     pdf.save(result.fname.replace(/\.pdf$/i,'_ASSINATURA_MANUSCRITA.pdf'));cover.remove();
+     const filename=result.fname.replace(/\.pdf$/i,'_ASSINATURA_MANUSCRITA.pdf');
+     // Salvar somente após confirmação do Supabase. Não usar armazenamento local para prontuário.
+     if(!window.OralCloud?.enabled || !window.OralCloudSync?.fileOperation || !window.OralCloud?.clinicId){
+       alert('Não foi possível identificar a clínica conectada ao Supabase. O documento não foi arquivado.');return;
+     }
+     const button=box.querySelector('[data-save]');button.disabled=true;button.textContent='Salvando no prontuário...';
+     try{
+       const data=pdf.output('datauristring');
+       const file={id:uid(),nome:filename,tipo:'application/pdf',categoria:'Documento assinado - '+(type==='rx'?'Receituário':'Atestado'),data,dataEnvio:hojeBR(),
+         assinaturaTipo:'imagem manuscrita (não ICP-Brasil)',dentistaNome:d.nome||'',dentistaCro:d.cro||'',assinadoEm:new Date().toISOString()};
+       await OralCloudSync.fileOperation(p.id,'append',{file});
+       pdf.save(filename);
+       cover.remove();
+       alert('Documento arquivado no Supabase e PDF disponibilizado para download. A assinatura é manuscrita, NÃO ICP-Brasil.');
+     }catch(error){
+       alert('Falha ao salvar no Supabase: '+(error?.message||String(error))+'\nO documento NÃO foi confirmado como arquivado. Não feche a clínica antes de resolver a falha de sincronização.');
+     }finally{button.disabled=false;button.textContent='Baixar PDF com assinatura manuscrita';}
    };
  }
  window.NexoDocumentSigning={open,exportForIcp};
