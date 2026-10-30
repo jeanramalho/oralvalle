@@ -17,7 +17,29 @@
     return panel;
   }
   async function openHistory(patient,evolution){
-    const panel=showModal();const state=text('p','Consultando histórico no Supabase...');panel.append(state);
+    const panel=showModal();
+    const integrity=document.createElement('div');integrity.style.cssText='margin:16px 0;padding:14px;border:1px solid rgba(234,112,0,.35);border-radius:10px;background:rgba(234,112,0,.05)';
+    const verifyBtn=text('button','🛡️ Verificar integridade');verifyBtn.type='button';verifyBtn.className='sm';verifyBtn.style.cssText='background:#ea7000;color:white;border:0;padding:10px 14px;border-radius:8px;cursor:pointer';
+    const verifyResult=text('div','A verificação compara o conteúdo atual com o hash SHA-256 armazenado na finalização.');verifyResult.style.cssText='margin-top:10px;overflow-wrap:anywhere;font-size:14px';
+    integrity.append(verifyBtn,verifyResult);panel.append(integrity);
+    verifyBtn.addEventListener('click',async()=>{
+      verifyBtn.disabled=true;verifyBtn.textContent='Verificando...';verifyResult.textContent='Consultando a integridade no Supabase...';
+      try{
+        if(!ready())throw Error('Conecte-se ao Supabase para verificar a integridade.');
+        const response=await OralCloud.request('/rest/v1/rpc/nexodent_verify_evolution_integrity',{method:'POST',body:{p_clinic:OralCloud.clinicId,p_record_id:rowId(patient,evolution)}});
+        const result=Array.isArray(response)?response[0]:response;
+        if(!result||!['VERIFIED','MISMATCH','NOT_FINALIZED'].includes(result.status))throw Error('Resposta inválida da verificação.');
+        verifyResult.replaceChildren();
+        const labels={VERIFIED:'🟢 Integridade verificada — conteúdo corresponde ao hash registrado.',MISMATCH:'🔴 Divergência detectada — o conteúdo atual não corresponde ao hash registrado.',NOT_FINALIZED:'⚪ Evolução não finalizada — ainda não existe hash de referência.'};
+        const headline=text('strong',labels[result.status]);headline.style.color=result.status==='MISMATCH'?'#b91c1c':result.status==='VERIFIED'?'#16803c':'inherit';verifyResult.append(headline);
+        if(result.finalized_at)verifyResult.append(text('div','Finalizada em: '+formatDate(result.finalized_at)));
+        if(result.stored_hash)verifyResult.append(text('div','Hash armazenado: '+result.stored_hash));
+        if(result.calculated_hash&&result.status==='MISMATCH')verifyResult.append(text('div','Hash calculado: '+result.calculated_hash));
+        verifyResult.append(text('small','Esta verificação não equivale a uma assinatura digital qualificada.'));
+      }catch(err){verifyResult.textContent='Não foi possível verificar a integridade: '+(err?.message||String(err));}
+      finally{verifyBtn.disabled=false;verifyBtn.textContent='🛡️ Verificar novamente';}
+    });
+    const state=text('p','Consultando histórico no Supabase...');panel.append(state);
     try{
       if(!ready())throw Error('Conecte-se ao Supabase para consultar o histórico.');
       const rows=await OralCloud.request('/rest/v1/rpc/nexodent_evolution_audit_history',{method:'POST',body:{p_clinic:OralCloud.clinicId,p_evolution_id:rowId(patient,evolution)}});
