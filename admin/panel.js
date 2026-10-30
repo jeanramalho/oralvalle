@@ -6,10 +6,12 @@
     const result = await OralCloud.request('/rest/v1/rpc/nexodent_admin_overview', {method:'POST',body:{}});
     $('total').textContent = result.total_clinicas;
     $('members').textContent = result.total_vinculos;
+    $('trials').textContent = result.em_teste ?? 0;
+    $('active').textContent = result.assinaturas_ativas ?? 0;
     $('clinics').replaceChildren();
     for (const c of result.clinicas || []) {
       const tr = document.createElement('tr');
-      for (const value of [c.nome, new Date(c.created_at).toLocaleDateString('pt-BR'), c.id]) {
+      for (const value of [c.nome, c.created_at ? new Date(c.created_at).toLocaleDateString('pt-BR') : '—', c.status_assinatura || 'Não configurado', c.vencimento ? new Date(c.vencimento).toLocaleDateString('pt-BR') : '—', c.id]) {
         const td = document.createElement('td'); td.textContent = value ?? ''; tr.appendChild(td);
       }
       $('clinics').appendChild(tr);
