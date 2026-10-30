@@ -41,6 +41,7 @@ function ovSidebar(active){
       ${pmSee('lem')?`<button class="ov-nav-btn${active==='impl'?' on':''}" data-act="implnav"><span class="ico">◈</span><span>Implantodontia</span></button>`:''}
       ${pmSee('lem')?`<button class="ov-nav-btn${active==='prot'?' on':''}" data-act="protnav"><span class="ico">◇</span><span>Prótese</span></button>`:''}
       ${item('lem','Lembretes')}
+      ${item('lab','Laboratório','pr')}
       ${item('wa','WhatsApp','pac')}
       ${item('sigdoc','Documentos e Assinaturas','pr')}
       ${item('dt','Dentistas')}
