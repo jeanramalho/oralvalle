@@ -58,6 +58,59 @@
   }
   $('clinic-search').addEventListener('input',renderClinics);
   $('clinic-filter').addEventListener('change',renderClinics);
+
+  const money = n => Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  const cycleLabels={monthly:'Mensal',quarterly:'Trimestral',yearly:'Anual',free:'Gratuito'};
+  async function rpc(name,body={}) { return OralCloud.request('/rest/v1/rpc/'+name,{method:'POST',body}); }
+  async function loadCommercial(){
+    try{
+      const data=await rpc('nexodent_admin_commercial_overview');
+      const plans=data.plans||[], payments=data.payments||[];
+      $('plans').replaceChildren();
+      for(const p of plans){
+        const tr=document.createElement('tr');
+        for(const value of [p.name,cycleLabels[p.cycle]||p.cycle,money(p.price_cents/100),(p.modules||[]).join(', ')]){
+          const td=document.createElement('td');td.textContent=value;tr.appendChild(td);
+        }
+        const td=document.createElement('td');const b=document.createElement('button');b.className='secondary';b.textContent='Vincular à clínica';
+        b.addEventListener('click',async()=>{
+          const names=(window.nexoClinics||[]).map((c,i)=>`${i+1}. ${c.nome}`).join('\n');
+          const n=prompt('Escolha o número da clínica:\n'+names);if(n===null)return;
+          const c=(window.nexoClinics||[])[Number(n)-1];if(!c){alert('Clínica inválida');return;}
+          const reason=prompt('Justificativa (mínimo 5 caracteres):');if(!reason||reason.trim().length<5)return;
+          if(!confirm(`Vincular ${p.name} à clínica ${c.nome}?`))return;
+          try{await rpc('nexodent_admin_set_clinic_plan',{p_clinic:c.id,p_plan:p.id,p_reason:reason.trim()});await loadCommercial();alert('Plano vinculado.');}catch(e){alert(e.message)}
+        });td.appendChild(b);tr.appendChild(td);$('plans').appendChild(tr);
+      }
+      const clinicSelect=$('payment-clinic');const prev=clinicSelect.value;clinicSelect.replaceChildren();
+      for(const c of window.nexoClinics||[]){const o=document.createElement('option');o.value=c.id;o.textContent=c.nome;clinicSelect.appendChild(o)}clinicSelect.value=prev||clinicSelect.value;
+      $('payments').replaceChildren();let received=0,open=0,overdue=0;
+      for(const p of payments){
+        const tr=document.createElement('tr');const late=p.status==='open'&&p.due_date<new Date().toISOString().slice(0,10);
+        if(p.status==='paid')received+=p.amount_cents;else if(p.status==='open'){open+=p.amount_cents;if(late)overdue+=p.amount_cents;}
+        for(const value of [p.clinic_name||p.clinic_id,money(p.amount_cents/100),formatDate(p.due_date),p.status==='paid'?'Pago':p.status==='canceled'?'Cancelado':late?'Vencida':'Em aberto']){const td=document.createElement('td');td.textContent=value;tr.appendChild(td)}
+        const td=document.createElement('td');if(p.status==='open')for(const [label,status] of [['Marcar pago','paid'],['Cancelar','canceled']]){
+          const b=document.createElement('button');b.className='secondary action';b.textContent=label;b.addEventListener('click',async()=>{
+            const reason=prompt('Justificativa (mínimo 5 caracteres):');if(!reason||reason.trim().length<5)return;
+            if(!confirm('Confirmar '+label+'?'))return;
+            try{await rpc('nexodent_admin_update_payment',{p_payment:p.id,p_status:status,p_reason:reason.trim()});await loadCommercial()}catch(e){alert(e.message)}
+          });td.appendChild(b);
+        }tr.appendChild(td);$('payments').appendChild(tr);
+      }
+      $('received-total').textContent=money(received/100);$('open-total').textContent=money(open/100);$('overdue-total').textContent=money(overdue/100);
+    }catch(e){console.error('Comercial indisponível:',e);$('plans').textContent='Não foi possível carregar planos: '+e.message;}
+  }
+  $('create-plan').addEventListener('click',async()=>{
+    const name=$('plan-name').value.trim(),cycle=$('plan-cycle').value,amount=Number($('plan-price').value),modules=$('plan-modules').value.split(',').map(x=>x.trim()).filter(Boolean);
+    if(name.length<2||!Number.isFinite(amount)||amount<0||!$('plan-price').value){alert('Informe nome e preço válido.');return;}
+    try{await rpc('nexodent_admin_create_plan',{p_name:name,p_cycle:cycle,p_price_cents:Math.round(amount*100),p_modules:modules});await loadCommercial()}catch(e){alert(e.message)}
+  });
+  $('create-payment').addEventListener('click',async()=>{
+    const amount=Number($('payment-amount').value),due=$('payment-due').value,clinic=$('payment-clinic').value;
+    if(!clinic||!Number.isFinite(amount)||amount<=0||!due){alert('Preencha clínica, valor e vencimento.');return;}
+    try{await rpc('nexodent_admin_create_payment',{p_clinic:clinic,p_amount_cents:Math.round(amount*100),p_due_date:due});await loadCommercial()}catch(e){alert(e.message)}
+  });
+
   async function load() {
     const result = await OralCloud.request('/rest/v1/rpc/nexodent_admin_overview', {method:'POST',body:{}});
     $('total').textContent = result.total_clinicas;
@@ -66,6 +119,7 @@
     $('active').textContent = result.assinaturas_ativas ?? 0;
     window.nexoClinics = result.clinicas || [];
     renderClinics();
+    await loadCommercial();
     try {
       const history = await OralCloud.request('/rest/v1/rpc/nexodent_admin_subscription_history',{method:'POST',body:{}});
       $('audit').replaceChildren();
