@@ -129,3 +129,12 @@ html[data-ov-mode="light"] .ag-date-panel strong,html[data-ov-mode="light"] .ag-
 html[data-ov-mode="light"] .ov-ag-status-options label:has(input[value="Compareceu"]) input {accent-color:#f07800!important}
 html[data-ov-mode="light"] .ov-ag-status-options label:has(input[value="Faltou"]) input {accent-color:#dc3545!important}
 html[data-ov-mode="light"] .ov-ag-status-options label:has(input[value="Cancelado"]) input {accent-color:#eab308!important}
+
+/* NexoDent 162 — indicadores visuais independentes do radio nativo. */
+html[data-ov-mode="light"] .ov-ag-status-options label {position:relative;display:flex;align-items:center;gap:12px;color:#202a34!important}
+html[data-ov-mode="light"] .ov-ag-status-options input[type="radio"] {appearance:none!important;-webkit-appearance:none!important;flex:0 0 17px!important;width:17px!important;height:17px!important;min-width:17px!important;min-height:17px!important;margin:0!important;border-radius:50%!important;border:2px solid currentColor!important;background:currentColor!important;opacity:1!important;box-shadow:none!important;cursor:pointer}
+html[data-ov-mode="light"] .ov-ag-status-options input[type="radio"][value="Compareceu"] {color:#ee7600!important}
+html[data-ov-mode="light"] .ov-ag-status-options input[type="radio"][value="Faltou"] {color:#dc3545!important}
+html[data-ov-mode="light"] .ov-ag-status-options input[type="radio"][value="Cancelado"] {color:#eab308!important}
+html[data-ov-mode="light"] .ov-ag-status-options input[type="radio"]:checked {box-shadow:inset 0 0 0 3px #fff!important}
+html[data-ov-mode="light"] .ov-ag-status-options input[type="radio"]:focus-visible {outline:2px solid #2563eb!important;outline-offset:3px!important}
