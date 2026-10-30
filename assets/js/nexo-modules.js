@@ -5,6 +5,9 @@
   'use strict';
   let generation = 0;
   let current = null;
+  let loadedClinic = null;
+  let lastRefresh = 0;
+  let pending = false;
   const keys = ['agenda','patients','finance','commissions','wa','documents','reports'];
   function resolve(key) {
     if (!keys.includes(key) || !current) return null;
@@ -14,10 +17,17 @@
     return Array.isArray(current.plan_modules) && current.plan_modules.includes(key);
   }
   async function refresh() {
-    const seq = ++generation;
     const clinicId = window.OralCloud?.clinicId;
-    current = null;
-    if (!clinicId || !window.OralCloud?.request) return;
+    if (clinicId !== loadedClinic) {
+      ++generation;
+      current = null;
+      loadedClinic = clinicId || null;
+      applyNavigation();
+    }
+    if (!clinicId || !window.OralCloud?.request || pending) return;
+    const seq = ++generation;
+    pending = true;
+    lastRefresh = Date.now();
     try {
       const result = await window.OralCloud.request('/rest/v1/rpc/nexodent_clinic_module_access', {
         method: 'POST', body: { p_clinic: clinicId }
@@ -27,7 +37,9 @@
         window.dispatchEvent(new CustomEvent('nexodent:modules-updated', { detail: { clinicId } }));
       }
     } catch (err) {
-      if (seq === generation) console.warn('[NexoDent] Não foi possível consultar os módulos; nenhuma restrição será aplicada nesta etapa.', err);
+      if (seq === generation) console.warn('[NexoDent] Falha ao atualizar permissões comerciais; mantendo último estado conhecido para esta clínica.', err);
+    } finally {
+      pending = false;
     }
   }
   // Proteção de interface apenas. Autorização de operações exige RLS/RPC no servidor.
@@ -74,6 +86,18 @@
     if (root) observer.observe(root, { childList:true, subtree:true });
     applyNavigation();
   });
+  // Consulta periodicamente e quando o usuário retorna à aba. Não substitui
+  // as validações no Supabase; evita exigir uma nova publicação para mudanças.
+  function refreshIfDue() {
+    const clinicId = window.OralCloud?.clinicId || null;
+    if (clinicId !== loadedClinic || Date.now() - lastRefresh > 60000) refresh();
+  }
+  window.addEventListener('focus', refreshIfDue);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) refreshIfDue();
+  });
+  window.setInterval(() => { if (!document.hidden) refreshIfDue(); }, 60000);
+  window.addEventListener('DOMContentLoaded', refreshIfDue);
   window.NexoModules = Object.freeze({ refresh, resolve, allowedNavigation, applyNavigation, get snapshot() { return current; },
-    reset() { ++generation; current = null; } });
+    reset() { ++generation; current = null; loadedClinic = null; lastRefresh = 0; applyNavigation(); } });
 })();
