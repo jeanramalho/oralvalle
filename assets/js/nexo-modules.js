@@ -8,7 +8,7 @@
   let current = null;
   let loadedClinic = null;
   let lastRefresh = 0;
-  let pending = false;
+  let pendingClinic = null;
   const keys = ['agenda','patients','finance','commissions','wa','documents','reports'];
   function resolve(key) {
     if (!keys.includes(key) || !current) return null;
@@ -25,9 +25,9 @@
       loadedClinic = clinicId || null;
       applyNavigation();
     }
-    if (!clinicId || !window.OralCloud?.request || pending) return;
+    if (!clinicId || !window.OralCloud?.request || pendingClinic === clinicId) return;
     const seq = ++generation;
-    pending = true;
+    pendingClinic = clinicId;
     lastRefresh = Date.now();
     try {
       const result = await window.OralCloud.request('/rest/v1/rpc/nexodent_clinic_module_access', {
@@ -40,7 +40,7 @@
     } catch (err) {
       if (seq === generation) console.warn('[NexoDent] Falha ao atualizar permissões comerciais; mantendo último estado conhecido para esta clínica.', err);
     } finally {
-      pending = false;
+      if (pendingClinic === clinicId) pendingClinic = null;
     }
   }
   // Proteção de interface apenas. Autorização de operações exige RLS/RPC no servidor.
@@ -53,11 +53,16 @@
   });
   function moduleForNavigation(section) { return navigationModules[section] || null; }
   // Disponível aos recursos de interface; não substitui autorização no servidor.
-  function isAllowed(key) { return resolve(key) !== false; }
+  function isAllowed(key) {
+    // Relatórios comerciais aguardam a autorização da clínica atual.
+    if (key === 'reports' && window.OralCloud?.enabled &&
+        (!current || loadedClinic !== window.OralCloud?.clinicId)) return false;
+    return resolve(key) !== false;
+  }
 
   function allowedNavigation(section) {
     const module = moduleForNavigation(section);
-    return !module || resolve(module) !== false;
+    return !module || isAllowed(module);
   }
   function applyNavigation() {
     document.querySelectorAll('[data-act="nav"][data-t]').forEach(button => {
@@ -103,6 +108,6 @@
   });
   window.setInterval(() => { if (!document.hidden) refreshIfDue(); }, 60000);
   window.addEventListener('DOMContentLoaded', refreshIfDue);
-  window.NexoModules = Object.freeze({ refresh, resolve, isAllowed, allowedNavigation, applyNavigation, get snapshot() { return current; },
+  window.NexoModules = Object.freeze({ refresh, resolve, isAllowed, allowedNavigation, applyNavigation, get snapshot() { return loadedClinic === window.OralCloud?.clinicId ? current : null; },
     reset() { ++generation; current = null; loadedClinic = null; lastRefresh = 0; applyNavigation(); } });
 })();
