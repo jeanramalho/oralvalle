@@ -39,7 +39,7 @@ document.addEventListener('click', async function nexodentLinkMyDentist(event) {
     const mine = await OralCloud.request('/rest/v1/rpc/nexodent_my_dentist', {
       method: 'POST', body: { p_clinic: OralCloud.clinicId }
     });
-    if (!Array.isArray(mine) || !mine.some(item => item.dentist_id === dentistId)) {
+    if (!Array.isArray(mine) || !mine.some(item => item.dentist_id === dentistId || String(item.dentist_id).includes('\"' + dentistId + '\"'))) {
       throw new Error('Vínculo não confirmado pela consulta ao Supabase.');
     }
     toast('Dentista vinculado à sua conta com sucesso.');

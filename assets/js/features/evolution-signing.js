@@ -1,11 +1,23 @@
 /* Assinatura manuscrita na impressão da evolução. Não é ICP-Brasil. */
 (()=>{
-  function open(p){
-    const dentists=(db.dt||[]).filter(x=>x&&x.nome);
-    if(!dentists.length){alert('Cadastre um dentista antes de assinar.');return;}
+  async function open(p){
+    if(!window.OralCloud?.enabled || !OralCloud.clinicId){alert('Entre na clínica pelo Supabase para identificar o dentista.');return;}
+    let identity;
+    try {
+      const result=await OralCloud.request('/rest/v1/rpc/nexodent_my_dentist',{
+        method:'POST',body:{p_clinic:OralCloud.clinicId}
+      });
+      if(!Array.isArray(result)||result.length!==1)throw new Error('Sua conta não possui um vínculo profissional ativo nesta clínica.');
+      identity=result[0];
+    }catch(error){alert('Não foi possível identificar o dentista autenticado: '+(error?.message||String(error)));return;}
+    const dentists=(db.dt||[]).filter(x=>x&&x.nome && (
+      String(x.id)===String(identity.dentist_id) ||
+      String(identity.dentist_id).includes('"'+String(x.id)+'"')
+    ));
+    if(dentists.length!==1){alert('O cadastro do dentista autenticado não está disponível nesta clínica.');return;}
     const overlay=document.createElement('div');overlay.style.cssText='position:fixed;inset:0;background:#0009;z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px';
     const box=document.createElement('section');box.style.cssText='background:white;color:#222;padding:20px;border-radius:12px;max-width:660px;width:100%;max-height:94vh;overflow:auto';
-    box.innerHTML='<h2 style="color:#dc6b00">Assinar evolução clínica</h2><p>Revise a evolução antes de assinar. A assinatura desenhada será incluída na impressão/PDF, mas NÃO é ICP-Brasil.</p><label>Dentista responsável</label><select data-dent style="width:100%;padding:10px;margin:8px 0"></select><canvas width="600" height="180" style="display:block;width:100%;height:180px;background:#fff;border:2px solid #ea7000;border-radius:8px;touch-action:none"></canvas><label style="display:block;margin:12px 0"><input type="checkbox" data-confirm> Sou o dentista selecionado, revisei o documento e autorizo esta assinatura.</label><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" data-clear>Limpar</button><button type="button" data-print style="background:#ea7000;color:white">Imprimir / salvar PDF assinado</button><button type="button" data-archive style="background:#b85800;color:white">Arquivar PDF assinado no Supabase</button><button type="button" data-close>Cancelar</button></div>';
+    box.innerHTML='<h2 style="color:#dc6b00">Assinar evolução clínica</h2><p>Revise a evolução antes de assinar. A assinatura desenhada será incluída na impressão/PDF, mas NÃO é ICP-Brasil.</p><label>Dentista autenticado (identificado pelo Supabase)</label><select disabled data-dent style="width:100%;padding:10px;margin:8px 0"></select><canvas width="600" height="180" style="display:block;width:100%;height:180px;background:#fff;border:2px solid #ea7000;border-radius:8px;touch-action:none"></canvas><label style="display:block;margin:12px 0"><input type="checkbox" data-confirm> Sou o dentista autenticado acima, revisei o documento e autorizo esta assinatura.</label><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" data-clear>Limpar</button><button type="button" data-print style="background:#ea7000;color:white">Imprimir / salvar PDF assinado</button><button type="button" data-archive style="background:#b85800;color:white">Arquivar PDF assinado no Supabase</button><button type="button" data-close>Cancelar</button></div>';
     const select=box.querySelector('[data-dent]');dentists.forEach(d=>{const o=document.createElement('option');o.value=String(d.id);o.textContent=(d.nome||'')+' · CRO '+(d.cro||'não informado');select.appendChild(o)});
     overlay.appendChild(box);document.body.appendChild(overlay);
     const c=box.querySelector('canvas'),ctx=c.getContext('2d');ctx.strokeStyle='#182638';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.lineJoin='round';let drawing=false,hasInk=false;
