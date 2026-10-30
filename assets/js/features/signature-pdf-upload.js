@@ -61,5 +61,25 @@
     const slot='<div id="nexo-signature-upload-slot"></div>';
     return html.includes(slot)?html.replace(slot,'<div style="margin:14px 0;padding:12px;border:1px solid #f2b47e;border-radius:10px;background:#fff8f1"><strong>📄 Preparar PDF para assinatura</strong><p style="font-size:12px">Envio de teste ao Storage privado; ainda não vincula ao paciente e não assina.</p><button type="button" data-act="nexopdfupload" style="background:#e97713;color:white">📄 Enviar PDF para assinatura (administrador)</button></div>'):html;
   };
-  if(window.A){window.A.nexopdfupload=async(button)=>{button.disabled=true;try{if(!(await permission())){notify('Acesso exclusivo do administrador ativo.');return;}modal();}finally{button.disabled=false;}};}
+  // Captura o clique independentemente do roteador global A, que pode não
+  // estar exposto em window quando este módulo é carregado.
+  document.addEventListener('click', async (event) => {
+    const button = event.target?.closest?.('[data-act="nexopdfupload"]');
+    if (!button) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    if (button.disabled) return;
+    button.disabled = true;
+    try {
+      if (!(await permission())) {
+        notify('Acesso exclusivo do administrador ativo.');
+        return;
+      }
+      modal();
+    } catch (error) {
+      notify('Não foi possível abrir o envio: ' + (error?.message || String(error)));
+    } finally {
+      button.disabled = false;
+    }
+  }, true);
 })();
