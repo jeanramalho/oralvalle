@@ -335,6 +335,7 @@ const A={
   prprint:()=>{window.print()},
   evsigclr:(b,d,p)=>{p.evolSign='';p.evolSignDate='';save();render()},
   printevol:(b,d,p)=>printEvolucao(p),
+  evolicp:(b,d,p)=>{alert("O documento será aberto para impressão. Selecione Salvar como PDF e assine o arquivo com um assinador ICP-Brasil externo. O NexoDent NÃO aplica assinatura digital nesta etapa. Confira o conteúdo e a identificação profissional antes de assinar.");printEvolucao(p)},
   printficha:(b,d,p)=>printFicha(p),
   savebtn:(b,d,p)=>{const ae=document.activeElement;if(ae&&ae.blur)ae.blur();save();updSaveStat();toastSaved('✓ Tudo salvo neste paciente')},
   prshare:()=>{copy(window.location.href,'Link copiado')},
