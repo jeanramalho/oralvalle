@@ -50,6 +50,9 @@
     sigdoc:'documents', bk:'reports'
   });
   function moduleForNavigation(section) { return navigationModules[section] || null; }
+  // Disponível aos recursos de interface; não substitui autorização no servidor.
+  function isAllowed(key) { return resolve(key) !== false; }
+
   function allowedNavigation(section) {
     const module = moduleForNavigation(section);
     return !module || resolve(module) !== false;
@@ -98,6 +101,6 @@
   });
   window.setInterval(() => { if (!document.hidden) refreshIfDue(); }, 60000);
   window.addEventListener('DOMContentLoaded', refreshIfDue);
-  window.NexoModules = Object.freeze({ refresh, resolve, allowedNavigation, applyNavigation, get snapshot() { return current; },
+  window.NexoModules = Object.freeze({ refresh, resolve, isAllowed, allowedNavigation, applyNavigation, get snapshot() { return current; },
     reset() { ++generation; current = null; loadedClinic = null; lastRefresh = 0; applyNavigation(); } });
 })();
