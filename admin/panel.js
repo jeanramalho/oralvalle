@@ -16,6 +16,25 @@
       }
       $('clinics').appendChild(tr);
     }
+    const requests = await OralCloud.request('/rest/v1/rpc/nexodent_admin_trial_requests', {method:'POST',body:{}});
+    $('requests').replaceChildren();
+    for (const r of requests || []) {
+      const tr = document.createElement('tr');
+      for (const value of [r.nome,r.clinica,r.email,r.whatsapp,r.status,r.created_at ? new Date(r.created_at).toLocaleDateString('pt-BR') : '—']) {
+        const td=document.createElement('td'); td.textContent=value??'';tr.appendChild(td);
+      }
+      const td=document.createElement('td');
+      if(r.status==='pending') for(const [label,decision] of [['Aprovar análise','approved'],['Recusar','rejected']]) {
+        const button=document.createElement('button');button.textContent=label;button.className=decision==='rejected'?'secondary':'';
+        button.addEventListener('click',async()=>{
+          if(!confirm('Confirma esta decisão? A aprovação nesta etapa NÃO libera acesso nem inicia o teste.'))return;
+          button.disabled=true;
+          try {await OralCloud.request('/rest/v1/rpc/nexodent_admin_review_trial',{method:'POST',body:{p_id:r.id,p_decision:decision}});await load()}
+          catch(err){alert(err.message);button.disabled=false}
+        });td.appendChild(button);td.append(' ');
+      }
+      tr.appendChild(td);$('requests').appendChild(tr);
+    }
     $('login').style.display = 'none'; $('app').style.display = 'block'; $('logout').hidden = false;
   }
   $('login').addEventListener('submit', async e => {
