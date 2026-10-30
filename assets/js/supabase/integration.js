@@ -68,6 +68,7 @@
       if (pending || running || failure || membersRunning || membersPending || editing() || view.id) return;
       db = migrate(raw);
       OralCloudData.prepareDefaults(db);
+      window.dispatchEvent(new CustomEvent('nexodent:clinic-data-loaded', { detail: { clinicId: OralCloud.clinicId } }));
       syncRevision = meta.revision;
       syncNotice = false;
       render();
@@ -245,6 +246,7 @@
     // Nunca importar automaticamente os dados locais ao preencher as credenciais.
     db = migrate(raw);
     OralCloudData.prepareDefaults(db);
+    window.dispatchEvent(new CustomEvent('nexodent:clinic-data-loaded', { detail: { clinicId: OralCloud.clinicId } }));
     const member = AUTH.users.find(user => user.id === clinic.user_id);
     if (!member) throw new Error('Vínculo de usuário não disponível.');
     accessRequests = [];
