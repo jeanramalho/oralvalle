@@ -12,11 +12,14 @@
   };
   function enforceLight(){
     document.documentElement.setAttribute('data-ov-mode','light');
-    document.documentElement.style.colorScheme='light';
+    document.documentElement.style.colorScheme='only light';
   }
   enforceLight();
   // Mantém compatibilidade com chamadas antigas, sem permitir ativar o modo escuro.
   window.oralValleApplyTheme=function(){enforceLight()};
   document.addEventListener('DOMContentLoaded',enforceLight);
   window.addEventListener('pageshow',enforceLight);
+  new MutationObserver(function(){
+    if(document.documentElement.getAttribute('data-ov-mode')!=='light')enforceLight();
+  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-ov-mode']});
 })();
