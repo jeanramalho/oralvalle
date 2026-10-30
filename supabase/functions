@@ -1,0 +1,101 @@
+// NexoDent 144: upload de PDF não assinado vinculado ao paciente.
+// A autorização administrativa é verificada com o JWT do usuário.
+// A service role é usada somente no servidor. Esta função NÃO assina PDFs.
+import { createClient } from 'npm:@supabase/supabase-js@2';
+
+const BUCKET = 'nexodent-signed-documents';
+const MAX_BYTES = 10 * 1024 * 1024;
+const allowedTypes = new Set(['ANAMNESE', 'CONSENTIMENTO', 'CONTRATO', 'PLANO_TRATAMENTO', 'ORCAMENTO', 'EVOLUCAO', 'OUTRO']);
+const cors = {
+  'Access-Control-Allow-Origin': Deno.env.get('NEXODENT_APP_ORIGIN') || 'https://invalid.example',
+  'Access-Control-Allow-Headers': 'authorization, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+const json = (status: number, body: unknown) => new Response(JSON.stringify(body), {
+  status,
+  headers: { ...cors, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+});
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
+  if (req.method !== 'POST') return json(405, { error: 'METHOD_NOT_ALLOWED' });
+  try {
+    const url = Deno.env.get('SUPABASE_URL');
+    const anon = Deno.env.get('SUPABASE_ANON_KEY');
+    const service = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (!url || !anon || !service) return json(500, { error: 'SERVER_NOT_CONFIGURED' });
+
+    const token = req.headers.get('authorization')?.match(/^Bearer\s+(.+)$/i)?.[1];
+    if (!token) return json(401, { error: 'AUTH_REQUIRED' });
+    const userClient = createClient(url, anon, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { data: auth, error: authError } = await userClient.auth.getUser(token);
+    if (authError || !auth.user) return json(401, { error: 'AUTH_INVALID' });
+
+    const form = await req.formData();
+    const file = form.get('file');
+    const clinicId = form.get('clinic_id');
+    const documentType = form.get('document_type');
+    const patientId = form.get('patient_id');
+
+    if (!(file instanceof File) ||
+        typeof clinicId !== 'string' ||
+        !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(clinicId) ||
+        typeof documentType !== 'string' || !allowedTypes.has(documentType) ||
+        typeof patientId !== 'string' || patientId.length !== 32 ||
+        !/^[a-zA-Z0-9_-]{32}$/.test(patientId)) {
+      return json(400, { error: 'INVALID_INPUT' });
+    }
+    if (file.size < 5 || file.size > MAX_BYTES) return json(413, { error: 'INVALID_FILE_SIZE' });
+
+    const { data: canAdmin, error: permissionError } = await userClient.rpc('nexodent_can_use_ecnpj', { p_clinic: clinicId });
+    if (permissionError || canAdmin !== true) return json(403, { error: 'ADMIN_REQUIRED' });
+
+    const admin = createClient(url, service, { auth: { persistSession: false, autoRefreshToken: false } });
+    const { data: patient, error: patientError } = await admin
+      .from('patients').select('id')
+      .eq('clinic_id', clinicId).eq('id', patientId)
+      .eq('slot', 'p').eq('kind', 'object').maybeSingle();
+    if (patientError) return json(500, { error: 'PATIENT_LOOKUP_FAILED' });
+    if (!patient) return json(400, { error: 'PATIENT_NOT_FOUND' });
+
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    if (new TextDecoder().decode(bytes.subarray(0, 5)) !== '%PDF-') {
+      return json(400, { error: 'NOT_A_PDF' });
+    }
+    const hash = [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))]
+      .map(b => b.toString(16).padStart(2, '0')).join('');
+    const documentId = crypto.randomUUID();
+    const path = `${clinicId}/${documentId}/original.pdf`;
+
+    const { error: uploadError } = await admin.storage.from(BUCKET)
+      .upload(path, bytes, { contentType: 'application/pdf', upsert: false });
+    if (uploadError) return json(500, { error: 'STORAGE_UPLOAD_FAILED' });
+
+    const { error: insertError } = await admin.from('nexodent_signature_documents').insert({
+      id: documentId,
+      clinic_id: clinicId,
+      patient_id: patientId,
+      document_type: documentType,
+      source_record_id: null,
+      storage_path: path,
+      sha256: hash,
+      created_by: auth.user.id,
+    });
+    if (insertError) {
+      const { error: cleanupError } = await admin.storage.from(BUCKET).remove([path]);
+      return json(500, { error: cleanupError ? 'DOCUMENT_REGISTER_FAILED_ORPHAN_FILE' : 'DOCUMENT_REGISTER_FAILED' });
+    }
+    return json(201, {
+      document_id: documentId,
+      patient_id: patientId,
+      sha256: hash,
+      document_type: documentType,
+      status: 'STORED_UNSIGNED',
+    });
+  } catch (_) {
+    return json(500, { error: 'UNEXPECTED_UPLOAD_ERROR' });
+  }
+});
