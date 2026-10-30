@@ -42,6 +42,7 @@ function ovSidebar(active){
       ${pmSee('lem')?`<button class="ov-nav-btn${active==='prot'?' on':''}" data-act="protnav"><span class="ico">◇</span><span>Prótese</span></button>`:''}
       ${item('lem','Lembretes')}
       ${item('wa','WhatsApp','pac')}
+      ${item('sigdoc','Documentos e Assinaturas','pr')}
       ${item('dt','Dentistas')}
       ${item('cm','Comissões')}
       ${item('vd','Pagamentos Recebidos','pg')}
