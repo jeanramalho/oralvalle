@@ -4,7 +4,7 @@
 (function(){
  'use strict';
  const can = k => typeof pmLvl==='function' && pmLvl(k)>=1;
- const commercial = () => window.NexoModules?.resolve('reports') !== false;
+ const commercial = () => !window.OralCloud?.enabled || window.NexoModules?.isAllowed('reports') === true;
  // Não apresentar/exportar dados de uma clínica após a troca de contexto.
  let reportClinic = null;
  function clinicReady(){
@@ -12,13 +12,16 @@
   if (!window.OralCloud?.enabled) return true;
   if (!id) return false;
   if (reportClinic === null) reportClinic = id;
-  return reportClinic === id;
+  if (reportClinic !== id) return false;
+  return true;
  }
  window.addEventListener('nexodent:modules-updated', e => {
-  if (e.detail?.clinicId && e.detail.clinicId !== reportClinic) reportClinic = e.detail.clinicId;
+  // A atualização de permissões não prova que os dados da nova clínica
+  // já foram carregados; não redefinir o contexto de dados aqui.
  });
- const moduleAllowed = key => window.NexoModules?.resolve(key) !== false;
+ const moduleAllowed = key => window.NexoModules?.isAllowed(key) !== false;
  const dateOK=(s,a,b)=>!!s && String(s).slice(0,10)>=a && String(s).slice(0,10)<=b;
+ const validDate=s=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(s))return false;const d=new Date(s+'T12:00:00Z');return !Number.isNaN(d.getTime()) && d.toISOString().slice(0,10)===s;};
  const n=v=>typeof num==='function'?num(v):(Number(v)||0);
  const cash=v=>typeof brl==='function'?brl(v):Number(v||0).toFixed(2);
  const safe=v=>typeof esc==='function'?esc(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -74,7 +77,7 @@
   if(!clinicReady() || !commercial())return;
   const type=document.getElementById('nx-r-type')?.value;
   if(!allowed(type))return;
-  const [a,b]=dates();if(!/^\d{4}-\d{2}-\d{2}$/.test(a)||!/^\d{4}-\d{2}-\d{2}$/.test(b)||a>b){alert('Informe um período válido, com a data inicial anterior ou igual à final.');return}
+  const [a,b]=dates();if(!validDate(a)||!validDate(b)||a>b){alert('Informe um período válido, com a data inicial anterior ou igual à final.');return}
   view.reportType=type;view.reportFrom=a;view.reportTo=b;
   if(apply){render();return}
   // Revalidar contexto e permissões imediatamente antes de exportar.
