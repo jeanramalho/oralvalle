@@ -119,7 +119,7 @@
     return base.slice(0, base.indexOf('<h2>Arquivos anexados'))
       .replace('Para evitar que o navegador fique sem espaço, cada arquivo pode ter até 1,5 MB.', 'Cada novo arquivo pode ter até 1,5 MB.')
       .replace('Os anexos ficam salvos neste navegador; faça backups regularmente.', 'Os anexos ficam no Supabase; faça backups regularmente.')
-      + `<h2>Arquivos anexados (${list.length})</h2><div class="ov-file-grid">${content}</div>`;
+      + `<div id="nexo-signature-upload-slot"></div><h2>Arquivos anexados (${list.length})</h2><div class="ov-file-grid">${content}</div>`;
   };
   A.cloudfilesretry = () => { const patient = cur(); if (!patient) return; cache.delete(JSON.stringify(patient.id)); render(); };
   A.cloudfileopen = async (button, data, patient) => {
