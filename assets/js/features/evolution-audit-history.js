@@ -73,6 +73,16 @@
       btn.addEventListener('click',()=>openHistory(btn.dataset.patient,btn.dataset.evolution));del.before(btn);
     });
   }
-  let pending=false;new MutationObserver(()=>{if(pending)return;pending=true;setTimeout(()=>{pending=false;attach();},120);}).observe(document.documentElement,{childList:true,subtree:true});
+  let pending=false;
+  // Only react when new evolution delete controls enter the DOM.
+  // Changes to status labels/buttons must not recursively trigger a scan.
+  const evoObserver=new MutationObserver(records=>{
+    const inserted=records.some(record=>Array.from(record.addedNodes).some(node=>
+      node.nodeType===1 && (node.matches?.('.evi [data-act="rmevol"]') || node.querySelector?.('.evi [data-act="rmevol"]'))));
+    if(!inserted||pending)return;
+    pending=true;
+    setTimeout(()=>{pending=false;attach();},120);
+  });
+  evoObserver.observe(document.documentElement,{childList:true,subtree:true});
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',attach);else attach();
 })();
