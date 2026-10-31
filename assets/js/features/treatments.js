@@ -139,6 +139,26 @@ function trCom(x){return (!x.vid&&x.dt&&num(x.valor)>0)?'Comissão prevista: '+b
 function syncItemToTrat(p,it){if(!it.tid)return;const t=(p.trat||[]).find(x=>x.id===it.tid);if(t&&!t.vid){t.valor=it.valor;t.dente=it.dente;t.obs=it.obs||'';t.dt=it.dt;t.qtd=it.qtd;t.unit=it.unit}}
 function syncTratToItem(p,t){if(!t.oiid)return;const o=getO(p,t.oid),it=o&&o.itens.find(i=>i.id===t.oiid);if(it){it.valor=String(t.valor);it.dente=t.dente||'';it.obs=t.obs||'';it.dt=t.dt;it.qtd=t.qtd;it.unit=t.unit}}
 /* Resumo clínico-financeiro por paciente; somente leitura, sem alterar baixas. */
+/* Atualização 228: conferência clínica e financeira, sem alterar lançamentos. */
+function trAuditoriaHtml(p){
+  const rows=(p.trat||[]).filter(x=>x.status!=='Cancelado');
+  const concluidos=rows.filter(x=>x.status==='Concluído'||!!x.vid);
+  const semDentista=rows.filter(x=>!x.dt);
+  const baixasSemRegistro=rows.filter(x=>x.status==='Concluído'&&!x.vid);
+  const registrosSemBaixa=rows.filter(x=>!!x.vid&&x.status!=='Concluído');
+  const custoRealizado=concluidos.reduce((v,x)=>v+num(x.custo),0);
+  const receitaProduzida=concluidos.reduce((v,x)=>v+num(x.valor),0);
+  const repasses=concluidos.reduce((v,x)=>v+num(x.rep),0);
+  const margem=receitaProduzida-custoRealizado-repasses;
+  return `<details class="card" style="margin-bottom:12px"><summary style="cursor:pointer;font-weight:700">Conferência de tratamentos e margem estimada</summary>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:12px">
+  ${stat('Custo dos concluídos',brl(custoRealizado))}${stat('Repasses dos concluídos',brl(repasses))}${stat('Margem estimada',brl(margem))}${stat('Sem dentista',String(semDentista.length))}</div>
+  <p class="note">Margem estimada = valor dos tratamentos concluídos menos custos cadastrados e comissões registradas. Não é lucro contábil nem saldo recebido.</p>
+  ${baixasSemRegistro.length?`<p class="note" style="color:#a14c00">${baixasSemRegistro.length} tratamento(s) marcado(s) como concluído(s) sem registro de baixa.</p>`:''}
+  ${registrosSemBaixa.length?`<p class="note" style="color:#a14c00">${registrosSemBaixa.length} tratamento(s) com baixa registrada, mas status diferente de concluído.</p>`:''}
+  ${semDentista.length?`<p class="note" style="color:#a14c00">${semDentista.length} tratamento(s) sem dentista responsável definido.</p>`:''}
+  <p class="note">Esta conferência é somente leitura: não gera pagamentos nem altera procedimentos.</p></details>`;
+}
 function trResumoHtml(p){
   const all=(p.trat||[]).filter(x=>x.status!=='Cancelado');
   const done=all.filter(x=>x.status==='Concluído'||!!x.vid);
@@ -184,7 +204,7 @@ function tratHtml(p){
     <div class="note" data-trc="${x.id}" style="margin:4px 0 0">${trCom(x)}</div>
     ${x.vid?`<div class="note" style="margin:8px 0 0;color:var(--ok)">Baixa realizada em ${fd(x.data||'')} · dentista: ${esc(dName(x.dt))} · comissão registrada: ${brl(x.rep||0)}</div>`:`<div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="sm" data-act="trbaixa" data-id="${x.id}">Dar baixa no procedimento</button><button class="danger sm" data-act="rmtr" data-id="${x.id}">${delArm===x.id?'Toque de novo para excluir':'Excluir'}</button></div>`}</div>`}).join(''):'<div class="empty">Nenhum tratamento cadastrado.</div>';
   const bar=`<div class="tr-bar"><button type="button" id="trbarbtn" class="tr-add" data-act="addtr">${trBarInner()}</button></div>`;
-  return `${trResumoHtml(p)}<div class="card">${flt}<h2 style="margin-top:16px">Odontograma</h2>${seg}${odxHtml(p,tr)}${lg}<div id="trchips" style="margin-top:10px">${trChips()}</div><div id="trbasket">${ttBasketHtml(p)}</div><div id="trteeth">${ttPanelHtml(p)}</div><div id="trshared">${ttSharedHtml(p)}</div></div>${form}<h2>Tratamentos (${tr.length})</h2>${lista}${bar}`;
+  return `${trResumoHtml(p)}${trAuditoriaHtml(p)}<div class="card">${flt}<h2 style="margin-top:16px">Odontograma</h2>${seg}${odxHtml(p,tr)}${lg}<div id="trchips" style="margin-top:10px">${trChips()}</div><div id="trbasket">${ttBasketHtml(p)}</div><div id="trteeth">${ttPanelHtml(p)}</div><div id="trshared">${ttSharedHtml(p)}</div></div>${form}<h2>Tratamentos (${tr.length})</h2>${lista}${bar}`;
 }
 function tabOrc(p){
   return prList()+`<button data-act="addo" style="width:100%;margin-bottom:12px">Novo orçamento</button>`+(p.orcs.length?p.orcs.map(orcHtml).join(''):'<div class="empty">Nenhum orçamento para este paciente.</div>');
