@@ -89,7 +89,7 @@ function form(o={}){
  const patients=(db.p||[]).filter(p=>!p.arq);
  return `<section class="card nxlab-form"><h3>${o.id?'Editar trabalho':'Novo trabalho para laboratório'}</h3>
  <div class="nxlab-grid"><label class="nxlab-field"><span>Paciente * — digite para filtrar</span><input id="nxlab-patient-search" type="search" autocomplete="off" list="nxlab-patient-options" placeholder="Digite o nome do paciente" value="${safe(patients.find(p=>String(p.id)===String(o.patient_id))?.nome||'')}"><datalist id="nxlab-patient-options">${patients.map(p=>`<option value="${safe(p.nome)}"></option>`).join('')}</datalist><input id="nxlab-patient" type="hidden" value="${safe(o.patient_id||'')}"><small id="nxlab-patient-count">${patients.length} pacientes disponíveis</small></label>
- <label class="nxlab-field"><span>Tratamento vinculado</span><select id="nxlab-treatment"><option value="">Sem vínculo</option>${patientTreatments(o.patient_id).map(t=>`<option value="${safe(t.id)}" ${String(linkFor(o.id).treatment_id||'')===String(t.id)?'selected':''}>${safe(treatmentLabel(t))}</option>`).join('')}</select><small>Selecione o paciente, salve e depois edite para vincular. Na nuvem, exige a migração SQL da versão 250.</small></label>
+ <label class="nxlab-field"><span>Tratamento vinculado</span><select id="nxlab-treatment" data-patient-id="${safe(o.patient_id||'')}"><option value="">Sem vínculo</option>${patientTreatments(o.patient_id).map(t=>`<option value="${safe(t.id)}" ${String(linkFor(o.id).treatment_id||'')===String(t.id)?'selected':''}>${safe(treatmentLabel(t))}</option>`).join('')}</select><small id="nxlab-treatment-help">Selecione um paciente para carregar os tratamentos cadastrados.</small></label>
  ${input('Custo do laboratório','nxlab-cost',linkFor(o.id).cost||0,'number','min="0" step="0.01"')}
  ${input('Laboratório responsável *' ,'nxlab-lab',o.laboratory,'text','maxlength="160" required')}
  ${input('Trabalho a realizar *','nxlab-work',o.work_description,'text','maxlength="240" required')}
@@ -193,6 +193,20 @@ async function execute(action,id){
  catch(e){alert('Não foi possível salvar: '+(e.message||'Erro de conexão'));}
  finally{busy=false;}
 }
+function refreshTreatmentOptions(patientId){
+ const select=$id('nxlab-treatment');
+ if(!select)return;
+ const pid=String(patientId||'');
+ const previousPatient=String(select.dataset.patientId||'');
+ const patientChanged=pid!==previousPatient;
+ const previousValue=patientChanged?'':String(select.value||'');
+ const list=patientTreatments(pid);
+ select.innerHTML='<option value="">Sem vínculo</option>'+list.map(t=>`<option value="${safe(t.id)}">${safe(treatmentLabel(t))}</option>`).join('');
+ select.dataset.patientId=pid;
+ if(previousValue&&list.some(t=>String(t.id)===previousValue))select.value=previousValue;
+ const help=$id('nxlab-treatment-help');
+ if(help)help.textContent=!pid?'Selecione um paciente para carregar os tratamentos.':list.length?`${list.length} tratamento(s) encontrado(s). Escolha o procedimento que corresponde a este trabalho.`:'Este paciente ainda não possui tratamentos cadastrados.';
+}
 function labPatientMatch(){
  const input=$id('nxlab-patient-search'),hidden=$id('nxlab-patient'),count=$id('nxlab-patient-count');
  if(!input||!hidden)return;
@@ -201,6 +215,7 @@ function labPatientMatch(){
  const patients=(db.p||[]).filter(p=>!p.arq);
  const exact=patients.filter(p=>normalize(p.nome)===q);
  hidden.value=exact.length===1?String(exact[0].id):'';
+ refreshTreatmentOptions(hidden.value);
  if(count)count.textContent=!q?patients.length+' pacientes disponíveis':exact.length>1?'Existem pacientes com o mesmo nome. Confirme no cadastro.':exact.length===1?'Paciente selecionado':patients.filter(p=>normalize(p.nome).includes(q)).length+' paciente(s) encontrado(s)';
 }
 document.addEventListener('input',e=>{if(e.target.id==='nxlab-patient-search')labPatientMatch();});
