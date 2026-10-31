@@ -164,11 +164,16 @@
       if (!patient) return;
       button.disabled = true;
       try {
+        // rxDoc/atDoc podem retornar Promise: aguardar antes de acessar .doc.output.
         const generated = await create(patient);
         if (!generated) return;
-        if (!generated.doc || typeof generated.doc.output !== 'function') throw new Error('Gerador de PDF não retornou documento válido.');
+        if (!generated.doc || typeof generated.doc.output !== 'function') {
+          throw new Error('O gerador de PDF não retornou um documento válido.');
+        }
         const pdfData = generated.doc.output('datauristring');
-        if (typeof pdfData !== 'string' || !pdfData.startsWith('data:application/pdf')) throw new Error('PDF gerado em formato inválido.');
+        if (typeof pdfData !== 'string' || !pdfData.startsWith('data:application/pdf')) {
+          throw new Error('Não foi possível preparar o PDF para o prontuário.');
+        }
         await append(patient, { id: uid(), nome: generated.fname, tipo: 'application/pdf', categoria: category,
           data: pdfData.replace(/;filename=[^;]*;/, ';'), dataEnvio: hojeBR() });
       } catch (error) { report(error); }
