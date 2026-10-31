@@ -48,6 +48,16 @@ function patientTreatments(pid){
  return Array.isArray(patient?.trat)?patient.trat:[];
 }
 function money(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
+function isoToday(){const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');}
+function validateOrder(f,original){
+ if(f.due_at&&f.sent_at&&f.due_at<f.sent_at)return 'A previsão de entrega não pode ser anterior à data de envio.';
+ if(f.received_at&&f.sent_at&&f.received_at<f.sent_at)return 'O recebimento não pode ser anterior ao envio.';
+ if(f.status==='Entregue'&&!f.received_at)return 'Informe a data de recebimento antes de marcar como entregue.';
+ const duplicate=orders.some(o=>o.id!==original?.id&&String(o.patient_id)===String(f.patient_id)&&String(o.laboratory||'').trim().toLowerCase()===f.laboratory.toLowerCase()&&String(o.work_description||'').trim().toLowerCase()===f.work_description.toLowerCase()&&!['Cancelado','Entregue'].includes(o.status));
+ if(duplicate&&!confirm('Já existe um trabalho em aberto com o mesmo paciente, laboratório e descrição. Deseja cadastrar mesmo assim?'))return 'cancel';
+ return '';
+}
+
 function treatmentSummary(pid){
  const list=patientTreatments(pid);
  if(!list.length)return '<span>Nenhum tratamento cadastrado para este paciente.</span>';
@@ -90,10 +100,10 @@ function style(){return `<style>
 window.nexoLabHtml=function(){
  if(!allowed())return '<div class="card">Você não possui permissão para consultar os trabalhos de laboratório.</div>';
  if(loadedClinic!==(clinic()||'local')&&!loading&&loadAttemptedClinic!==(clinic()||'local'))setTimeout(()=>fetchOrders(),0);
- const today=new Date().toISOString().slice(0,10);
+ const today=isoToday();
  const active=o=>!['Entregue','Cancelado'].includes(o.status);
  const late=o=>active(o)&&!!o.due_at&&date(o.due_at)<today;
- const soon=o=>active(o)&&!!o.due_at&&date(o.due_at)>=today&&date(o.due_at)<=new Date(Date.now()+7*86400000).toISOString().slice(0,10);
+ const soon=o=>active(o)&&!!o.due_at&&date(o.due_at)>=today&&date(o.due_at)<=new Date(Date.now()+7*86400000).toLocaleDateString('en-CA');
  const noDeadline=o=>active(o)&&!o.due_at;
  const totals={open:orders.filter(active).length,late:orders.filter(late).length,observed:orders.filter(o=>o.status==='Em observação').length,delivered:orders.filter(o=>o.status==='Entregue').length,soon:orders.filter(soon).length,noDeadline:orders.filter(noDeadline).length};
  const items=orders.filter(o=>filter==='todos'||(filter==='observacao'?o.status==='Em observação':filter==='atrasados'?late(o):filter==='proximos'?soon(o):filter==='sem-prazo'?noDeadline(o):active(o))).filter(o=>!search||[patientName(o.patient_id),o.laboratory,o.work_description,o.teeth].some(t=>String(t||'').toLowerCase().includes(search.toLowerCase())));
@@ -118,9 +128,9 @@ async function persist(o){
 function readForm(){const v=id=>($id(id)?.value||'').trim();return {patient_id:v('nxlab-patient'),laboratory:v('nxlab-lab'),work_description:v('nxlab-work'),shade:v('nxlab-shade'),teeth:v('nxlab-teeth'),sent_at:v('nxlab-sent')||null,due_at:v('nxlab-due')||null,received_at:v('nxlab-received')||null,stage:v('nxlab-stage'),status:v('nxlab-status'),observation_reason:v('nxlab-observation'),instructions:v('nxlab-instructions')};}
 function exportCsv(){
  const fields=['Paciente','Laboratório','Trabalho','Dentes','Cor','Etapa','Situação','Envio','Previsão','Recebimento','Observação','Tratamentos cadastrados','Tratamentos concluídos','Custos cadastrados'];
- const today=new Date().toISOString().slice(0,10);
+ const today=isoToday();
  const active=o=>!['Entregue','Cancelado'].includes(o.status);
- const filtered=orders.filter(o=>filter==='todos'||(filter==='observacao'?o.status==='Em observação':filter==='atrasados'?active(o)&&o.due_at&&date(o.due_at)<today:filter==='proximos'?active(o)&&o.due_at&&date(o.due_at)>=today&&date(o.due_at)<=new Date(Date.now()+7*86400000).toISOString().slice(0,10):filter==='sem-prazo'?active(o)&&!o.due_at:active(o))).filter(o=>!search||[patientName(o.patient_id),o.laboratory,o.work_description,o.teeth].some(t=>String(t||'').toLowerCase().includes(search.toLowerCase())));
+ const filtered=orders.filter(o=>filter==='todos'||(filter==='observacao'?o.status==='Em observação':filter==='atrasados'?active(o)&&o.due_at&&date(o.due_at)<today:filter==='proximos'?active(o)&&o.due_at&&date(o.due_at)>=today&&date(o.due_at)<=new Date(Date.now()+7*86400000).toLocaleDateString('en-CA'):filter==='sem-prazo'?active(o)&&!o.due_at:active(o))).filter(o=>!search||[patientName(o.patient_id),o.laboratory,o.work_description,o.teeth].some(t=>String(t||'').toLowerCase().includes(search.toLowerCase())));
  const rows=filtered.map(o=>[patientName(o.patient_id),o.laboratory,o.work_description,o.teeth,o.shade,o.stage,o.status,date(o.sent_at),date(o.due_at),date(o.received_at),o.observation_reason,patientTreatments(o.patient_id).length,patientTreatments(o.patient_id).filter(t=>t.vid||['concluído','concluido','realizado'].includes(String(t.status||'').toLowerCase())).length,patientTreatments(o.patient_id).reduce((sum,t)=>sum+(Number(t.custo)||0),0).toFixed(2)]);
  const cell=v=>'"'+String(v??'').replace(/^[=+@\-\t\r]/,v=>"'"+v).replace(/"/g,'""')+'"';
  const csv='\uFEFF'+[fields,...rows].map(row=>row.map(cell).join(';')).join('\r\n');
@@ -143,6 +153,7 @@ async function execute(action,id){
   const f=readForm();if(!f.patient_id||!f.laboratory||!f.work_description){alert('Informe paciente, laboratório e trabalho.');return;}
   if(f.status==='Em observação'&&!f.observation_reason){alert('Informe o motivo da observação.');return;}
   const original=editing==='new'?null:orders.find(x=>x.id===editing);
+  const invalid=validateOrder(f,original);if(invalid){if(invalid!=='cancel')alert(invalid);return;}
   o={...(original||{}),...f,id:original?.id||crypto.randomUUID(),history:[...(original?.history||[]),{at:stamp(),text:original?'Dados e etapa atualizados':'Trabalho cadastrado'}],comments:original?.comments||[],updated_at:stamp(),_new:!original};
  }else if(action==='advance'){
   const ix=STAGES.indexOf(old.stage),next=STAGES[Math.min(ix+1,STAGES.length-1)];
