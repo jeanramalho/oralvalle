@@ -140,14 +140,25 @@
     if (!slot || !patient) return;
     const state = entry(patient);
     if (!state.rows && !state.loading && !state.error) metadata(patient).catch(() => {});
-    if (state.error) { slot.textContent = 'Documentos na nuvem indisponíveis no momento.'; return; }
-    if (!state.rows) { slot.textContent = 'Consultando documentos na nuvem...'; return; }
-    const rows = state.rows.filter(row => row.slot === 'arquivos' && row.position >= 0);
-    slot.replaceChildren();
-    const title = document.createElement('p');
-    title.className = 'note';
-    title.textContent = `Documentos arquivados na nuvem: ${rows.length}. Abra a aba Radiografias e documentos para visualizar ou baixar.`;
-    slot.appendChild(title);
+    let message;
+    if (state.error) message = 'Documentos na nuvem indisponíveis no momento.';
+    else if (!state.rows) message = 'Consultando documentos na nuvem...';
+    else {
+      const count = state.rows.filter(row => row.slot === 'arquivos' && row.position >= 0).length;
+      message = `Documentos arquivados na nuvem: ${count}. Abra a aba Radiografias e documentos para visualizar ou baixar.`;
+    }
+    // Evita ciclo infinito: MutationObserver observa as próprias alterações no slot.
+    // Nunca modificar o DOM se o resumo já estiver correto.
+    if (slot.dataset.nexoSummary === message && slot.textContent === message) return;
+    slot.dataset.nexoSummary = message;
+    if (state.rows && !state.error) {
+      const title = document.createElement('p');
+      title.className = 'note';
+      title.textContent = message;
+      slot.replaceChildren(title);
+    } else {
+      slot.textContent = message;
+    }
   }
   const timelineObserver = new MutationObserver(() => {
     if (document.getElementById('nexo-timeline-cloud-slot')) timelineCloudSummary();
