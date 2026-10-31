@@ -37,16 +37,27 @@
   const receivedPeriod=pay.reduce((t,z)=>t+n(z.x.valor),0);
   const salesTotal=sales.reduce((t,v)=>t+n(v.valor),0);
   const balance=sales.reduce((t,v)=>t+(typeof saldoV==='function'?saldoV(v):0),0);
+  if(type==='laboratory'){
+   const mirror=window.NexoLabRead;
+   const ready=mirror?.loaded && mirror.clinicId===(window.OralCloud?.clinicId||'local');
+   const all=ready?mirror.orders||[]:[];
+   const items=all.filter(o=>dateOK(o.received_at||o.due_at,a,b));
+   const total=items.filter(o=>o.status!=='Cancelado').reduce((sum,o)=>sum+n(o.laboratory_cost),0);
+   const missing=items.filter(o=>!o.treatment_id&&o.status!=='Cancelado').length;
+   const invalid=items.filter(o=>o.treatment_id&&!((db.p||[]).find(p=>String(p.id)===String(o.patient_id))?.trat||[]).some(t=>String(t.id)===String(o.treatment_id))).length;
+   return {heads:['Data referência','Paciente','Laboratório','Trabalho','Situação','Tratamento vinculado','Custo'],items:items.map(o=>[o.received_at||o.due_at||'',patient(o.patient_id),o.laboratory||'',o.work_description||'',o.status||'',o.treatment_id||'Não vinculado',cash(o.laboratory_cost)]),summary:ready?`Custos cadastrados de trabalhos não cancelados: ${cash(total)} · Sem vínculo: ${missing} · Vínculos não encontrados: ${invalid}. Data de referência: recebimento, ou previsão se não recebido. Valores informativos, não representam despesas pagas; NÃO são somados ao caixa.`:'Dados do laboratório ainda não carregados. Clique em “Carregar laboratório” para consultar. Nenhuma despesa é lançada.'};
+  }
   if(type==='finance')return {heads:['Data da venda','Paciente','Procedimento','Venda','Recebido até hoje','Saldo atual'],items:sales.map(v=>[v.data,patient(v.pid),v.proc||'',cash(v.valor),cash(typeof recebido==='function'?recebido(v):0),cash(typeof saldoV==='function'?saldoV(v):0)]),summary:`Vendas realizadas no período: ${cash(salesTotal)} · Recebimentos registrados no período (inclusive de vendas anteriores): ${cash(receivedPeriod)} · Saldo atual das vendas realizadas no período: ${cash(balance)}. As colunas Recebido até hoje e Saldo atual refletem a situação atual de cada venda, não somente os pagamentos do período.`};
   if(type==='dentists')return {heads:['Data','Dentista','Procedimento','Produção','Comissão'],items:sales.map(v=>[v.data,dentist(v.dt),v.proc||'',cash(v.valor),cash(v.rep)]),summary:`Produção: ${cash(sales.reduce((t,v)=>t+n(v.valor),0))} · Comissões geradas: ${cash(sales.reduce((t,v)=>t+n(v.rep),0))}`};
   if(type==='procedures')return {heads:['Procedimento','Quantidade','Valor de vendas'],items:Object.values(sales.reduce((acc,v)=>{const key=v.proc||'Não informado';const x=acc[key]||(acc[key]={name:key,count:0,total:0});x.count++;x.total+=n(v.valor);return acc},{})).sort((x,y)=>y.total-x.total).map(x=>[x.name,x.count,cash(x.total)]),summary:`${sales.length} venda(s) no período`};
   const pts=(db.p||[]).filter(p=>dateOK(p.created_at||p.createdAt||p.dataCadastro||p.data_cadastro,a,b));
   return {heads:['Paciente','Data de cadastro'],items:pts.map(p=>[p.nome||'',String(p.created_at||p.createdAt||p.dataCadastro||p.data_cadastro).slice(0,10)]),summary:`${pts.length} paciente(s) com data de cadastro no período. Cadastros sem data não são contabilizados.`};
  }
- const kinds={finance:'Financeiro',dentists:'Dentistas e comissões',procedures:'Procedimentos',patients:'Novos pacientes'};
+ const kinds={finance:'Financeiro',dentists:'Dentistas e comissões',procedures:'Procedimentos',patients:'Novos pacientes',laboratory:'Custos do laboratório'};
  function allowed(type){
   if(!commercial() || !Object.prototype.hasOwnProperty.call(kinds,type))return false;
   if(type==='patients')return can('pac');
+  if(type==='laboratory')return moduleAllowed('finance') && can('vd') && can('pac') && typeof window.NexoLabLoad==='function';
   if(type==='dentists')return moduleAllowed('finance') && moduleAllowed('commissions') && can('vd') && can('cm');
   return moduleAllowed('finance') && can('vd');
  }
@@ -62,7 +73,7 @@
   <div class="card" style="display:flex;flex-wrap:wrap;gap:12px;align-items:end">
    <label>Relatório<select id="nx-r-type">${Object.entries(kinds).filter(([k])=>allowed(k)).map(([k,v])=>`<option value="${k}" ${k===type?'selected':''}>${safe(v)}</option>`).join('')}</select></label>
    <label>De<input id="nx-r-from" type="date" value="${safe(a)}"></label><label>Até<input id="nx-r-to" type="date" value="${safe(b)}"></label>
-   <button type="button" id="nx-r-apply">Consultar</button><button type="button" class="ghost" id="nx-r-pdf">Imprimir / salvar PDF</button>
+   <button type="button" id="nx-r-apply">Consultar</button>${type==='laboratory'?'<button type="button" class="ghost" id="nx-r-load-lab">Carregar laboratório</button>':''}<button type="button" class="ghost" id="nx-r-pdf">Imprimir / salvar PDF</button>
   </div><div class="card"><h2>${safe(kinds[type])}</h2><p class="note">${safe(report.summary)}</p><p class="note">${report.items.length} registro(s) · ${safe(a)} a ${safe(b)} · Os valores de comissões representam valores associados às vendas, não necessariamente pagamentos efetuados.</p>
   <div style="overflow:auto"><table style="width:100%;border-collapse:collapse"><thead><tr>${report.heads.map(x=>`<th style="text-align:left;padding:10px;border-bottom:1px solid #ddd">${safe(x)}</th>`).join('')}</tr></thead><tbody>${report.items.map(r=>`<tr>${r.map(x=>`<td style="padding:9px;border-bottom:1px solid #eee">${safe(x)}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${report.heads.length}" style="padding:14px">Nenhum registro encontrado.</td></tr>`}</tbody></table></div></div>`;
  };
@@ -72,10 +83,11 @@
   if(window.view?.h==='reports' && typeof window.render==='function')window.render();
  });
  document.addEventListener('click',e=>{
-  const apply=e.target.closest('#nx-r-apply'),pdf=e.target.closest('#nx-r-pdf');if(!apply&&!pdf)return;
+  const apply=e.target.closest('#nx-r-apply'),pdf=e.target.closest('#nx-r-pdf'),load=e.target.closest('#nx-r-load-lab');if(!apply&&!pdf&&!load)return;
   e.preventDefault();e.stopImmediatePropagation();
   if(!clinicReady() || !commercial())return;
   const type=document.getElementById('nx-r-type')?.value;
+  if(load){if(!allowed('laboratory'))return;load.disabled=true;window.NexoLabLoad(true).then(()=>render()).catch(err=>{alert('Falha ao carregar laboratório: '+(err.message||err));load.disabled=false});return;}
   if(!allowed(type))return;
   const [a,b]=dates();if(!validDate(a)||!validDate(b)||a>b){alert('Informe um período válido, com a data inicial anterior ou igual à final.');return}
   view.reportType=type;view.reportFrom=a;view.reportTo=b;
