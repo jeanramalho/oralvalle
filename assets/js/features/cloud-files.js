@@ -164,9 +164,13 @@
       if (!patient) return;
       button.disabled = true;
       try {
-        const document = create(patient);
-        if (document) await append(patient, { id: uid(), nome: document.fname, tipo: 'application/pdf', categoria: category,
-          data: document.doc.output('datauristring').replace(/;filename=[^;]*;/, ';'), dataEnvio: hojeBR() });
+        const generated = await create(patient);
+        if (!generated) return;
+        if (!generated.doc || typeof generated.doc.output !== 'function') throw new Error('Gerador de PDF não retornou documento válido.');
+        const pdfData = generated.doc.output('datauristring');
+        if (typeof pdfData !== 'string' || !pdfData.startsWith('data:application/pdf')) throw new Error('PDF gerado em formato inválido.');
+        await append(patient, { id: uid(), nome: generated.fname, tipo: 'application/pdf', categoria: category,
+          data: pdfData.replace(/;filename=[^;]*;/, ';'), dataEnvio: hojeBR() });
       } catch (error) { report(error); }
       finally { button.disabled = false; }
     };
