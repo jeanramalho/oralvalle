@@ -72,10 +72,8 @@ document.addEventListener('visibilitychange', () => {
 });
 window.addEventListener('focus', avsCheck);
 
-new MutationObserver(() => removerConfirmacaoAutomatica()).observe(document.body, {
-	childList: true,
-	subtree: true,
-});
+// A limpeza da navegação ocorre uma única vez em render();
+// Não observar todo o prontuário: mutações frequentes podem bloquear a interface.
 
 if (window.claude && claude.use) {
 	claude.use('downloads').then((downloads) => {
