@@ -45,7 +45,7 @@ function patientName(id){return db.p?.find(p=>String(p.id)===String(id))?.nome||
 function form(o={}){
  const patients=(db.p||[]).filter(p=>!p.arq);
  return `<section class="card nxlab-form"><h3>${o.id?'Editar trabalho':'Novo trabalho para laboratório'}</h3>
- <div class="nxlab-grid"><label class="nxlab-field"><span>Paciente *</span><select id="nxlab-patient"><option value="">Selecione o paciente</option>${patients.map(p=>`<option value="${safe(p.id)}" ${String(p.id)===String(o.patient_id)?'selected':''}>${safe(p.nome)}</option>`).join('')}</select></label>
+ <div class="nxlab-grid"><label class="nxlab-field"><span>Paciente * — digite para filtrar</span><input id="nxlab-patient-search" type="search" autocomplete="off" placeholder="Digite o nome do paciente" value="${safe(patients.find(p=>String(p.id)===String(o.patient_id))?.nome||'')}"><select id="nxlab-patient" size="1"><option value="">Selecione o paciente</option>${patients.map(p=>`<option value="${safe(p.id)}" ${String(p.id)===String(o.patient_id)?'selected':''}>${safe(p.nome)}</option>`).join('')}</select><small id="nxlab-patient-count">${patients.length} paciente(s)</small></label>
  ${input('Laboratório responsável *','nxlab-lab',o.laboratory,'text','maxlength="160" required')}
  ${input('Trabalho a realizar *','nxlab-work',o.work_description,'text','maxlength="240" required')}
  ${input('Cor / escala (ex.: A2)','nxlab-shade',o.shade,'text','maxlength="80"')}
@@ -125,6 +125,30 @@ async function execute(action,id){
  catch(e){alert('Não foi possível salvar: '+(e.message||'Erro de conexão'));}
  finally{busy=false;}
 }
+document.addEventListener('input',e=>{
+ if(e.target.id!=='nxlab-patient-search')return;
+ const select=$id('nxlab-patient');if(!select)return;
+ const query=e.target.value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR').trim();
+ let visible=0;
+ for(const option of select.options){
+  if(!option.value)continue;
+  const name=option.textContent.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR');
+  const match=!query||name.includes(query);
+  option.hidden=!match;option.disabled=!match;
+  if(match)visible++;
+ }
+ const selected=select.selectedOptions[0];
+ if(selected&&selected.disabled)select.value='';
+ const count=$id('nxlab-patient-count');if(count)count.textContent=visible+' paciente(s) encontrado(s)';
+ select.size=query?Math.min(Math.max(visible+1,2),7):1;
+});
+document.addEventListener('change',e=>{
+ if(e.target.id==='nxlab-patient'){
+  const selected=e.target.selectedOptions[0];
+  const searchInput=$id('nxlab-patient-search');if(searchInput&&selected?.value)searchInput.value=selected.textContent;
+  e.target.size=1;
+ }
+});
 document.addEventListener('click',e=>{const btn=e.target.closest('[data-lab]');if(btn){e.preventDefault();execute(btn.dataset.lab,btn.dataset.id);}});
 document.addEventListener('change',e=>{if(e.target.id==='nxlab-filter'){filter=e.target.value;renderLab();}if(e.target.id==='nxlab-search'){search=e.target.value;renderLab();}});
 document.addEventListener('keydown',e=>{if(e.target.id==='nxlab-search'&&e.key==='Enter'){search=e.target.value;renderLab();}});
