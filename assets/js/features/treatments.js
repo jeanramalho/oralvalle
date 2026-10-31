@@ -200,6 +200,35 @@ function trConciliacaoHtml(p){
   ${alertas.length?`<div role="status" style="border-left:3px solid #d97706;padding:8px 12px;margin-top:8px"><strong>Itens para conferência</strong><ul>${alertas.map(a=>`<li>${esc(a)}</li>`).join('')}</ul></div>`:'<p class="note" style="color:var(--ok)">Nenhuma inconsistência de vínculo identificada nesta verificação.</p>'}
   <p class="note">Painel somente leitura: não altera registros, pagamentos ou comissões.</p></details>`;
 }
+/* NexoDent 252: margem por procedimento, somente leitura. Custos laboratoriais
+   são separados do custo-base e não geram despesas ou comissões. */
+function trLabCostMap(p){
+ const snap=window.NexoLabRead;
+ if(!snap||!snap.loaded||snap.clinicId!==(window.OralCloud?.clinicId||'local'))return null;
+ const ids=new Set((p.trat||[]).map(t=>String(t.id)));
+ const map=new Map();
+ (snap.orders||[]).forEach(o=>{
+  if(String(o.patient_id)!==String(p.id)||!ids.has(String(o.treatment_id))||o.status==='Cancelado')return;
+  const id=String(o.treatment_id),cost=Math.max(0,Number(o.laboratory_cost)||0);
+  map.set(id,(map.get(id)||0)+cost);
+ });
+ return map;
+}
+function trMargemDetalhadaHtml(p){
+ const map=trLabCostMap(p);
+ if(!map)return `<details class="card" style="margin-bottom:12px"><summary style="cursor:pointer;font-weight:700">Margem por procedimento</summary><p class="note">Abra Laboratório para carregar os custos vinculados e depois retorne a Tratamentos.</p></details>`;
+ const tratamentos=(p.trat||[]).filter(t=>t.status!=='Cancelado');
+ const totals={valor:0,base:0,lab:0,rep:0};
+ const linhas=tratamentos.map(t=>{
+  const valor=num(t.valor),base=num(t.custo),lab=map.get(String(t.id))||0;
+  const rep=t.vid?num(t.rep):0;
+  const margem=valor-base-lab-rep;
+  totals.valor+=valor;totals.base+=base;totals.lab+=lab;totals.rep+=rep;
+  return `<tr><td>${esc(t.proc||'Procedimento')}</td><td>${esc(t.vid?'Concluído':t.status||'Pendente')}</td><td>${brl(valor)}</td><td>${brl(base)}</td><td>${brl(lab)}</td><td>${brl(rep)}</td><td>${brl(margem)}</td></tr>`;
+ }).join('');
+ const margem=totals.valor-totals.base-totals.lab-totals.rep;
+ return `<details class="card" style="margin-bottom:12px"><summary style="cursor:pointer;font-weight:700">Margem por procedimento (com laboratório)</summary><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:12px">${stat('Valor dos tratamentos',brl(totals.valor))}${stat('Custo-base',brl(totals.base))}${stat('Laboratório',brl(totals.lab))}${stat('Comissões registradas',brl(totals.rep))}${stat('Margem estimada',brl(margem))}</div><div style="overflow-x:auto"><table style="width:100%;margin-top:12px"><thead><tr><th>Procedimento</th><th>Situação</th><th>Valor</th><th>Custo-base</th><th>Laboratório</th><th>Comissão</th><th>Margem</th></tr></thead><tbody>${linhas||'<tr><td colspan="7">Nenhum tratamento cadastrado.</td></tr>'}</tbody></table></div><p class="note">Projeção sobre valores cadastrados, inclusive tratamentos pendentes; não representa dinheiro recebido ou lucro contábil. O custo-base pode já incluir despesas laboratoriais lançadas manualmente: confira antes de interpretar a margem. Nenhum lançamento é criado ou alterado.</p></details>`;
+}
 /* NexoDent 251: consulta de trabalhos protéticos e custos sem criar lançamentos duplicados. */
 function trLabResumoHtml(p){
  const snapshot=window.NexoLabRead;
@@ -240,7 +269,7 @@ function tratHtml(p){
     <div class="note" data-trc="${x.id}" style="margin:4px 0 0">${trCom(x)}</div>
     ${x.vid?`<div class="note" style="margin:8px 0 0;color:var(--ok)">Baixa realizada em ${fd(x.data||'')} · dentista: ${esc(dName(x.dt))} · comissão registrada: ${brl(x.rep||0)}</div>`:`<div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="sm" data-act="trbaixa" data-id="${x.id}">Dar baixa no procedimento</button><button class="danger sm" data-act="rmtr" data-id="${x.id}">${delArm===x.id?'Toque de novo para excluir':'Excluir'}</button></div>`}</div>`}).join(''):'<div class="empty">Nenhum tratamento cadastrado.</div>';
   const bar=`<div class="tr-bar"><button type="button" id="trbarbtn" class="tr-add" data-act="addtr">${trBarInner()}</button></div>`;
-  return `${trResumoHtml(p)}${trLabResumoHtml(p)}${trAuditoriaHtml(p)}${trConciliacaoHtml(p)}<div class="card">${flt}<h2 style="margin-top:16px">Odontograma</h2>${seg}${odxHtml(p,tr)}${lg}<div id="trchips" style="margin-top:10px">${trChips()}</div><div id="trbasket">${ttBasketHtml(p)}</div><div id="trteeth">${ttPanelHtml(p)}</div><div id="trshared">${ttSharedHtml(p)}</div></div>${form}<h2>Tratamentos (${tr.length})</h2>${lista}${bar}`;
+  return `${trResumoHtml(p)}${trLabResumoHtml(p)}${trMargemDetalhadaHtml(p)}${trAuditoriaHtml(p)}${trConciliacaoHtml(p)}<div class="card">${flt}<h2 style="margin-top:16px">Odontograma</h2>${seg}${odxHtml(p,tr)}${lg}<div id="trchips" style="margin-top:10px">${trChips()}</div><div id="trbasket">${ttBasketHtml(p)}</div><div id="trteeth">${ttPanelHtml(p)}</div><div id="trshared">${ttSharedHtml(p)}</div></div>${form}<h2>Tratamentos (${tr.length})</h2>${lista}${bar}`;
 }
 function tabOrc(p){
   return prList()+`<button data-act="addo" style="width:100%;margin-bottom:12px">Novo orçamento</button>`+(p.orcs.length?p.orcs.map(orcHtml).join(''):'<div class="empty">Nenhum orçamento para este paciente.</div>');
