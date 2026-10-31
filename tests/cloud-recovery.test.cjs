@@ -54,6 +54,7 @@ test('a failed clinic load keeps the app locked and retries reads without anothe
   const control = () => ({ value: '', checked: false, disabled: false, focus() {}, addEventListener() {} });
   const lock = {
     innerHTML: '',
+    remove() {},
     querySelector(selector) {
       if (selector === 'input') return this.innerHTML.includes('id="cloudEmail"') ? elements.get('cloudEmail') : null;
       if (!elements.has(selector)) elements.set(selector, control());
@@ -76,7 +77,7 @@ test('a failed clinic load keeps the app locked and retries reads without anothe
       request: async () => [{ clinic_id: 'clinic', user_id: 'user', nome: 'Synthetic' }],
     },
     OralCloudData: {
-      members: async () => [member], prepareDefaults() {},
+      members: async () => [member], prepareDefaults() {}, currentRevision: () => "1",
       load: async () => {
         calls.push('load');
         if (failLoad) throw Object.assign(new Error('canceling statement due to statement timeout'), { code: '57014' });
@@ -84,13 +85,15 @@ test('a failed clinic load keeps the app locked and retries reads without anothe
       },
     },
     $: name => elements.get(name), toast() {}, pmCardHtml() {}, bkHtml() {},
-    clearTimeout() {}, idleT: null, topCl: () => ({ marca: 'Synthetic', sub: '' }),
-    esc: text => text, location: { hash: '' }, window: { addEventListener() {} },
+    clearTimeout() {}, clearInterval() {}, setInterval() { return 1; }, idleT: null, topCl: () => ({ marca: 'Synthetic', sub: '' }),
+    esc: text => text, location: { hash: '' }, window: { addEventListener() {}, removeEventListener() {}, dispatchEvent() {} },
+    CustomEvent: class CustomEvent { constructor(type, options) { this.type = type; this.detail = options?.detail; } },
     A: {}, AUTH: { users: [] }, lastSaved: null, LOCKED: true, db: { initial: true }, migrate: value => value,
     unlock() { context.LOCKED = false; calls.push('unlock'); },
     document: {
+      getElementById: () => null, addEventListener() {}, removeEventListener() {},
       createElement: () => ({ setAttribute() {}, replaceChildren() {}, appendChild() {} }),
-      body: { appendChild() {} },
+      body: { appendChild() {}, classList: { add() {}, remove() {} } },
     },
   });
   vm.runInContext(source('assets/js/supabase/integration.js'), context);
