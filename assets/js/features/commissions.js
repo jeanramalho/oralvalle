@@ -5,6 +5,14 @@ function comHtml(){
   let h=`<div class="tabs" style="margin-bottom:16px">${pmSee('dt')?'<button type="button" data-act="nav" data-t="dt">Dentistas</button>':''}<button type="button" class="on" data-act="nav" data-t="cm">Comissões</button></div><div class="card"><label for="cmm" style="margin:0 0 4px">Mês</label><input id="cmm" type="month" value="${m}"></div>`;
   if(!ds.length)return h+'<div class="empty">Cadastre um dentista na aba Dentistas para acompanhar comissões.</div>';
 
+  // 253: conferência somente leitura; não modifica comissões nem pagamentos.
+  const moves=db.vd.filter(v=>String(v.data||'').slice(0,7)===m);
+  const missing=moves.filter(v=>!v.dt||!db.dt.some(d=>String(d.id)===String(v.dt)));
+  const duplicateKeys=new Map();
+  moves.forEach(v=>{const k=String(v.pid)+'|'+String(v.trid||v.tid||v.tratId||v.proc||'')+'|'+String(v.data||'');duplicateKeys.set(k,(duplicateKeys.get(k)||0)+1)});
+  const suspects=[...duplicateKeys.values()].filter(n=>n>1).length;
+  const paid=db.cp.filter(c=>String(c.data||'').slice(0,7)===m).reduce((n,c)=>n+num(c.valor),0);
+  h+=`<details class="card" style="margin-bottom:12px"><summary style="cursor:pointer;font-weight:700">Conferência mensal de comissões</summary><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;margin-top:12px">${stat('Produção baixada',brl(sum(moves,'valor')))}${stat('Comissões geradas',brl(sum(moves,'rep')))}${stat('Pagamentos no mês',brl(paid))}${stat('Sem dentista válido',String(missing.length))}${stat('Possíveis repetições',String(suspects))}</div><p class="note">Pagamentos do mês podem quitar comissões de meses anteriores. Repetições são alertas para conferência, não confirmação de duplicidade. Nenhum registro é alterado.</p></details>`;
   const selected=view.cmDent||'';
   if(!selected){
     h+=`<div class="card"><h2 style="margin-top:0">Comissões por dentista</h2><p class="note">Clique no nome do dentista para visualizar todos os comissionamentos registrados para ele.</p>`;
