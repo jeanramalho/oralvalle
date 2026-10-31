@@ -132,6 +132,29 @@
       .replace('Os anexos ficam salvos neste navegador; faça backups regularmente.', 'Os anexos ficam no Supabase; faça backups regularmente.')
       + `<div id="nexo-signature-upload-slot"></div><h2>Arquivos anexados (${list.length})</h2><div class="ov-file-filters" style="display:flex;flex-wrap:wrap;gap:6px;margin:12px 0">${filters}</div><div class="ov-file-grid">${content}</div>`;
   };
+  // Resumo somente leitura de documentos na linha do tempo clínica.
+  // Os arquivos permanecem no armazenamento existente e são abertos na aba Documentos.
+  function timelineCloudSummary() {
+    const slot = document.getElementById('nexo-timeline-cloud-slot');
+    const patient = cur();
+    if (!slot || !patient) return;
+    const state = entry(patient);
+    if (!state.rows && !state.loading && !state.error) metadata(patient).catch(() => {});
+    if (state.error) { slot.textContent = 'Documentos na nuvem indisponíveis no momento.'; return; }
+    if (!state.rows) { slot.textContent = 'Consultando documentos na nuvem...'; return; }
+    const rows = state.rows.filter(row => row.slot === 'arquivos' && row.position >= 0);
+    slot.replaceChildren();
+    const title = document.createElement('p');
+    title.className = 'note';
+    title.textContent = `Documentos arquivados na nuvem: ${rows.length}. Abra a aba Radiografias e documentos para visualizar ou baixar.`;
+    slot.appendChild(title);
+  }
+  const timelineObserver = new MutationObserver(() => {
+    if (document.getElementById('nexo-timeline-cloud-slot')) timelineCloudSummary();
+  });
+  document.addEventListener('DOMContentLoaded', () => {
+    if (document.body) timelineObserver.observe(document.body, {childList:true,subtree:true});
+  });
   A.cloudfilefilter = (button, data, patient) => {
     if (!patient) return;
     const categories = ['Todos', 'Receituário', 'Atestado', 'Relatório', 'Outros'];
