@@ -168,13 +168,31 @@
     date:x.data,kind:'Repasse pago ao dentista',ref:'CP-'+String(x.id||''),
     desc:dentist(x.dt)+(x.obs?' — '+x.obs:''),in:0,out:n(x.valor)
    }));
+   // 270: excluir apenas repasses com vínculo explícito e valor correspondente.
+   // Divergências ficam visíveis para conferência e NÃO são abatidas automaticamente.
+   const generalByRef=new Map();
+   for(const x of (exp?.ready?exp.rows:[])){
+    const ref=String(x.external_reference||'').trim();
+    if(!ref.startsWith('CP-'))continue;
+    if(!generalByRef.has(ref))generalByRef.set(ref,[]);
+    generalByRef.get(ref).push(x);
+   }
+   const linked=new Set(),linkWarnings=[];
+   for(const x of commissionPayments){
+    const matches=generalByRef.get(x.ref)||[];
+    if(!matches.length)continue;
+    if(matches.length===1&&matches[0].paid_at&&Math.abs(n(matches[0].amount)-x.out)<0.005){linked.add(x.ref);}
+    else linkWarnings.push(x.ref+' (valor, pagamento ou vínculo divergente)');
+   }
+   const unmatchedRepasses=commissionPayments.filter(x=>!linked.has(x.ref));
+   const outsidePeriodLinks=(exp?.ready?exp.rows:[]).filter(x=>x.paid_at&&dateOK(x.paid_at,a,b)&&String(x.external_reference||'').startsWith('CP-')&&!commissionPayments.some(p=>p.ref===x.external_reference));
    // Uma despesa geral cadastrada manualmente como repasse pode já conter
    // esse pagamento. Não presumir equivalência apenas por data/valor.
-   const potentialOverlap=general.filter(x=>/comiss[aã]o|repasse|dentista|profissional/i.test([x.desc,x.kind].join(' ')));
-   const entries=income.reduce((t,x)=>t+x.in,0),other=general.reduce((t,x)=>t+x.out,0),labor=auxiliary.reduce((t,x)=>t+x.out,0),repasses=commissionPayments.reduce((t,x)=>t+x.out,0);
-   const all=[...income,...general,...auxiliary,...commissionPayments].sort((x,y)=>String(x.date).localeCompare(String(y.date))||x.kind.localeCompare(y.kind));
+   const potentialOverlap=general.filter(x=>!x.ref || !linked.has(String((exp?.rows||[]).find(e=>String(e.id)===x.ref)?.external_reference||''))).filter(x=>/comiss[aã]o|repasse|dentista|profissional/i.test([x.desc,x.kind].join(' ')));
+   const entries=income.reduce((t,x)=>t+x.in,0),other=general.reduce((t,x)=>t+x.out,0),labor=auxiliary.reduce((t,x)=>t+x.out,0),repasses=unmatchedRepasses.reduce((t,x)=>t+x.out,0);
+   const all=[...income,...general,...auxiliary,...unmatchedRepasses].sort((x,y)=>String(x.date).localeCompare(String(y.date))||x.kind.localeCompare(y.kind));
    return {heads:['Data','Origem','Referência','Descrição','Entrada','Saída'],items:all.map(x=>[x.date,x.kind,x.ref,x.desc,x.in?cash(x.in):'—',x.out?cash(x.out):'—']),
-    summary:ready?`Entradas recebidas: ${cash(entries)} · Despesas gerais pagas: ${cash(other)} · Laboratório no livro auxiliar (sem conciliação manual): ${cash(labor)} · Repasses pagos a dentistas: ${cash(repasses)} · Resultado operacional estimado: ${cash(entries-other-labor-repasses)}. ${potentialOverlap.length?'ATENÇÃO: '+potentialOverlap.length+' despesa(s) geral(is) podem já incluir repasses; confira antes de usar o resultado. ':''} Laboratório conciliado manualmente: ${manual.length} parcela(s) (${cash(manual.reduce((t,x)=>t+n(x.amount),0))}) — NÃO somadas novamente. Pendentes: ${pending.length} (${cash(pending.reduce((t,x)=>t+n(x.amount),0))}); conflitos: ${conflict.length} (${cash(conflict.reduce((t,x)=>t+n(x.amount),0))}) — excluídos. ATENÇÃO: conciliação manual é declaratória, não confirma a existência da despesa geral; confira referências. Comissões apenas geradas não entram no caixa; somente pagamentos de repasses registrados. Taxas e saldo bancário não são apurados. Nenhuma despesa é criada.`:'Clique em “Carregar dados financeiros” para consultar despesas gerais e pagamentos laboratoriais. Resultado indisponível até concluir o carregamento; nenhuma despesa será criada.'};
+    summary:ready?`Entradas recebidas: ${cash(entries)} · Despesas gerais pagas: ${cash(other)} · Laboratório no livro auxiliar (sem conciliação manual): ${cash(labor)} · Repasses pagos sem vínculo confirmado: ${cash(repasses)} · Repasses vinculados a despesas gerais: ${linked.size} · Resultado operacional estimado: ${cash(entries-other-labor-repasses)}. ${linkWarnings.length?'VÍNCULOS DIVERGENTES: '+linkWarnings.join(', ')+'. ':''}${outsidePeriodLinks.length?'ATENÇÃO: '+outsidePeriodLinks.length+' despesa(s) com vínculo CP- não tiveram repasse correspondente no período; confira datas e referências. ':''}${potentialOverlap.length?'ATENÇÃO: '+potentialOverlap.length+' despesa(s) geral(is) podem já incluir repasses; confira antes de usar o resultado. ':''} Laboratório conciliado manualmente: ${manual.length} parcela(s) (${cash(manual.reduce((t,x)=>t+n(x.amount),0))}) — NÃO somadas novamente. Pendentes: ${pending.length} (${cash(pending.reduce((t,x)=>t+n(x.amount),0))}); conflitos: ${conflict.length} (${cash(conflict.reduce((t,x)=>t+n(x.amount),0))}) — excluídos. ATENÇÃO: conciliação manual é declaratória, não confirma a existência da despesa geral; confira referências. Comissões apenas geradas não entram no caixa; somente pagamentos de repasses registrados. Taxas e saldo bancário não são apurados. Nenhuma despesa é criada.`:'Clique em “Carregar dados financeiros” para consultar despesas gerais e pagamentos laboratoriais. Resultado indisponível até concluir o carregamento; nenhuma despesa será criada.'};
   }
   if(type==='cashflow'){
    const id=window.OralCloud?.clinicId;
