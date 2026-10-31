@@ -60,6 +60,14 @@
    return {heads:['Identificador da obrigação','Data referência','Paciente','Laboratório','Trabalho','Tratamento','Custo previsto','Situação'],items:entries.map(o=>['LAB-'+o.id,o.received_at||o.due_at,patient(o.patient_id),o.laboratory||'',o.work_description||'',o.treatment_id||'Sem vínculo',cash(o.laboratory_cost),o.status||'']),summary:ready?`Obrigações laboratoriais previstas no período: ${cash(total)} · ${entries.length} trabalho(s) · ${unlinked} sem tratamento vinculado · ${undated} sem data (fora do período). Cada trabalho tem uma única referência LAB-ID. Alterações de custo atualizam a mesma referência. Não são despesas pagas, não movimentam caixa e não devem ser somadas novamente ao custo do tratamento.`:'Carregue o laboratório para consultar obrigações financeiras. Não houve lançamento no caixa.'};
   }
   if(type==='labpayments')return {heads:['Informação'],items:[],summary:'Controle de pagamentos: utilize o painel interativo no relatório.'};
+  if(type==='labcash'){
+   const id=window.OralCloud?.clinicId;
+   const ready=labCashClinic===id;
+   const items=ready?labCashRows.filter(x=>dateOK(x.paid_at,a,b)):[];
+   const total=items.reduce((t,x)=>t+n(x.paid_amount),0);
+   const noDate=ready?labCashRows.filter(x=>n(x.paid_amount)>0&&!x.paid_at).length:0;
+   return {heads:['Referência única','Data de pagamento','Paciente','Laboratório','Trabalho','Forma','Valor pago'],items:items.map(x=>[x.source_reference,x.paid_at,patient(x.patient_id),x.laboratory||'',x.work_description||'',x.payment_method||'',cash(x.paid_amount)]),summary:ready?`Saídas laboratoriais conciliadas no período: ${cash(total)} · ${items.length} registro(s) · ${noDate} sem data. Valores derivados dos pagamentos laboratoriais registrados, sem lançamentos duplicados. NÃO somar novamente a despesas manuais existentes. Não representa extrato bancário.`:'Clique em “Carregar pagamentos” para consultar os pagamentos laboratoriais. Nenhum lançamento foi criado.'};
+  }
   if(type==='finance')return {heads:['Data da venda','Paciente','Procedimento','Venda','Recebido até hoje','Saldo atual'],items:sales.map(v=>[v.data,patient(v.pid),v.proc||'',cash(v.valor),cash(typeof recebido==='function'?recebido(v):0),cash(typeof saldoV==='function'?saldoV(v):0)]),summary:`Vendas realizadas no período: ${cash(salesTotal)} · Recebimentos registrados no período (inclusive de vendas anteriores): ${cash(receivedPeriod)} · Saldo atual das vendas realizadas no período: ${cash(balance)}. As colunas Recebido até hoje e Saldo atual refletem a situação atual de cada venda, não somente os pagamentos do período.`};
   if(type==='dentists')return {heads:['Data','Dentista','Procedimento','Produção','Comissão'],items:sales.map(v=>[v.data,dentist(v.dt),v.proc||'',cash(v.valor),cash(v.rep)]),summary:`Produção: ${cash(sales.reduce((t,v)=>t+n(v.valor),0))} · Comissões geradas: ${cash(sales.reduce((t,v)=>t+n(v.rep),0))}`};
   if(type==='procedures')return {heads:['Procedimento','Quantidade','Valor de vendas'],items:Object.values(sales.reduce((acc,v)=>{const key=v.proc||'Não informado';const x=acc[key]||(acc[key]={name:key,count:0,total:0});x.count++;x.total+=n(v.valor);return acc},{})).sort((x,y)=>y.total-x.total).map(x=>[x.name,x.count,cash(x.total)]),summary:`${sales.length} venda(s) no período`};
@@ -68,6 +76,18 @@
  }
  // Pagamentos laboratoriais: persistidos por referência única do trabalho, sem movimentar o caixa.
  let labSettlements={}; let labSettlementClinic=null; let labSettlementError='';
+ let labCashRows=[]; let labCashClinic=null; let labCashError='';
+ async function loadLabCash(){
+  if(!allowed('labcash'))throw Error('Acesso não autorizado.');
+  const id=window.OralCloud?.clinicId;
+  labCashClinic=null;labCashRows=[];labCashError='';
+  try{
+   const data=await window.OralCloud.request('/rest/v1/nexodent_lab_cash_reconciliation?select=source_reference,source_order_id,patient_id,laboratory,work_description,paid_amount,paid_at,payment_method&clinic_id=eq.'+encodeURIComponent(id)+'&limit=5000');
+   if(window.OralCloud.clinicId!==id)throw Error('Clínica alterada durante a consulta.');
+   labCashRows=Array.isArray(data)?data:[];labCashClinic=id;
+  }catch(e){labCashError=e.message||String(e);throw e;}
+ }
+
  const labWritable=()=>!!window.OralCloud?.enabled && !!window.OralCloud?.clinicId && can('vd') && typeof pmLvl==='function' && pmLvl('vd')>=2;
  async function loadLabSettlements(){
   if(!labWritable())throw Error('É necessário acesso de edição ao financeiro e conexão Supabase.');
@@ -115,10 +135,11 @@
   }).join(''):'';
   return `<div class="card"><h2>Controle de pagamentos aos laboratórios</h2><p class="note">${ready?`Custo previsto: ${cash(total)} · Pago: ${cash(paid)} · Pendente: ${cash(Math.max(0,total-paid))}`:'Carregue os trabalhos e os pagamentos para consultar os valores.'} Os pagamentos aqui são registros de controle, sem lançamento automático no caixa. Não cadastre novamente como despesa sem conciliação.</p>${labSettlementError?`<p class="note">Erro: ${safe(labSettlementError)}</p>`:''}<button type="button" id="nx-lab-refresh">Carregar trabalhos e pagamentos</button><div style="overflow:auto"><table style="width:100%"><thead><tr>${['Referência','Paciente','Laboratório','Trabalho','Custo','Pago','Pendente','Pagamento'].map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${lines||'<tr><td colspan="8">Nenhum registro carregado no período.</td></tr>'}</tbody></table></div></div>`;
  }
- const kinds={labpayments:'Pagamentos aos laboratórios',finance:'Financeiro',dentists:'Dentistas e comissões',procedures:'Procedimentos',patients:'Novos pacientes',laboratory:'Custos do laboratório',labledger:'Obrigações laboratoriais'};
+ const kinds={labcash:'Conciliação de saídas laboratoriais',labpayments:'Pagamentos aos laboratórios',finance:'Financeiro',dentists:'Dentistas e comissões',procedures:'Procedimentos',patients:'Novos pacientes',laboratory:'Custos do laboratório',labledger:'Obrigações laboratoriais'};
  function allowed(type){
   if(!commercial() || !Object.prototype.hasOwnProperty.call(kinds,type))return false;
   if(type==='patients')return can('pac');
+  if(type==='labcash')return moduleAllowed('finance') && can('vd') && can('pac') && !!window.OralCloud?.enabled;
   if(type==='labpayments')return moduleAllowed('finance') && can('vd') && can('pac') && !!window.OralCloud?.enabled && typeof window.NexoLabLoad==='function';
   if(type==='laboratory'||type==='labledger')return moduleAllowed('finance') && can('vd') && can('pac') && typeof window.NexoLabLoad==='function';
   if(type==='dentists')return moduleAllowed('finance') && moduleAllowed('commissions') && can('vd') && can('cm');
@@ -136,8 +157,8 @@
   <div class="card" style="display:flex;flex-wrap:wrap;gap:12px;align-items:end">
    <label>Relatório<select id="nx-r-type">${Object.entries(kinds).filter(([k])=>allowed(k)).map(([k,v])=>`<option value="${k}" ${k===type?'selected':''}>${safe(v)}</option>`).join('')}</select></label>
    <label>De<input id="nx-r-from" type="date" value="${safe(a)}"></label><label>Até<input id="nx-r-to" type="date" value="${safe(b)}"></label>
-   <button type="button" id="nx-r-apply">Consultar</button>${(type==='laboratory'||type==='labledger'||type==='labpayments')?'<button type="button" class="ghost" id="nx-r-load-lab">Carregar laboratório</button>':''}<button type="button" class="ghost" id="nx-r-pdf">Imprimir / salvar PDF</button>
-  </div>${type==='labpayments'?labPaymentHtml(a,b):`<div class="card"><h2>${safe(kinds[type])}</h2><p class="note">${safe(report.summary)}</p><p class="note">${report.items.length} registro(s) · ${safe(a)} a ${safe(b)} · Os valores de comissões representam valores associados às vendas, não necessariamente pagamentos efetuados.</p>
+   <button type="button" id="nx-r-apply">Consultar</button>${(type==='laboratory'||type==='labledger'||type==='labpayments'||type==='labcash')?'<button type="button" class="ghost" id="nx-r-load-lab">Carregar laboratório</button>':''}<button type="button" class="ghost" id="nx-r-pdf">Imprimir / salvar PDF</button>
+  </div>${type==='labcash'&&labCashError?`<p class="note">${safe(labCashError)}</p>`:''}${type==='labpayments'?labPaymentHtml(a,b):`<div class="card"><h2>${safe(kinds[type])}</h2><p class="note">${safe(report.summary)}</p><p class="note">${report.items.length} registro(s) · ${safe(a)} a ${safe(b)} · Os valores de comissões representam valores associados às vendas, não necessariamente pagamentos efetuados.</p>
   <div style="overflow:auto"><table style="width:100%;border-collapse:collapse"><thead><tr>${report.heads.map(x=>`<th style="text-align:left;padding:10px;border-bottom:1px solid #ddd">${safe(x)}</th>`).join('')}</tr></thead><tbody>${report.items.map(r=>`<tr>${r.map(x=>`<td style="padding:9px;border-bottom:1px solid #eee">${safe(x)}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${report.heads.length}" style="padding:14px">Nenhum registro encontrado.</td></tr>`}</tbody></table></div></div>`}`;
  };
  // Reavaliar relatórios já exibidos quando o administrador alterar o plano ou
@@ -160,7 +181,7 @@
   e.preventDefault();e.stopImmediatePropagation();
   if(!clinicReady() || !commercial())return;
   const type=document.getElementById('nx-r-type')?.value;
-  if(load){if(!allowed(type))return;load.disabled=true;Promise.resolve(window.NexoLabLoad(true)).then(()=>type==='labpayments'?loadLabSettlements():null).then(()=>render()).catch(err=>{alert('Falha ao carregar laboratório: '+(err.message||err));load.disabled=false});return;}
+  if(load){if(!allowed(type))return;load.disabled=true;Promise.resolve(type==='labcash'?loadLabCash():window.NexoLabLoad(true)).then(()=>type==='labpayments'?loadLabSettlements():null).then(()=>render()).catch(err=>{alert('Falha ao carregar laboratório: '+(err.message||err));load.disabled=false});return;}
   if(!allowed(type))return;
   const [a,b]=dates();if(!validDate(a)||!validDate(b)||a>b){alert('Informe um período válido, com a data inicial anterior ou igual à final.');return}
   view.reportType=type;view.reportFrom=a;view.reportTo=b;
