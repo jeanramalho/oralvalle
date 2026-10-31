@@ -3,6 +3,19 @@
  * substitutos para RLS / RPC no Supabase. */
 (function(){
  'use strict';
+ // Paginação explícita: nunca considerar uma resposta truncada como caixa completo.
+ async function fetchAllFinancial(base,clinic,max=20000){
+  const pageSize=500, rows=[];
+  for(let offset=0;offset<=max;offset+=pageSize){
+   if(window.OralCloud?.clinicId!==clinic)throw Error('Clínica alterada durante a consulta.');
+   const sep=base.includes('?')?'&':'?';
+   const page=await window.OralCloud.request(base+sep+'limit='+pageSize+'&offset='+offset);
+   if(!Array.isArray(page))throw Error('Resposta financeira inválida.');
+   rows.push(...page);
+   if(page.length<pageSize)return rows;
+  }
+  throw Error('Limite de segurança de '+max+' registros atingido. O fechamento foi bloqueado.');
+ }
  const can = k => typeof pmLvl==='function' && pmLvl(k)>=1;
  const commercial = () => !window.OralCloud?.enabled || window.NexoModules?.isAllowed('reports') === true;
  // Não apresentar/exportar dados de uma clínica após a troca de contexto.
@@ -311,7 +324,7 @@
   const id=window.OralCloud?.clinicId;if(!id)throw Error('Selecione uma clínica.');
   labExpenseClinic=null;labExpenseRows=[];labExpenseError='';
   try{
-   const r=await window.OralCloud.request('/rest/v1/nexodent_lab_expense_ledger?select=source_reference,source_order_id,patient_id,laboratory,work_description,amount,paid_at,payment_method&clinic_id=eq.'+encodeURIComponent(id)+'&order=paid_at.desc&limit=5000');
+   const r=await fetchAllFinancial('/rest/v1/nexodent_lab_expense_ledger?select=source_reference,source_order_id,patient_id,laboratory,work_description,amount,paid_at,payment_method&clinic_id=eq.'+encodeURIComponent(id)+'&order=paid_at.desc',id);
    if(window.OralCloud?.clinicId!==id)throw Error('Clínica alterada durante a consulta.');
    labExpenseRows=Array.isArray(r)?r:[];labExpenseClinic=id;
   }catch(e){labExpenseError=e.message||String(e);throw e;}
@@ -320,7 +333,7 @@
  async function loadLabEvents(){
   const id=window.OralCloud?.clinicId;if(!id||!allowed('labhistory'))throw Error('Sem acesso ao histórico.');
   labEventsClinic=null;labEvents=[];labEventsError='';
-  try{const r=await window.OralCloud.request('/rest/v1/nexodent_lab_payment_events?select=id,source_order_id,amount,paid_at,payment_method,created_at,kind&clinic_id=eq.'+encodeURIComponent(id)+'&order=paid_at.desc&limit=5000');
+  try{const r=await fetchAllFinancial('/rest/v1/nexodent_lab_payment_events?select=id,source_order_id,amount,paid_at,payment_method,created_at,kind&clinic_id=eq.'+encodeURIComponent(id)+'&order=paid_at.desc',id);
    if(window.OralCloud?.clinicId!==id)throw Error('Clínica alterada durante a consulta.');
    labEvents=Array.isArray(r)?r:[];labEventsClinic=id;
   }catch(e){labEventsError=e.message||String(e);throw e;}
@@ -347,7 +360,7 @@
   const id=window.OralCloud?.clinicId;
   labCashClinic=null;labCashRows=[];labCashError='';
   try{
-   const data=await window.OralCloud.request('/rest/v1/nexodent_lab_cash_reconciliation?select=source_reference,source_order_id,patient_id,laboratory,work_description,paid_amount,paid_at,payment_method&clinic_id=eq.'+encodeURIComponent(id)+'&limit=5000');
+   const data=await fetchAllFinancial('/rest/v1/nexodent_lab_cash_reconciliation?select=source_reference,source_order_id,patient_id,laboratory,work_description,paid_amount,paid_at,payment_method&clinic_id=eq.'+encodeURIComponent(id),id);
    if(window.OralCloud.clinicId!==id)throw Error('Clínica alterada durante a consulta.');
    labCashRows=Array.isArray(data)?data:[];labCashClinic=id;
   }catch(e){labCashError=e.message||String(e);throw e;}
