@@ -1,7 +1,8 @@
 /* ===== dentistas ===== */
 function dtHtml(){
   const novo=`<details class="dt-new-collapsible"><summary class="dt-new-toggle">+ Adicionar dentista <span aria-hidden="true">⌄</span></summary><div class="card dt-novo"><h2>Novo dentista</h2><label for="dn">Nome</label><input id="dn" autocomplete="off"><label for="dm">Como é a comissão</label><select id="dm">${selOpts(MODOS,'pct')}</select><div class="row" style="align-items:flex-start"><div><label for="dp">Percentual (%)</label><input id="dp" inputmode="decimal" value="40"></div></div><label for="dbs">Base de cálculo do percentual</label><select id="dbs">${selOpts(BASES,'bruto')}</select><div style="margin-top:12px"><button data-act="adddt" style="width:100%">Cadastrar dentista</button></div></div></details>`;
-  return novo+(db.dt.length?`<h2 class="dt-title">Dentistas cadastrados (${db.dt.length})</h2>`+db.dt.map(d=>{
+  const subnav=pmSee('cm')?`<div class="tabs" style="margin-bottom:16px"><button type="button" class="on" data-act="nav" data-t="dt">Dentistas</button><button type="button" data-act="nav" data-t="cm">Comissões</button></div>`:'';
+  return subnav+novo+(db.dt.length?`<h2 class="dt-title">Dentistas cadastrados (${db.dt.length})</h2>`+db.dt.map(d=>{
     const t=dtTot(d.id),mv=dtMoves(d.id);
     return `<details class="dt-card dt-collapsible${d.ativo===false?' off':''}"><summary class="dt-head"><div class="dt-nm">${esc(d.nome||'Sem nome')}<small>${d.cro?esc(d.cro):'CRO não informado'}</small></div><span class="badge ${d.ativo===false?'':'stt-ok'}">${d.ativo===false?'Arquivado':'Ativo'}</span><span class="ov-patient-arrow dt-chevron" aria-hidden="true">›</span></summary>
     <div class="row" style="align-items:flex-start"><div><label style="margin-top:8px">Nome</label><input data-d="${d.id}" data-f="nome" value="${esc(d.nome)}"></div><div><label style="margin-top:8px">Percentual (%)</label><input data-d="${d.id}" data-f="pct" inputmode="decimal" value="${esc(d.pct)}"></div></div>

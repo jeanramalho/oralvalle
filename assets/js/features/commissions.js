@@ -2,7 +2,7 @@
 function comHtml(){
   const m=view.cm||tdy().slice(0,7);
   const ds=db.dt.filter(d=>d.ativo!==false||dtMoves(d.id));
-  let h=`<div class="card"><label for="cmm" style="margin:0 0 4px">Mês</label><input id="cmm" type="month" value="${m}"></div>`;
+  let h=`<div class="tabs" style="margin-bottom:16px">${pmSee('dt')?'<button type="button" data-act="nav" data-t="dt">Dentistas</button>':''}<button type="button" class="on" data-act="nav" data-t="cm">Comissões</button></div><div class="card"><label for="cmm" style="margin:0 0 4px">Mês</label><input id="cmm" type="month" value="${m}"></div>`;
   if(!ds.length)return h+'<div class="empty">Cadastre um dentista na aba Dentistas para acompanhar comissões.</div>';
 
   const selected=view.cmDent||'';

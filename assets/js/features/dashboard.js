@@ -44,8 +44,7 @@ function ovSidebar(active){
       ${item('lab','Laboratório','pr')}
       ${item('wa','WhatsApp','pac')}
       ${item('sigdoc','Documentos e Assinaturas','pr')}
-      ${item('dt','Dentistas')}
-      ${item('cm','Comissões')}
+      ${pmSee('dt')||pmSee('cm')?`<button class="ov-nav-btn${active==='dt'||active==='cm'?' on':''}" data-act="nav" data-t="${pmSee('dt')?'dt':'cm'}"><span class="ico">${ovIcon('dt')}</span><span>Dentistas</span></button>`:''}
       ${item('vd','Pagamentos Recebidos','pg')}
       ${item('vd','Vendas')}
       ${pmSee('vd')||pmSee('cm')||pmSee('pac')?`<button class="ov-nav-btn${active==='reports'?' on':''}" data-act="nav" data-t="reports"><span class="ico">▥</span><span>Relatórios</span></button>`:''}
