@@ -17,6 +17,14 @@
     <button type="button" id="ns-a1-check" style="background:#f97316">Verificar certificado</button>
     <p class="note" id="ns-a1-result" role="status" aria-live="polite">Nenhum certificado verificado. O arquivo e a senha serão enviados somente ao serviço HTTPS da Vercel para inspeção transitória, sem armazenamento intencional.</p>
    </section>
+   <section style="padding:16px;border:1px solid #fdba74;border-radius:12px;margin:16px 0;background:#fffaf5" aria-label="Assinatura PDF A1 em teste">
+    <h3 style="margin-top:0">Assinar PDF com A1 — teste técnico</h3>
+    <p class="note"><strong>Não use para documentos clínicos reais nesta etapa.</strong> O serviço ainda não comprova que o certificado pertence ao profissional autenticado, não valida toda a cadeia ICP-Brasil e não salva o arquivo no prontuário. Use apenas PDF de teste, sem dados de pacientes.</p>
+    <label for="ns-pdf-file">PDF de teste (até 5 MB)</label><input type="file" id="ns-pdf-file" accept="application/pdf,.pdf">
+    <label style="display:block;margin-top:10px"><input type="checkbox" id="ns-a1-ack"> Confirmo que sou titular do certificado, autorizo esta assinatura e estou utilizando somente um PDF de teste sem dados de pacientes.</label>
+    <button type="button" id="ns-a1-sign" style="background:#f97316;margin-top:10px">Assinar PDF de teste</button>
+    <p class="note" id="ns-a1-sign-result" role="status" aria-live="polite">Selecione o certificado A1 e informe a senha acima; escolha também um PDF de teste.</p>
+   </section>
    <div class="row"><div><label>Paciente</label><select id="ns-patient"><option value="">Selecione</option>${patients.map(p=>`<option value="${e(p.id)}">${e(p.nome)}</option>`).join('')}</select></div><div><label>Dentista</label><select id="ns-dentist"><option value="">Selecione</option>${dentists.map(d=>`<option value="${e(d.id)}">${e(d.nome)}${d.cro?' — '+e(d.cro):''}</option>`).join('')}</select></div></div>
    <label>Tipo de documento</label><select id="ns-type">${types.map(t=>`<option>${e(t)}</option>`).join('')}</select>
    <label>Título</label><input id="ns-title" maxlength="160" placeholder="Ex.: Consentimento para procedimento">
@@ -54,8 +62,31 @@
   }catch(err){out.textContent='Erro: '+(err?.message||'Falha na verificação');}
   finally{pwd.value='';btn.disabled=false;}
  }
+ async function signPdfTest(){
+  const cert=document.getElementById('ns-a1-file')?.files?.[0],pdf=document.getElementById('ns-pdf-file')?.files?.[0];
+  const pwd=document.getElementById('ns-a1-password'),out=document.getElementById('ns-a1-sign-result'),btn=document.getElementById('ns-a1-sign');
+  if(!out||!pwd||!btn)return;
+  if(!cert||!(/\.(pfx|p12)$/i.test(cert.name))||!cert.size||cert.size>1024*1024){out.textContent='Selecione um certificado A1 .pfx/.p12 de até 1 MB.';return}
+  if(!pdf||!(/\.pdf$/i.test(pdf.name))||!pdf.size||pdf.size>5*1024*1024){out.textContent='Selecione um PDF de teste de até 5 MB.';return}
+  if(!pwd.value){out.textContent='Informe a senha do certificado.';return}
+  if(!document.getElementById('ns-a1-ack')?.checked){out.textContent='Confirme a autorização e o uso exclusivo de documento de teste.';return}
+  const token=window.OralCloud?.session?.access_token;
+  if(!token){out.textContent='Sua sessão expirou. Entre novamente no NexoDent.';return}
+  const b64=async file=>{const bytes=new Uint8Array(await file.arrayBuffer());let str='';for(let i=0;i<bytes.length;i+=8192)str+=String.fromCharCode(...bytes.subarray(i,i+8192));return btoa(str)};
+  btn.disabled=true;out.textContent='Assinando PDF de teste...';
+  try{
+   const response=await fetch('/api/certificado-assinar-pdf',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},cache:'no-store',body:JSON.stringify({pdfBase64:await b64(pdf),pfxBase64:await b64(cert),password:pwd.value,acknowledge:true})});
+   if(!response.ok){const data=await response.json().catch(()=>({}));throw new Error(data.error||'Erro HTTP '+response.status)}
+   if(!String(response.headers.get('content-type')||'').includes('application/pdf'))throw new Error('Resposta inesperada do servidor');
+   const blob=await response.blob();if(blob.size<100)throw new Error('PDF assinado inválido');
+   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='nexodent-teste-assinado.pdf';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+   out.textContent='PDF de teste recebido. Verifique a assinatura em um validador independente antes de considerar o recurso apto para uso clínico.';
+  }catch(err){out.textContent='Erro: '+(err?.message||'Falha ao assinar PDF de teste')}
+  finally{pwd.value='';btn.disabled=false}
+ }
  document.addEventListener('click',ev=>{
   if(ev.target.closest('#ns-a1-check')){checkA1();return}
+  if(ev.target.closest('#ns-a1-sign')){signPdfTest();return}
   const c=ev.target.closest('[data-ns-clear]');if(c){const r=c.dataset.nsClear,cv=document.getElementById('ns-'+r);cv?.getContext('2d').clearRect(0,0,cv.width,cv.height);signatures[r]=null;delete signedAt[r];document.getElementById('ns-status-'+r).textContent='Ainda não assinou';return}
   if(ev.target.closest('#ns-reset')){if(confirm('Limpar texto e assinaturas desta sessão?')){clear();render()}return}
   if(!ev.target.closest('#ns-print'))return;
