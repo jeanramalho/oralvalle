@@ -37,6 +37,7 @@
     <label>Observações internas (sem dados sensíveis)</label><textarea id="ns-reg-note" maxlength="500" rows="2" placeholder="Informações administrativas sobre a pendência"></textarea>
     <button type="button" id="ns-reg-save" style="background:#f97316">Registrar pendência</button>
     <button type="button" class="ghost" id="ns-reg-refresh">Atualizar histórico</button>
+    <p class="note">Após salvar, clique em <b>Gerar PDF (rascunho)</b> no histórico e use Imprimir → Salvar como PDF. O arquivo não será assinado digitalmente.</p>
     <p class="note">Filtre por paciente acima ou pesquise pelo título e tipo abaixo.</p>
     <input id="ns-reg-search" type="search" placeholder="Pesquisar documentos cadastrados" autocomplete="off">
     <p id="ns-reg-status" class="note" role="status">${registryAvailable()?'Carregando histórico...':'Disponível somente com clínica conectada ao Supabase.'}</p>
@@ -120,7 +121,7 @@
   el.replaceChildren();
   for(const row of rows){const p=(db.p||[]).find(x=>String(x.id)===String(row.patient_id));const div=document.createElement('div');div.style.cssText='border-top:1px solid #eee;padding:10px 0';
    const title=document.createElement('strong');title.textContent=(p?.nome||'Paciente não carregado')+' — '+row.document_type+' — '+row.title;
-   const sub=document.createElement('div');sub.className='note';sub.textContent='Pendente de assinatura · '+new Date(row.created_at).toLocaleString('pt-BR')+(row.note?' · '+row.note:'');const action=document.createElement('button');action.type='button';action.className='ghost sm';action.textContent='Abrir ficha da pendência';action.dataset.nsRegView=row.id;action.style.marginTop='6px';div.append(title,sub,action);el.appendChild(div);}
+   const sub=document.createElement('div');sub.className='note';sub.textContent='Pendente de assinatura · '+new Date(row.created_at).toLocaleString('pt-BR')+(row.note?' · '+row.note:'');const action=document.createElement('button');action.type='button';action.className='ghost sm';action.textContent='Abrir ficha da pendência';action.dataset.nsRegView=row.id;action.style.marginTop='6px';const pdf=document.createElement('button');pdf.type='button';pdf.className='ghost sm';pdf.textContent='Gerar PDF (rascunho)';pdf.dataset.nsRegPdf=row.id;pdf.style.margin='6px 0 0 8px';div.append(title,sub,action,pdf);el.appendChild(div);}
  }
  async function registrySave(){
   const btn=document.getElementById('ns-reg-save'),out=document.getElementById('ns-reg-status');if(!btn||!out)return;
@@ -131,6 +132,18 @@
   try{await OralCloud.request('/rest/v1/nexodent_patient_document_register',{method:'POST',body:{clinic_id:id,patient_id:patient,document_type:kind,title,note:note||null,body:document.getElementById('ns-reg-body')?.value.trim()||null}});
    document.getElementById('ns-reg-title').value='';document.getElementById('ns-reg-note').value='';document.getElementById('ns-reg-body').value='';registryClinic=null;await registryLoad(true);
   }catch(err){out.textContent='Erro ao salvar: '+(err.message||'Falha de conexão');}finally{btn.disabled=false;}
+ }
+ function printRegistryPdf(id){
+  if(!registryAvailable()||registryClinic!==activeClinic()){alert('Atualize o histórico da clínica antes de gerar o PDF.');return;}
+  const row=registryRows.find(r=>String(r.id)===String(id));if(!row)return;
+  const patient=(db.p||[]).find(p=>String(p.id)===String(row.patient_id));
+  if(!patient){alert('Dados do paciente não carregados. Atualize a lista de pacientes.');return;}
+  const date=new Date(row.created_at).toLocaleString('pt-BR');
+  const html=`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>${e(row.title)} - Rascunho</title><style>@page{size:A4;margin:18mm}body{font:14px Arial,sans-serif;color:#222;line-height:1.55}header{border-bottom:2px solid #f97316;padding-bottom:12px;margin-bottom:22px}h1{font-size:23px;color:#c65a10;margin:0}h2{font-size:18px;margin-top:25px}.meta{font-size:12px;color:#555}.body{white-space:pre-wrap;overflow-wrap:anywhere;min-height:200px}.watermark{font-size:12px;color:#9a3412;border:1px solid #fdba74;background:#fff7ed;padding:10px;margin:20px 0}footer{border-top:1px solid #ddd;margin-top:40px;padding-top:12px;font-size:11px;color:#666}@media print{button{display:none}}</style></head><body><header><h1>${e(row.document_type)}</h1><div class="meta">NexoDent · Rascunho de documento</div></header><div class="watermark"><b>RASCUNHO — NÃO ASSINADO.</b> Não substitui receita, atestado ou documento clínico assinado. Não possui assinatura digital ICP-Brasil.</div><p><b>Paciente:</b> ${e(patient.nome)}<br><b>Documento:</b> ${e(row.title)}<br><b>Registrado em:</b> ${e(date)}</p><h2>Conteúdo</h2><div class="body">${e(row.body||'Sem conteúdo cadastrado.')}</div><footer>Registro: ${e(row.id)} · Documento pendente de assinatura</footer><button onclick="window.print()">Imprimir / Salvar como PDF</button></body></html>`;
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'}),url=URL.createObjectURL(blob);
+  const win=window.open(url,'_blank');
+  if(!win){URL.revokeObjectURL(url);alert('Permita a abertura de janelas para gerar o PDF.');return;}
+  setTimeout(()=>URL.revokeObjectURL(url),120000);
  }
  function viewRegistry(id){
   const row=registryRows.find(r=>String(r.id)===String(id));if(!row)return;
@@ -143,6 +156,7 @@
  const regObserver=new MutationObserver(()=>{if(document.getElementById('ns-reg-list')){if(registryClinic!==activeClinic()){registryRows=[];registryClinic=null;}registryLoad();}});
  document.addEventListener('DOMContentLoaded',()=>regObserver.observe(document.body,{childList:true,subtree:true}));
  document.addEventListener('click',ev=>{
+  const regPdf=ev.target.closest('[data-ns-reg-pdf]');if(regPdf){printRegistryPdf(regPdf.dataset.nsRegPdf);return}
   const regView=ev.target.closest('[data-ns-reg-view]');if(regView){viewRegistry(regView.dataset.nsRegView);return}
   if(ev.target.closest('#ns-reg-save')){registrySave();return}
   if(ev.target.closest('#ns-reg-refresh')){registryClinic=null;registryLoad(true);return}
