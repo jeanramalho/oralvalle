@@ -15,6 +15,11 @@ const key=()=>`nexodent:lab:v1:${clinic()||'local'}:${ME?.id||'local'}`;
 const isLab=()=>view.h==='lab'&&!view.id;
 function localRead(){try{return JSON.parse(localStorage.getItem(key())||'[]')}catch(_){return []}}
 function localWrite(){localStorage.setItem(key(),JSON.stringify(orders));}
+// Espelho de consulta para os demais módulos; nenhuma baixa ou lançamento é criado.
+function publishOrders(){
+ window.NexoLabRead={clinicId:clinic()||'local',loaded:!!loadedClinic,orders:orders.map(o=>({id:o.id,patient_id:o.patient_id,treatment_id:linkFor(o.id).treatment_id||'',laboratory_cost:linkFor(o.id).cost||0,status:o.status,stage:o.stage,laboratory:o.laboratory,work_description:o.work_description,due_at:o.due_at,received_at:o.received_at}))};
+ window.dispatchEvent(new CustomEvent('nexodent:lab-orders-updated'));
+}
 function allowed(){return typeof pmSee!=='function'||pmSee('pac');}
 function canEdit(){return typeof pmLvl!=='function'||pmLvl('pac')>=2;}
 function renderLab(){if(isLab()&&typeof render==='function')render();}
@@ -32,7 +37,7 @@ async function fetchOrders(force=false){
    const data=await OralCloud.request(path);if(clinic()!==id)return;
    orders=Array.isArray(data)?data:[];
   }else orders=localRead();
-  loadedClinic=id||'local';
+  loadedClinic=id||'local';publishOrders();
  }catch(e){orders=[];loadedClinic=null;error='Não foi possível carregar os trabalhos: '+(e.message||'erro de conexão');}
  finally{loading=false;renderLab();}
 }
@@ -176,7 +181,7 @@ async function execute(action,id){
   o={...old,comments:[...(old.comments||[]),{at:stamp(),text:txt.slice(0,2000)}],updated_at:stamp()};
  }else return;
  busy=true;
- try{await persist(o);if(action==='save'&&!cloud())saveLink(o.id,pendingLink.tid,pendingLink.cost);if(action==='save')editing=null;renderLab();if(typeof toast==='function')toast('Trabalho de laboratório atualizado.');}
+ try{await persist(o);if(action==='save'&&!cloud())saveLink(o.id,pendingLink.tid,pendingLink.cost);publishOrders();if(action==='save')editing=null;renderLab();if(typeof toast==='function')toast('Trabalho de laboratório atualizado.');}
  catch(e){alert('Não foi possível salvar: '+(e.message||'Erro de conexão'));}
  finally{busy=false;}
 }

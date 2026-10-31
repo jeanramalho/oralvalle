@@ -200,6 +200,18 @@ function trConciliacaoHtml(p){
   ${alertas.length?`<div role="status" style="border-left:3px solid #d97706;padding:8px 12px;margin-top:8px"><strong>Itens para conferência</strong><ul>${alertas.map(a=>`<li>${esc(a)}</li>`).join('')}</ul></div>`:'<p class="note" style="color:var(--ok)">Nenhuma inconsistência de vínculo identificada nesta verificação.</p>'}
   <p class="note">Painel somente leitura: não altera registros, pagamentos ou comissões.</p></details>`;
 }
+/* NexoDent 251: consulta de trabalhos protéticos e custos sem criar lançamentos duplicados. */
+function trLabResumoHtml(p){
+ const snapshot=window.NexoLabRead;
+ if(!snapshot||!snapshot.loaded||snapshot.clinicId!==(window.OralCloud?.clinicId||'local'))return `<details class="card"><summary>Laboratório vinculado aos tratamentos</summary><p class="note">Abra a aba Laboratório para carregar os trabalhos desta clínica. Depois retorne aos tratamentos.</p></details>`;
+ const items=(snapshot.orders||[]).filter(o=>String(o.patient_id)===String(p.id)&&o.treatment_id);
+ const trs=p.trat||[];
+ const valid=items.filter(o=>trs.some(t=>String(t.id)===String(o.treatment_id)));
+ const orphan=items.length-valid.length;
+ const total=valid.filter(o=>o.status!=='Cancelado').reduce((n,o)=>n+(Number(o.laboratory_cost)||0),0);
+ const rows=valid.map(o=>{const t=trs.find(x=>String(x.id)===String(o.treatment_id));return `<tr><td>${esc(t?.proc||'Procedimento')}</td><td>${esc(o.work_description||'')}</td><td>${esc(o.status||'')}</td><td>${brl(Number(o.laboratory_cost)||0)}</td></tr>`}).join('');
+ return `<details class="card" style="margin-bottom:12px"><summary style="cursor:pointer;font-weight:700">Laboratório vinculado aos tratamentos (${valid.length})</summary><div style="margin-top:12px">${stat('Custos laboratoriais vinculados',brl(total))}${stat('Trabalhos vinculados',String(valid.length))}</div>${valid.length?`<div style="overflow-x:auto"><table style="width:100%;margin-top:12px"><thead><tr><th>Tratamento</th><th>Trabalho</th><th>Situação</th><th>Custo</th></tr></thead><tbody>${rows}</tbody></table></div>`:'<p class="note">Nenhum trabalho vinculado a um tratamento deste paciente.</p>'}${orphan?`<p class="note" style="color:#a14c00">${orphan} vínculo(s) apontam para tratamentos não encontrados.</p>`:''}<p class="note">Consulta somente leitura. Os custos laboratoriais são exibidos separadamente dos custos cadastrados no tratamento para evitar dupla contagem. Não gera despesas, baixas ou comissões.</p></details>`;
+}
 function tratHtml(p){
   const all=p.trat||[],tr=trList(p),dr=view.trDraft||{},dec=(view.dent||'perm')==='dec';
   const orcOpts=p.orcs.filter(o=>o.status!=='Recusado');
@@ -228,7 +240,7 @@ function tratHtml(p){
     <div class="note" data-trc="${x.id}" style="margin:4px 0 0">${trCom(x)}</div>
     ${x.vid?`<div class="note" style="margin:8px 0 0;color:var(--ok)">Baixa realizada em ${fd(x.data||'')} · dentista: ${esc(dName(x.dt))} · comissão registrada: ${brl(x.rep||0)}</div>`:`<div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="sm" data-act="trbaixa" data-id="${x.id}">Dar baixa no procedimento</button><button class="danger sm" data-act="rmtr" data-id="${x.id}">${delArm===x.id?'Toque de novo para excluir':'Excluir'}</button></div>`}</div>`}).join(''):'<div class="empty">Nenhum tratamento cadastrado.</div>';
   const bar=`<div class="tr-bar"><button type="button" id="trbarbtn" class="tr-add" data-act="addtr">${trBarInner()}</button></div>`;
-  return `${trResumoHtml(p)}${trAuditoriaHtml(p)}${trConciliacaoHtml(p)}<div class="card">${flt}<h2 style="margin-top:16px">Odontograma</h2>${seg}${odxHtml(p,tr)}${lg}<div id="trchips" style="margin-top:10px">${trChips()}</div><div id="trbasket">${ttBasketHtml(p)}</div><div id="trteeth">${ttPanelHtml(p)}</div><div id="trshared">${ttSharedHtml(p)}</div></div>${form}<h2>Tratamentos (${tr.length})</h2>${lista}${bar}`;
+  return `${trResumoHtml(p)}${trLabResumoHtml(p)}${trAuditoriaHtml(p)}${trConciliacaoHtml(p)}<div class="card">${flt}<h2 style="margin-top:16px">Odontograma</h2>${seg}${odxHtml(p,tr)}${lg}<div id="trchips" style="margin-top:10px">${trChips()}</div><div id="trbasket">${ttBasketHtml(p)}</div><div id="trteeth">${ttPanelHtml(p)}</div><div id="trshared">${ttSharedHtml(p)}</div></div>${form}<h2>Tratamentos (${tr.length})</h2>${lista}${bar}`;
 }
 function tabOrc(p){
   return prList()+`<button data-act="addo" style="width:100%;margin-bottom:12px">Novo orçamento</button>`+(p.orcs.length?p.orcs.map(orcHtml).join(''):'<div class="empty">Nenhum orçamento para este paciente.</div>');
