@@ -155,12 +155,12 @@ document.addEventListener('change',e=>{
   }
 });
 function removerConfirmacaoAutomatica(){
-  const termos=['confirmação automática','confirmacao automatica','confirmação automática via whatsapp','confirmacao automatica via whatsapp'];
-  document.querySelectorAll('button,a,li,div,span,section,article').forEach(el=>{
-    const txt=(el.textContent||'').trim().toLowerCase();
-    if(termos.some(t=>txt===t || txt.startsWith(t+' '))){
-      const alvo=el.closest('.ov-nav-btn,button,a,li,.card,.panel')||el;
-      if(alvo && alvo!==document.body) alvo.remove();
-    }
+  // Somente itens de navegação: não percorre o prontuário nem remove cartões inteiros.
+  const nav=document.querySelector('.ov-sidebar');
+  if(!nav)return;
+  const termos=new Set(['confirmação automática','confirmacao automatica','confirmação automática via whatsapp','confirmacao automatica via whatsapp']);
+  nav.querySelectorAll('button,a,.ov-nav-btn').forEach(el=>{
+    const txt=(el.textContent||'').trim().toLocaleLowerCase('pt-BR');
+    if(termos.has(txt))el.remove();
   });
 }
