@@ -45,7 +45,7 @@ function patientName(id){return db.p?.find(p=>String(p.id)===String(id))?.nome||
 function form(o={}){
  const patients=(db.p||[]).filter(p=>!p.arq);
  return `<section class="card nxlab-form"><h3>${o.id?'Editar trabalho':'Novo trabalho para laboratório'}</h3>
- <div class="nxlab-grid"><label class="nxlab-field"><span>Paciente * — digite para filtrar</span><input id="nxlab-patient-search" type="search" autocomplete="off" placeholder="Digite o nome do paciente" value="${safe(patients.find(p=>String(p.id)===String(o.patient_id))?.nome||'')}"><select id="nxlab-patient" size="1"><option value="">Selecione o paciente</option>${patients.map(p=>`<option value="${safe(p.id)}" ${String(p.id)===String(o.patient_id)?'selected':''}>${safe(p.nome)}</option>`).join('')}</select><small id="nxlab-patient-count">${patients.length} paciente(s)</small></label>
+ <div class="nxlab-grid"><label class="nxlab-field"><span>Paciente * — digite para filtrar</span><input id="nxlab-patient-search" type="search" autocomplete="off" placeholder="Digite o nome do paciente" value="${safe(patients.find(p=>String(p.id)===String(o.patient_id))?.nome||'')}"><select id="nxlab-patient" hidden aria-hidden="true" tabindex="-1"><option value="">Selecione o paciente</option>${patients.map(p=>`<option value="${safe(p.id)}" ${String(p.id)===String(o.patient_id)?'selected':''}>${safe(p.nome)}</option>`).join('')}</select><div id="nxlab-patient-suggestions" class="nxlab-patient-suggestions" hidden></div><small id="nxlab-patient-count">${patients.length} paciente(s)</small></label>
  ${input('Laboratório responsável *','nxlab-lab',o.laboratory,'text','maxlength="160" required')}
  ${input('Trabalho a realizar *','nxlab-work',o.work_description,'text','maxlength="240" required')}
  ${input('Cor / escala (ex.: A2)','nxlab-shade',o.shade,'text','maxlength="80"')}
@@ -72,7 +72,7 @@ function card(o){
  </article>`;
 }
 function style(){return `<style>
- .nxlab-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}.nxlab-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.nxlab-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}.nxlab-field{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:600}.nxlab-field input,.nxlab-field select,.nxlab-field textarea{width:100%;padding:10px;border:1px solid #d7d7d7;border-radius:9px;background:#fff;color:#222;font:inherit}.nxlab-wide{grid-column:1/-1}.nxlab-card{margin:12px 0}.nxlab-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.nxlab-sub{color:#666;margin-top:5px}.nxlab-pill{padding:5px 10px;border-radius:99px;background:#fff0df;color:#9a4d00;font-size:12px;font-weight:700}.nxlab-alert{background:#ffe1e1;color:#a70000}.nxlab-details{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:9px;margin-top:14px;font-size:13px}.nxlab-note{background:#fff3e2;border-left:3px solid #f80;padding:10px}.nxlab-timeline{border-top:1px solid #ddd;margin-top:14px;padding-top:12px}.nxlab-timeline>div{padding:7px 0;border-bottom:1px solid #eee}.nxlab-form{margin-bottom:20px}.nxlab-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.nxlab-filters input,.nxlab-filters select{padding:10px;border:1px solid #ddd;border-radius:8px;min-width:180px}.nxlab-empty{padding:20px;color:#555}.nxlab-error{background:#fff0f0;padding:12px;border-radius:8px;color:#a00000}
+ .nxlab-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}.nxlab-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.nxlab-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}.nxlab-field{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:600}.nxlab-field input,.nxlab-field select,.nxlab-field textarea{width:100%;padding:10px;border:1px solid #d7d7d7;border-radius:9px;background:#fff;color:#222;font:inherit}.nxlab-wide{grid-column:1/-1}.nxlab-card{margin:12px 0}.nxlab-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.nxlab-sub{color:#666;margin-top:5px}.nxlab-pill{padding:5px 10px;border-radius:99px;background:#fff0df;color:#9a4d00;font-size:12px;font-weight:700}.nxlab-alert{background:#ffe1e1;color:#a70000}.nxlab-details{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:9px;margin-top:14px;font-size:13px}.nxlab-note{background:#fff3e2;border-left:3px solid #f80;padding:10px}.nxlab-timeline{border-top:1px solid #ddd;margin-top:14px;padding-top:12px}.nxlab-timeline>div{padding:7px 0;border-bottom:1px solid #eee}.nxlab-form{margin-bottom:20px}.nxlab-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.nxlab-filters input,.nxlab-filters select{padding:10px;border:1px solid #ddd;border-radius:8px;min-width:180px}.nxlab-empty{padding:20px;color:#555}.nxlab-error{background:#fff0f0;padding:12px;border-radius:8px;color:#a00000}.nxlab-patient-suggestions{max-height:210px;overflow:auto;border:1px solid #ddd;border-radius:9px;background:#fff}.nxlab-patient-suggestions button{display:block;width:100%;text-align:left;padding:9px 12px;border:0;border-bottom:1px solid #eee;background:#fff;color:#222;cursor:pointer}.nxlab-patient-suggestions button:hover,.nxlab-patient-suggestions button:focus{background:#fff0df}.nxlab-patient-suggestions[hidden]{display:none}
  </style>`;}
 window.nexoLabHtml=function(){
  if(!allowed())return '<div class="card">Você não possui permissão para consultar os trabalhos de laboratório.</div>';
@@ -125,29 +125,28 @@ async function execute(action,id){
  catch(e){alert('Não foi possível salvar: '+(e.message||'Erro de conexão'));}
  finally{busy=false;}
 }
-document.addEventListener('input',e=>{
- if(e.target.id!=='nxlab-patient-search')return;
- const select=$id('nxlab-patient');if(!select)return;
- const query=e.target.value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR').trim();
- let visible=0;
- for(const option of select.options){
-  if(!option.value)continue;
-  const name=option.textContent.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR');
-  const match=!query||name.includes(query);
-  option.hidden=!match;option.disabled=!match;
-  if(match)visible++;
- }
+function labPatientSuggestions(){
+ const input=$id('nxlab-patient-search'),select=$id('nxlab-patient'),box=$id('nxlab-patient-suggestions'),count=$id('nxlab-patient-count');
+ if(!input||!select||!box)return;
+ const normalize=t=>String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR');
+ const q=normalize(input.value.trim());
+ const matches=[...select.options].filter(o=>o.value&&(!q||normalize(o.textContent).includes(q)));
  const selected=select.selectedOptions[0];
- if(selected&&selected.disabled)select.value='';
- const count=$id('nxlab-patient-count');if(count)count.textContent=visible+' paciente(s) encontrado(s)';
- select.size=query?Math.min(Math.max(visible+1,2),7):1;
-});
-document.addEventListener('change',e=>{
- if(e.target.id==='nxlab-patient'){
-  const selected=e.target.selectedOptions[0];
-  const searchInput=$id('nxlab-patient-search');if(searchInput&&selected?.value)searchInput.value=selected.textContent;
-  e.target.size=1;
- }
+ if(!selected?.value||normalize(selected.textContent)!==q)select.value='';
+ count.textContent=matches.length+' paciente(s) encontrado(s)';
+ box.innerHTML=matches.slice(0,30).map(o=>`<button type="button" data-lab-patient="${safe(o.value)}">${safe(o.textContent)}</button>`).join('')+(matches.length>30?'<small>Continue digitando para refinar a busca.</small>':'');
+ box.hidden=!q||!matches.length;
+}
+document.addEventListener('input',e=>{if(e.target.id==='nxlab-patient-search')labPatientSuggestions();});
+document.addEventListener('click',e=>{
+ const choice=e.target.closest('[data-lab-patient]');if(!choice)return;
+ const select=$id('nxlab-patient'),input=$id('nxlab-patient-search'),box=$id('nxlab-patient-suggestions');
+ if(!select||!input||!box)return;
+ select.value=choice.dataset.labPatient;
+ if(!select.value)return;
+ input.value=select.selectedOptions[0].textContent;
+ box.hidden=true;
+ const count=$id('nxlab-patient-count');if(count)count.textContent='Paciente selecionado';
 });
 document.addEventListener('click',e=>{const btn=e.target.closest('[data-lab]');if(btn){e.preventDefault();execute(btn.dataset.lab,btn.dataset.id);}});
 document.addEventListener('change',e=>{if(e.target.id==='nxlab-filter'){filter=e.target.value;renderLab();}if(e.target.id==='nxlab-search'){search=e.target.value;renderLab();}});
