@@ -50,7 +50,7 @@ function patientTreatments(pid){
 // Vínculos auxiliares por instalação: não alteram o esquema Supabase nem os lançamentos.
 const linkKey=()=>`nexodent:lab-links:v1:${clinic()||'local'}`;
 function linksRead(){try{return JSON.parse(localStorage.getItem(linkKey())||'{}')}catch(_){return {}}}
-function linkFor(id){return linksRead()[String(id)]||{}}
+function linkFor(id){const order=orders.find(o=>String(o.id)===String(id));if(order&&(order.treatment_id!=null||order.laboratory_cost!=null))return {treatment_id:String(order.treatment_id||''),cost:Number(order.laboratory_cost)||0};return linksRead()[String(id)]||{}}
 function saveLink(id,tid,cost){const all=linksRead();all[String(id)]={treatment_id:String(tid||''),cost:Number(cost)||0};localStorage.setItem(linkKey(),JSON.stringify(all));}
 function linkedTreatment(o){const link=linkFor(o.id);return patientTreatments(o.patient_id).find(t=>String(t.id)===link.treatment_id);}
 function treatmentLabel(t){return [t.nome||t.procedimento||t.descricao||t.tipo||'Procedimento',t.dente?'Dente '+t.dente:'',money(t.valor)].filter(Boolean).join(' · ');}
@@ -76,8 +76,8 @@ function form(o={}){
  const patients=(db.p||[]).filter(p=>!p.arq);
  return `<section class="card nxlab-form"><h3>${o.id?'Editar trabalho':'Novo trabalho para laboratório'}</h3>
  <div class="nxlab-grid"><label class="nxlab-field"><span>Paciente * — digite para filtrar</span><input id="nxlab-patient-search" type="search" autocomplete="off" list="nxlab-patient-options" placeholder="Digite o nome do paciente" value="${safe(patients.find(p=>String(p.id)===String(o.patient_id))?.nome||'')}"><datalist id="nxlab-patient-options">${patients.map(p=>`<option value="${safe(p.nome)}"></option>`).join('')}</datalist><input id="nxlab-patient" type="hidden" value="${safe(o.patient_id||'')}"><small id="nxlab-patient-count">${patients.length} pacientes disponíveis</small></label>
- <label class="nxlab-field"><span>Tratamento vinculado (neste computador)</span><select id="nxlab-treatment"><option value="">Sem vínculo</option>${patientTreatments(o.patient_id).map(t=>`<option value="${safe(t.id)}" ${String(linkFor(o.id).treatment_id||'')===String(t.id)?'selected':''}>${safe(treatmentLabel(t))}</option>`).join('')}</select><small>Para novos trabalhos, selecione o paciente e salve; depois edite para vincular. O vínculo é local.</small></label>
- ${input('Custo do laboratório (controle local)','nxlab-cost',linkFor(o.id).cost||0,'number','min="0" step="0.01"')}
+ <label class="nxlab-field"><span>Tratamento vinculado</span><select id="nxlab-treatment"><option value="">Sem vínculo</option>${patientTreatments(o.patient_id).map(t=>`<option value="${safe(t.id)}" ${String(linkFor(o.id).treatment_id||'')===String(t.id)?'selected':''}>${safe(treatmentLabel(t))}</option>`).join('')}</select><small>Selecione o paciente, salve e depois edite para vincular. Na nuvem, exige a migração SQL da versão 250.</small></label>
+ ${input('Custo do laboratório','nxlab-cost',linkFor(o.id).cost||0,'number','min="0" step="0.01"')}
  ${input('Laboratório responsável *' ,'nxlab-lab',o.laboratory,'text','maxlength="160" required')}
  ${input('Trabalho a realizar *','nxlab-work',o.work_description,'text','maxlength="240" required')}
  ${input('Cor / escala (ex.: A2)','nxlab-shade',o.shade,'text','maxlength="80"')}
@@ -96,7 +96,7 @@ function card(o){
  const comments=Array.isArray(o.comments)?o.comments:[];
  const obs=o.status==='Em observação';
  return `<article class="card nxlab-card"><div class="nxlab-head"><div><strong>${safe(patientName(o.patient_id))}</strong><div class="nxlab-sub">${safe(o.work_description)} · ${safe(o.teeth||'Sem região')}</div></div><span class="nxlab-pill ${obs?'nxlab-alert':''}">${safe(o.status)}</span></div>
- <div class="nxlab-details"><span><b>Laboratório:</b> ${safe(o.laboratory)}</span><span><b>Cor:</b> ${safe(o.shade||'—')}</span><span><b>Etapa:</b> ${safe(o.stage)}</span><span><b>Envio:</b> ${safe(date(o.sent_at)||'—')}</span><span><b>Entrega prevista:</b> ${safe(date(o.due_at)||'—')}</span><span><b>Recebido:</b> ${safe(date(o.received_at)||'—')}</span>${treatmentSummary(o.patient_id)}<span><b>Tratamento vinculado:</b> ${safe(linkedTreatment(o)?treatmentLabel(linkedTreatment(o)):'Não vinculado')}</span><span><b>Custo lab. local:</b> ${safe(money(linkFor(o.id).cost))}</span></div>
+ <div class="nxlab-details"><span><b>Laboratório:</b> ${safe(o.laboratory)}</span><span><b>Cor:</b> ${safe(o.shade||'—')}</span><span><b>Etapa:</b> ${safe(o.stage)}</span><span><b>Envio:</b> ${safe(date(o.sent_at)||'—')}</span><span><b>Entrega prevista:</b> ${safe(date(o.due_at)||'—')}</span><span><b>Recebido:</b> ${safe(date(o.received_at)||'—')}</span>${treatmentSummary(o.patient_id)}<span><b>Tratamento vinculado:</b> ${safe(linkedTreatment(o)?treatmentLabel(linkedTreatment(o)):'Não vinculado')}</span><span><b>Custo laboratório:</b> ${safe(money(linkFor(o.id).cost))}</span></div>
  ${obs?`<p class="nxlab-note"><b>Em observação:</b> ${safe(o.observation_reason||'Motivo não informado')}</p>`:''}
  ${o.instructions?`<p><b>Instruções:</b> ${safe(o.instructions)}</p>`:''}
  <div class="nxlab-actions"><button class="ghost sm" data-lab="details" data-id="${safe(o.id)}">Histórico e comentários (${events.length+comments.length})</button>${canEdit()?`<button class="ghost sm" data-lab="edit" data-id="${safe(o.id)}">Editar</button><button class="sm" data-lab="advance" data-id="${safe(o.id)}">Avançar etapa →</button>`:''}</div>
@@ -136,7 +136,7 @@ async function persist(o){
 }
 function readForm(){const v=id=>($id(id)?.value||'').trim();return {patient_id:v('nxlab-patient'),laboratory:v('nxlab-lab'),work_description:v('nxlab-work'),shade:v('nxlab-shade'),teeth:v('nxlab-teeth'),sent_at:v('nxlab-sent')||null,due_at:v('nxlab-due')||null,received_at:v('nxlab-received')||null,stage:v('nxlab-stage'),status:v('nxlab-status'),observation_reason:v('nxlab-observation'),instructions:v('nxlab-instructions')};}
 function exportCsv(){
- const fields=['Paciente','Laboratório','Trabalho','Dentes','Cor','Etapa','Situação','Envio','Previsão','Recebimento','Observação','Tratamentos cadastrados','Tratamentos concluídos','Custos cadastrados','Tratamento vinculado (local)','Custo laboratório (local)'];
+ const fields=['Paciente','Laboratório','Trabalho','Dentes','Cor','Etapa','Situação','Envio','Previsão','Recebimento','Observação','Tratamentos cadastrados','Tratamentos concluídos','Custos cadastrados','Tratamento vinculado','Custo laboratório'];
  const today=isoToday();
  const active=o=>!['Entregue','Cancelado'].includes(o.status);
  const filtered=orders.filter(o=>filter==='todos'||(filter==='observacao'?o.status==='Em observação':filter==='atrasados'?active(o)&&o.due_at&&date(o.due_at)<today:filter==='proximos'?active(o)&&o.due_at&&date(o.due_at)>=today&&date(o.due_at)<=new Date(Date.now()+7*86400000).toLocaleDateString('en-CA'):filter==='sem-prazo'?active(o)&&!o.due_at:active(o))).filter(o=>!search||[patientName(o.patient_id),o.laboratory,o.work_description,o.teeth].some(t=>String(t||'').toLowerCase().includes(search.toLowerCase())));
@@ -163,8 +163,9 @@ async function execute(action,id){
   if(f.status==='Em observação'&&!f.observation_reason){alert('Informe o motivo da observação.');return;}
   const original=editing==='new'?null:orders.find(x=>x.id===editing);
   const invalid=validateOrder(f,original);if(invalid){if(invalid!=='cancel')alert(invalid);return;}
-  const pendingLink={tid:$id('nxlab-treatment')?.value||'',cost:$id('nxlab-cost')?.value||0};
-  o={...(original||{}),...f,id:original?.id||crypto.randomUUID(),history:[...(original?.history||[]),{at:stamp(),text:original?'Dados e etapa atualizados':'Trabalho cadastrado'}],comments:original?.comments||[],updated_at:stamp(),_new:!original};
+  const pendingLink={tid:$id('nxlab-treatment')?.value||'',cost:Number($id('nxlab-cost')?.value||0)};
+  if(!Number.isFinite(pendingLink.cost)||pendingLink.cost<0){alert('Informe um custo laboratorial válido.');return;}
+  o={...(original||{}),...f,...(cloud()?{treatment_id:pendingLink.tid||null,laboratory_cost:pendingLink.cost}:{}),id:original?.id||crypto.randomUUID(),history:[...(original?.history||[]),{at:stamp(),text:original?'Dados e etapa atualizados':'Trabalho cadastrado'}],comments:original?.comments||[],updated_at:stamp(),_new:!original};
  }else if(action==='advance'){
   const ix=STAGES.indexOf(old.stage),next=STAGES[Math.min(ix+1,STAGES.length-1)];
   if(ix===STAGES.length-1){alert('O trabalho já está na última etapa.');return;}
@@ -175,7 +176,7 @@ async function execute(action,id){
   o={...old,comments:[...(old.comments||[]),{at:stamp(),text:txt.slice(0,2000)}],updated_at:stamp()};
  }else return;
  busy=true;
- try{await persist(o);if(action==='save')saveLink(o.id,pendingLink.tid,pendingLink.cost);if(action==='save')editing=null;renderLab();if(typeof toast==='function')toast('Trabalho de laboratório atualizado.');}
+ try{await persist(o);if(action==='save'&&!cloud())saveLink(o.id,pendingLink.tid,pendingLink.cost);if(action==='save')editing=null;renderLab();if(typeof toast==='function')toast('Trabalho de laboratório atualizado.');}
  catch(e){alert('Não foi possível salvar: '+(e.message||'Erro de conexão'));}
  finally{busy=false;}
 }
