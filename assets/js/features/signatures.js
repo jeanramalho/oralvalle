@@ -33,6 +33,7 @@
     <p class="note">Cadastre a pendência de assinatura por paciente. Este registro <strong>não é um PDF assinado</strong> e não comprova assinatura ICP-Brasil. A assinatura digital permanece em testes.</p>
     <div class="row" style="flex-wrap:wrap"><div><label>Paciente</label><select id="ns-reg-patient"><option value="">Selecione</option>${patients.map(p=>`<option value="${e(p.id)}">${e(p.nome)}</option>`).join('')}</select></div><div><label>Tipo</label><select id="ns-reg-type"><option>Receita</option><option>Atestado</option><option>Relatório</option><option>Termo de consentimento</option><option>Outro</option></select></div></div>
     <label>Título</label><input id="ns-reg-title" maxlength="180" placeholder="Ex.: Receita pós-operatória">
+    <label>Conteúdo do documento (rascunho, sem assinatura)</label><textarea id="ns-reg-body" maxlength="12000" rows="7" placeholder="Digite o texto da receita, atestado ou relatório. Este é apenas um rascunho, ainda não assinado."></textarea>
     <label>Observações internas (sem dados sensíveis)</label><textarea id="ns-reg-note" maxlength="500" rows="2" placeholder="Informações administrativas sobre a pendência"></textarea>
     <button type="button" id="ns-reg-save" style="background:#f97316">Registrar pendência</button>
     <button type="button" class="ghost" id="ns-reg-refresh">Atualizar histórico</button>
@@ -104,7 +105,7 @@
   const id=activeClinic();if(!registryAvailable())return;
   if(registryBusy||(!force&&registryClinic===id))return;
   registryBusy=true;registryClinic=id;registryError='';
-  try{const rows=await OralCloud.request('/rest/v1/nexodent_patient_document_register?select=id,patient_id,document_type,title,note,status,created_at&clinic_id=eq.'+encodeURIComponent(id)+'&order=created_at.desc&limit=200');
+  try{const rows=await OralCloud.request('/rest/v1/nexodent_patient_document_register?select=id,patient_id,document_type,title,note,body,status,created_at&clinic_id=eq.'+encodeURIComponent(id)+'&order=created_at.desc&limit=200');
    if(activeClinic()!==id)return;registryRows=Array.isArray(rows)?rows:[];
   }catch(err){registryRows=[];registryError=err.message||'Falha ao consultar registros';}
   finally{registryBusy=false;registryRender();}
@@ -127,14 +128,14 @@
   if(!registryAvailable()){out.textContent='Clínica não conectada.';return;}
   if(!(db.p||[]).some(x=>String(x.id)===patient)||!title){out.textContent='Selecione o paciente e informe o título.';return;}
   btn.disabled=true;out.textContent='Salvando pendência...';
-  try{await OralCloud.request('/rest/v1/nexodent_patient_document_register',{method:'POST',body:{clinic_id:id,patient_id:patient,document_type:kind,title,note:note||null}});
-   document.getElementById('ns-reg-title').value='';document.getElementById('ns-reg-note').value='';registryClinic=null;await registryLoad(true);
+  try{await OralCloud.request('/rest/v1/nexodent_patient_document_register',{method:'POST',body:{clinic_id:id,patient_id:patient,document_type:kind,title,note:note||null,body:document.getElementById('ns-reg-body')?.value.trim()||null}});
+   document.getElementById('ns-reg-title').value='';document.getElementById('ns-reg-note').value='';document.getElementById('ns-reg-body').value='';registryClinic=null;await registryLoad(true);
   }catch(err){out.textContent='Erro ao salvar: '+(err.message||'Falha de conexão');}finally{btn.disabled=false;}
  }
  function viewRegistry(id){
   const row=registryRows.find(r=>String(r.id)===String(id));if(!row)return;
   const patient=(db.p||[]).find(p=>String(p.id)===String(row.patient_id));
-  const html=`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Ficha de pendência - ${e(row.title)}</title><style>body{font:15px Arial,sans-serif;max-width:760px;margin:40px auto;color:#222;line-height:1.6}h1{color:#d65b0a}dt{font-weight:bold;margin-top:14px}dd{margin-left:0;white-space:pre-wrap}.alert{padding:12px;border:1px solid #f97316;background:#fff7ed}@media print{body{margin:18mm}}</style></head><body><h1>Ficha de controle de documento</h1><p class="alert"><b>PENDENTE DE ASSINATURA</b> — Esta ficha é administrativa, não contém o documento clínico nem assinatura digital.</p><dl><dt>Paciente</dt><dd>${e(patient?.nome||'Paciente não carregado')}</dd><dt>Tipo</dt><dd>${e(row.document_type)}</dd><dt>Título</dt><dd>${e(row.title)}</dd><dt>Data do registro</dt><dd>${e(new Date(row.created_at).toLocaleString('pt-BR'))}</dd><dt>Observações administrativas</dt><dd>${e(row.note||'Nenhuma')}</dd></dl><p>Identificador do registro: ${e(row.id)}</p></body></html>`;
+  const html=`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Ficha de pendência - ${e(row.title)}</title><style>body{font:15px Arial,sans-serif;max-width:760px;margin:40px auto;color:#222;line-height:1.6}h1{color:#d65b0a}dt{font-weight:bold;margin-top:14px}dd{margin-left:0;white-space:pre-wrap}.alert{padding:12px;border:1px solid #f97316;background:#fff7ed}@media print{body{margin:18mm}}</style></head><body><h1>Ficha de controle de documento</h1><p class="alert"><b>RASCUNHO — NÃO ASSINADO</b> — Este documento não possui assinatura digital nem validade de documento clínico assinado.</p><dl><dt>Paciente</dt><dd>${e(patient?.nome||'Paciente não carregado')}</dd><dt>Tipo</dt><dd>${e(row.document_type)}</dd><dt>Título</dt><dd>${e(row.title)}</dd><dt>Data do registro</dt><dd>${e(new Date(row.created_at).toLocaleString('pt-BR'))}</dd><dt>Conteúdo do documento (rascunho não assinado)</dt><dd>${e(row.body||'Não informado')}</dd><dt>Observações administrativas</dt><dd>${e(row.note||'Nenhuma')}</dd></dl><p>Identificador do registro: ${e(row.id)}</p></body></html>`;
   const blob=new Blob([html],{type:'text/html;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='nexodent-ficha-pendencia.html';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
  }
  document.addEventListener('input',ev=>{if(ev.target?.id==='ns-reg-search')registryRender()});
