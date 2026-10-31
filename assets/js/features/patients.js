@@ -215,23 +215,44 @@ function trChips(){
 }
 
 
-/* NexoDent 211 — consulta sob demanda dos rascunhos vinculados ao paciente. */
+/* NexoDent 212 — consulta, filtro e impressão de rascunhos por paciente. */
 (function(){
  'use strict';
  const safe=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ let state=null;
+ const clinicNow=()=>String(window.OralCloud?.clinicId||'');
+ const date=x=>{const d=new Date(x);return Number.isNaN(d.getTime())?'Data não informada':d.toLocaleDateString('pt-BR');};
+ function render(){
+  const box=document.getElementById('nexo-patient-doc-results');if(!box||!state)return;
+  const button=document.getElementById('nexo-patient-doc-load');
+  if(!button||button.dataset.patientId!==state.patient||clinicNow()!==state.clinic){state=null;box.textContent='Paciente ou clínica alterados. Consulte novamente.';return;}
+  const term=(document.getElementById('nexo-doc-filter')?.value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  const rows=state.rows.filter(r=>[r.title,r.document_type,r.body].join(' ').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().includes(term));
+  const list=document.getElementById('nexo-doc-list');if(!list)return;
+  list.innerHTML=rows.length?rows.map(r=>'<details style="border-top:1px solid var(--line);padding:9px 0"><summary><strong>'+safe(r.document_type||'Documento')+'</strong> · '+safe(r.title||'Sem título')+' <small class="note">('+safe(date(r.created_at))+')</small></summary><p class="note">RASCUNHO NÃO ASSINADO</p><div style="white-space:pre-wrap;overflow-wrap:anywhere">'+safe(r.body||'Sem conteúdo registrado.')+'</div>'+(r.note?'<p class="note">Observações: '+safe(r.note)+'</p>':'')+'<button type="button" class="ghost sm" data-nexo-doc-print="'+safe(r.id)+'" style="margin-top:10px">Imprimir / Salvar PDF (rascunho)</button></details>').join(''):'<p class="note">Nenhum documento encontrado.</p>';
+ }
+ document.addEventListener('input',e=>{if(e.target?.id==='nexo-doc-filter')render();});
  document.addEventListener('click',async event=>{
-  const button=event.target.closest('#nexo-patient-doc-load');if(!button)return;
-  const target=document.getElementById('nexo-patient-doc-results');if(!target||button.disabled)return;
-  const patientId=String(button.dataset.patientId||'');
-  const clinic=String(window.OralCloud?.clinicId||'');
-  if(!patientId||!clinic||typeof window.OralCloud?.request!=='function'){target.textContent='Clínica não carregada. Atualize a página.';return;}
-  button.disabled=true;target.textContent='Carregando documentos...';
+  const print=event.target.closest('[data-nexo-doc-print]');
+  if(print){
+   if(!state||clinicNow()!==state.clinic||document.getElementById('nexo-patient-doc-load')?.dataset.patientId!==state.patient)return;
+   const r=state.rows.find(x=>String(x.id)===print.dataset.nexoDocPrint);if(!r)return;
+   const html='<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Rascunho — '+safe(r.title)+'</title><style>@page{size:A4;margin:20mm}body{font:14px Arial,sans-serif;line-height:1.6;color:#222}header{border-bottom:2px solid #f97316;padding-bottom:12px}h1{font-size:20px}.alert{background:#fff4e8;border:1px solid #f97316;padding:12px;margin:18px 0}.body{white-space:pre-wrap;overflow-wrap:anywhere;min-height:180px}footer{margin-top:50px;border-top:1px solid #ddd;font-size:11px;padding-top:12px}@media print{button{display:none}}</style></head><body><header><h1>'+safe(r.document_type||'Documento')+'</h1><p>'+safe(r.title||'Sem título')+'</p></header><p class="alert"><strong>RASCUNHO — NÃO ASSINADO.</strong> Não possui assinatura digital ICP-Brasil e não substitui documento clínico assinado.</p><p><strong>Data do registro:</strong> '+safe(date(r.created_at))+'</p><div class="body">'+safe(r.body||'Sem conteúdo registrado.')+'</div><footer>Identificador: '+safe(r.id)+' · Registro vinculado ao prontuário · Não assinado</footer><button onclick="window.print()">Imprimir / Salvar PDF</button></body></html>';
+   const blob=new Blob([html],{type:'text/html;charset=utf-8'}),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='nexodent-rascunho-'+String(r.id).replace(/[^a-z0-9-]/gi,'')+'.html';document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);return;
+  }
+  const button=event.target.closest('#nexo-patient-doc-load');if(!button||button.disabled)return;
+  const target=document.getElementById('nexo-patient-doc-results');if(!target)return;
+  const patient=String(button.dataset.patientId||''),clinic=clinicNow();
+  if(!patient||!clinic||typeof window.OralCloud?.request!=='function'){target.textContent='Clínica não carregada. Atualize a página.';return;}
+  button.disabled=true;target.textContent='Carregando documentos...';state=null;
   try{
-   const query='/rest/v1/nexodent_patient_document_register?select=id,document_type,title,body,note,status,created_at&clinic_id=eq.'+encodeURIComponent(clinic)+'&patient_id=eq.'+encodeURIComponent(patientId)+'&order=created_at.desc&limit=100';
+   const query='/rest/v1/nexodent_patient_document_register?select=id,document_type,title,body,note,status,created_at&clinic_id=eq.'+encodeURIComponent(clinic)+'&patient_id=eq.'+encodeURIComponent(patient)+'&order=created_at.desc&limit=100';
    const rows=await OralCloud.request(query);
-   if(!target.isConnected||String(window.OralCloud?.clinicId||'')!==clinic||button.dataset.patientId!==patientId)return;
+   if(!target.isConnected||clinicNow()!==clinic||button.dataset.patientId!==patient)return;
    if(!Array.isArray(rows))throw new Error('Resposta inesperada do servidor');
-   target.innerHTML=rows.length?rows.map(row=>'<details style="border-top:1px solid var(--line);padding:9px 0"><summary><strong>'+safe(row.document_type||'Documento')+'</strong> · '+safe(row.title||'Sem título')+' <small class="note">('+safe(row.created_at?new Date(row.created_at).toLocaleDateString('pt-BR'):'sem data')+')</small></summary><p class="note">'+safe(row.status||'Pendente de assinatura')+' — RASCUNHO NÃO ASSINADO</p><div style="white-space:pre-wrap;overflow-wrap:anywhere">'+safe(row.body||'Sem conteúdo registrado.')+'</div>'+(row.note?'<p class="note">Observações: '+safe(row.note)+'</p>':'')+'</details>').join(''):'<p class="note">Nenhum documento cadastrado para este paciente.</p>';
+   state={rows,clinic,patient};
+   target.innerHTML='<label for="nexo-doc-filter">Pesquisar documentos</label><input id="nexo-doc-filter" type="search" placeholder="Tipo, título ou conteúdo" autocomplete="off"><p class="note">Mostrando até 100 documentos mais recentes. Todos são rascunhos não assinados.</p><div id="nexo-doc-list"></div>';
+   render();
   }catch(err){if(target.isConnected)target.textContent='Não foi possível carregar os documentos: '+(err?.message||'erro desconhecido');}
   finally{if(button.isConnected)button.disabled=false;}
  });
