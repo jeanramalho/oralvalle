@@ -171,8 +171,12 @@
    for(const x of lab){
     const ref='LABPAY-'+String(x.id),matches=generalLabRefs.get(ref)||[];
     if(!matches.length)continue;
-    if(matches.length===1&&matches[0].paid_at&&Math.abs(n(matches[0].amount)-n(x.amount))<0.005){labLinked.add(String(x.id));}
-    else labLinkWarnings.push(ref+' (valor, pagamento ou vínculo divergente)');
+    if(matches.length===1&&matches[0].paid_at&&Math.abs(n(matches[0].amount)-n(x.amount))<0.005){
+     // Caixa por data: só substituir a parcela por despesa geral se ambas
+     // estiverem no MESMO período de apuração. Datas diferentes exigem revisão.
+     if(dateOK(matches[0].paid_at,a,b))labLinked.add(String(x.id));
+     else labLinkWarnings.push(ref+' (despesa geral quitada fora do período da parcela; confira datas)');
+    }else labLinkWarnings.push(ref+' (valor, pagamento ou vínculo divergente)');
    }
    const allLabIds=new Set((ready?labEvents:[]).map(x=>'LABPAY-'+String(x.id)));
    const labOutsideLinks=[...generalLabRefs.keys()].filter(ref=>!allLabIds.has(ref));
@@ -189,6 +193,8 @@
     if(!expense)manualWarnings.push('LABPAY-'+x.id+' (despesa manual não localizada; confira a referência)');
     else if(!expense.paid_at||Math.abs(n(expense.amount)-n(x.amount))>=0.005)
      manualWarnings.push('LABPAY-'+x.id+' (despesa manual não paga ou valor divergente)');
+    else if(!dateOK(expense.paid_at,a,b))
+     manualWarnings.push('LABPAY-'+x.id+' (despesa manual quitada fora do período da parcela; confira datas)');
    }
    const manual=lab.filter(x=>labMatches[String(x.id)]?.status==='manual'&&!posted.has(String(x.id)));
    const conflict=lab.filter(x=>labMatches[String(x.id)]?.status==='manual'&&posted.has(String(x.id)));
@@ -212,8 +218,10 @@
    for(const x of commissionPayments){
     const matches=generalByRef.get(x.ref)||[];
     if(!matches.length)continue;
-    if(matches.length===1&&matches[0].paid_at&&Math.abs(n(matches[0].amount)-x.out)<0.005){linked.add(x.ref);}
-    else linkWarnings.push(x.ref+' (valor, pagamento ou vínculo divergente)');
+    if(matches.length===1&&matches[0].paid_at&&Math.abs(n(matches[0].amount)-x.out)<0.005){
+     if(dateOK(matches[0].paid_at,a,b))linked.add(x.ref);
+     else linkWarnings.push(x.ref+' (despesa geral quitada fora do período do repasse; confira datas)');
+    }else linkWarnings.push(x.ref+' (valor, pagamento ou vínculo divergente)');
    }
    const unmatchedRepasses=commissionPayments.filter(x=>!linked.has(x.ref));
    const allCommissionRefs=new Set((db.cp||[]).map(x=>'CP-'+String(x.id||'')));
