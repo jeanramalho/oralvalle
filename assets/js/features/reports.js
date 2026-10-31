@@ -158,10 +158,27 @@
    const general=exp?.ready?exp.rows.filter(x=>x.paid_at&&dateOK(x.paid_at,a,b)).map(x=>({date:x.paid_at,kind:'Despesa geral paga',ref:String(x.id),desc:(x.category||'Outros')+' — '+(x.description||''),in:0,out:n(x.amount)})):[];
    const posted=new Set((ready?labPosted:[]).map(x=>String(x.event_id)));
    const seen=new Set(),lab=ready?labEvents.filter(x=>x.kind!=='opening'&&dateOK(x.paid_at,a,b)&&n(x.amount)>0).filter(x=>{const k=String(x.id);if(seen.has(k))return false;seen.add(k);return true;}):[];
-   const auxiliary=lab.filter(x=>posted.has(String(x.id))&&labMatches[String(x.id)]?.status!=='manual').map(x=>({date:x.paid_at,kind:'Laboratório · livro auxiliar',ref:String(x.id),desc:'LAB-'+x.source_order_id,in:0,out:n(x.amount)}));
+   // 271: vinculação explícita LABPAY-ID entre despesa geral e parcela laboratorial.
+   // Somente vínculos pagos e com valor idêntico eliminam a duplicação.
+   const generalLabRefs=new Map();
+   for(const x of (exp?.ready?exp.rows:[])){
+    const ref=String(x.external_reference||'').trim();
+    if(!ref.startsWith('LABPAY-'))continue;
+    if(!generalLabRefs.has(ref))generalLabRefs.set(ref,[]);
+    generalLabRefs.get(ref).push(x);
+   }
+   const labLinked=new Set(),labLinkWarnings=[];
+   for(const x of lab){
+    const ref='LABPAY-'+String(x.id),matches=generalLabRefs.get(ref)||[];
+    if(!matches.length)continue;
+    if(matches.length===1&&matches[0].paid_at&&Math.abs(n(matches[0].amount)-n(x.amount))<0.005){labLinked.add(String(x.id));}
+    else labLinkWarnings.push(ref+' (valor, pagamento ou vínculo divergente)');
+   }
+   const labOutsideLinks=[...generalLabRefs.keys()].filter(ref=>!lab.some(x=>'LABPAY-'+String(x.id)===ref));
+   const auxiliary=lab.filter(x=>posted.has(String(x.id))&&labMatches[String(x.id)]?.status!=='manual'&&!labLinked.has(String(x.id))).map(x=>({date:x.paid_at,kind:'Laboratório · livro auxiliar',ref:String(x.id),desc:'LAB-'+x.source_order_id,in:0,out:n(x.amount)}));
    const manual=lab.filter(x=>labMatches[String(x.id)]?.status==='manual'&&!posted.has(String(x.id)));
    const conflict=lab.filter(x=>labMatches[String(x.id)]?.status==='manual'&&posted.has(String(x.id)));
-   const pending=lab.filter(x=>labMatches[String(x.id)]?.status!=='manual'&&!posted.has(String(x.id)));
+   const pending=lab.filter(x=>labMatches[String(x.id)]?.status!=='manual'&&!posted.has(String(x.id))&&!labLinked.has(String(x.id)));
    // 269: repasses efetivamente registrados, não comissões apenas geradas.
    // Não criar lançamentos: a fonte permanece db.cp, com data do pagamento.
    const commissionPayments=(db.cp||[]).filter(x=>dateOK(x.data,a,b)&&n(x.valor)>0).map(x=>({
@@ -192,7 +209,7 @@
    const entries=income.reduce((t,x)=>t+x.in,0),other=general.reduce((t,x)=>t+x.out,0),labor=auxiliary.reduce((t,x)=>t+x.out,0),repasses=unmatchedRepasses.reduce((t,x)=>t+x.out,0);
    const all=[...income,...general,...auxiliary,...unmatchedRepasses].sort((x,y)=>String(x.date).localeCompare(String(y.date))||x.kind.localeCompare(y.kind));
    return {heads:['Data','Origem','Referência','Descrição','Entrada','Saída'],items:all.map(x=>[x.date,x.kind,x.ref,x.desc,x.in?cash(x.in):'—',x.out?cash(x.out):'—']),
-    summary:ready?`Entradas recebidas: ${cash(entries)} · Despesas gerais pagas: ${cash(other)} · Laboratório no livro auxiliar (sem conciliação manual): ${cash(labor)} · Repasses pagos sem vínculo confirmado: ${cash(repasses)} · Repasses vinculados a despesas gerais: ${linked.size} · Resultado operacional estimado: ${cash(entries-other-labor-repasses)}. ${linkWarnings.length?'VÍNCULOS DIVERGENTES: '+linkWarnings.join(', ')+'. ':''}${outsidePeriodLinks.length?'ATENÇÃO: '+outsidePeriodLinks.length+' despesa(s) com vínculo CP- não tiveram repasse correspondente no período; confira datas e referências. ':''}${potentialOverlap.length?'ATENÇÃO: '+potentialOverlap.length+' despesa(s) geral(is) podem já incluir repasses; confira antes de usar o resultado. ':''} Laboratório conciliado manualmente: ${manual.length} parcela(s) (${cash(manual.reduce((t,x)=>t+n(x.amount),0))}) — NÃO somadas novamente. Pendentes: ${pending.length} (${cash(pending.reduce((t,x)=>t+n(x.amount),0))}); conflitos: ${conflict.length} (${cash(conflict.reduce((t,x)=>t+n(x.amount),0))}) — excluídos. ATENÇÃO: conciliação manual é declaratória, não confirma a existência da despesa geral; confira referências. Comissões apenas geradas não entram no caixa; somente pagamentos de repasses registrados. Taxas e saldo bancário não são apurados. Nenhuma despesa é criada.`:'Clique em “Carregar dados financeiros” para consultar despesas gerais e pagamentos laboratoriais. Resultado indisponível até concluir o carregamento; nenhuma despesa será criada.'};
+    summary:ready?`Entradas recebidas: ${cash(entries)} · Despesas gerais pagas: ${cash(other)} · Laboratório no livro auxiliar (sem conciliação manual): ${cash(labor)} · Repasses pagos sem vínculo confirmado: ${cash(repasses)} · Repasses vinculados a despesas gerais: ${linked.size} · Parcelas laboratoriais vinculadas a despesas gerais: ${labLinked.size} · Resultado operacional estimado: ${cash(entries-other-labor-repasses)}. ${labLinkWarnings.length?'VÍNCULOS LABORATORIAIS DIVERGENTES: '+labLinkWarnings.join(', ')+'. ':''}${labOutsideLinks.length?'ATENÇÃO: '+labOutsideLinks.length+' referência(s) LABPAY- sem parcela correspondente no período; confira datas. ':''}${linkWarnings.length?'VÍNCULOS DIVERGENTES: '+linkWarnings.join(', ')+'. ':''}${outsidePeriodLinks.length?'ATENÇÃO: '+outsidePeriodLinks.length+' despesa(s) com vínculo CP- não tiveram repasse correspondente no período; confira datas e referências. ':''}${potentialOverlap.length?'ATENÇÃO: '+potentialOverlap.length+' despesa(s) geral(is) podem já incluir repasses; confira antes de usar o resultado. ':''} Laboratório conciliado manualmente: ${manual.length} parcela(s) (${cash(manual.reduce((t,x)=>t+n(x.amount),0))}) — NÃO somadas novamente. Pendentes: ${pending.length} (${cash(pending.reduce((t,x)=>t+n(x.amount),0))}); conflitos: ${conflict.length} (${cash(conflict.reduce((t,x)=>t+n(x.amount),0))}) — excluídos. ATENÇÃO: conciliação manual é declaratória, não confirma a existência da despesa geral; confira referências. Comissões apenas geradas não entram no caixa; somente pagamentos de repasses registrados. Taxas e saldo bancário não são apurados. Nenhuma despesa é criada.`:'Clique em “Carregar dados financeiros” para consultar despesas gerais e pagamentos laboratoriais. Resultado indisponível até concluir o carregamento; nenhuma despesa será criada.'};
   }
   if(type==='cashflow'){
    const id=window.OralCloud?.clinicId;
