@@ -52,6 +52,7 @@ function ovCareRow(p,kind,stages){
  return `<details class="ret-it ov-care-collapse" style="display:block"><summary style="cursor:pointer;padding:5px 0"><strong>${esc(p.nome)}</strong> <small style="display:inline;margin-left:12px">${esc(stage)} · Último procedimento: ${last?esc(fd(last)):'Não registrado'}</small><span class="ov-care-arrow" aria-hidden="true">›</span></summary><div class="ret-i" style="margin-top:12px;min-width:0"><small>Último procedimento: ${last?esc(fd(last)):'Não registrado'}</small>
  <label>Etapa atual<select data-${kind}-etapa="${esc(p.id)}">${stages.map(t=>`<option value="${esc(t)}"${stage===t?' selected':''}>${esc(t)}</option>`).join('')}</select></label>
  ${kind==='prot'?`<label>Cor dos dentes<input data-prot-cor="${esc(p.id)}" maxlength="60" value="${esc(p.protCor||'')}" placeholder="Ex.: A2, B1"></label>`:''}
+ <label style="display:block;width:100%;max-width:720px">Descrição breve do tratamento<textarea data-${kind}-resumo="${esc(p.id)}" rows="3" maxlength="1000" style="display:block;width:100%;min-height:78px;resize:vertical" placeholder="Ex.: Prótese total superior em confecção; implantes nas regiões 36 e 46, aguardando osseointegração.">${esc(kind==='impl'?(p.implResumo||''):(p.protResumo||''))}</textarea><small>Resumo individual do paciente. Salvo ao sair do campo.</small></label>
  <label>Data do procedimento<input type="date" data-${kind}-data="${esc(p.id)}" value="${esc(p[dateKey]||'')}"></label>
  <small>${idx>=stages.length-1?'Última etapa — finalize quando houver alta.':'Próxima etapa: '+esc(stages[Math.min(idx+1,stages.length-1)])}</small></div>
  <div class="ret-act"><button class="sm" data-act="carebaixa" data-id="${esc(p.id)}" data-kind="${kind}">Dar baixa e evoluir</button><button class="ghost sm" data-act="carealta" data-id="${esc(p.id)}" data-kind="${kind}">Finalizar tratamento</button><button class="ghost sm" data-act="open" data-id="${esc(p.id)}">Ver ficha</button></div></details>`;
@@ -151,7 +152,7 @@ function lembretesHtml(){
   </div>`}`;
 }
 function home(){
-  const n=view.h||'ag',fn={ortho:orthoHtml,impl:implHtml,prot:protHtml,inicio:agHtml,pac:homePac,pf:pfListHtml,ag:agHtml,lem:lembretesHtml,vd:vdHtml,dt:dtHtml,cm:comHtml,pr:prHtml,mt:mtHtml,hc:hcHtml,bk:bkHtml,cfg:cfgHtml,wa:nexoWaSettingsHtml,sigdoc:nexoSignHtml,conta:pmContaHtml,reports:nexoReportsHtml,lab:window.nexoLabHtml}[n]||homePac;
+  const n=view.h||'ag',fn={ortho:orthoHtml,impl:implHtml,prot:protHtml,inicio:agHtml,pac:homePac,pf:pfListHtml,ag:agHtml,lem:lembretesHtml,vd:vdHtml,dt:dtHtml,cm:comHtml,pr:prHtml,mt:mtHtml,hc:hcHtml,bk:bkHtml,cfg:cfgHtml,wa:nexoWaSettingsHtml,sigdoc:nexoSignHtml,conta:pmContaHtml,reports:nexoReportsHtml}[n]||homePac;
   const content=fn();
   return `<div class="ov-content-inner">${content}</div>`;
 }

@@ -106,6 +106,16 @@ document.addEventListener('change',e=>{
   if(t.dataset&&t.dataset.implData){const p=db.p.find(x=>String(x.id)===String(t.dataset.implData));if(p&&p.implAtivo){p.implUltimaData=t.value;save();toast('Data salva')}return}
   if(t.dataset&&t.dataset.prot==='1'&&cur()){cur().protAtivo=t.checked;save();toast(t.checked?'Acompanhamento de prótese ativado':'Acompanhamento de prótese desativado');return}
   if(t.dataset&&t.dataset.protEtapa){const p=db.p.find(x=>x.id===t.dataset.protEtapa);if(p&&p.protAtivo){p.protEtapa=t.value;save();render();toast('Etapa selecionada; use Dar baixa e evoluir para registrar o procedimento')}return}
+  if(t.dataset&&(t.dataset.implResumo||t.dataset.protResumo)){
+    const kind=t.dataset.implResumo?'impl':'prot';
+    const id=kind==='impl'?t.dataset.implResumo:t.dataset.protResumo;
+    const p=(db.p||[]).find(x=>String(x.id)===String(id));
+    if(p&&(kind==='impl'?p.implAtivo:p.protAtivo)){
+      p[kind==='impl'?'implResumo':'protResumo']=String(t.value||'').trim().slice(0,1000);
+      save();toast('Descrição do tratamento salva');
+    }
+    return;
+  }
   if(t.dataset&&t.dataset.protCor){const p=db.p.find(x=>x.id===t.dataset.protCor);if(p&&p.protAtivo){p.protCor=t.value.trim().slice(0,60);save();toast('Cor registrada')}return}
   if(t.dataset&&t.dataset.protData){const p=db.p.find(x=>x.id===t.dataset.protData);if(p&&p.protAtivo){p.protUltimaData=t.value;save();toast('Data atualizada')}return}
   if(t.dataset&&t.dataset.impl==='1'&&cur()){cur().implAtivo=t.checked;save();toast(t.checked?'Acompanhamento de implantodontia ativado':'Acompanhamento de implantodontia desativado');return}
