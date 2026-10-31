@@ -36,6 +36,8 @@
     <label>Observações internas (sem dados sensíveis)</label><textarea id="ns-reg-note" maxlength="500" rows="2" placeholder="Informações administrativas sobre a pendência"></textarea>
     <button type="button" id="ns-reg-save" style="background:#f97316">Registrar pendência</button>
     <button type="button" class="ghost" id="ns-reg-refresh">Atualizar histórico</button>
+    <p class="note">Filtre por paciente acima ou pesquise pelo título e tipo abaixo.</p>
+    <input id="ns-reg-search" type="search" placeholder="Pesquisar documentos cadastrados" autocomplete="off">
     <p id="ns-reg-status" class="note" role="status">${registryAvailable()?'Carregando histórico...':'Disponível somente com clínica conectada ao Supabase.'}</p>
     <div id="ns-reg-list"></div>
    </section>
@@ -112,11 +114,12 @@
   if(!registryAvailable()){status.textContent='Selecione uma clínica conectada ao Supabase.';el.replaceChildren();return;}
   status.textContent=registryError?'Erro: '+registryError:registryRows.length+' registro(s) recentes — pendentes de assinatura.';
   const chosen=document.getElementById('ns-reg-patient')?.value||'';
-  const rows=registryRows.filter(x=>!chosen||String(x.patient_id)===chosen);
+  const query=(document.getElementById('ns-reg-search')?.value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+  const rows=registryRows.filter(x=>{const p=(db.p||[]).find(y=>String(y.id)===String(x.patient_id));const text=[p?.nome,x.title,x.document_type].join(' ').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();return (!chosen||String(x.patient_id)===chosen)&&(!query||text.includes(query));});
   el.replaceChildren();
   for(const row of rows){const p=(db.p||[]).find(x=>String(x.id)===String(row.patient_id));const div=document.createElement('div');div.style.cssText='border-top:1px solid #eee;padding:10px 0';
    const title=document.createElement('strong');title.textContent=(p?.nome||'Paciente não carregado')+' — '+row.document_type+' — '+row.title;
-   const sub=document.createElement('div');sub.className='note';sub.textContent='Pendente de assinatura · '+new Date(row.created_at).toLocaleString('pt-BR')+(row.note?' · '+row.note:'');div.append(title,sub);el.appendChild(div);}
+   const sub=document.createElement('div');sub.className='note';sub.textContent='Pendente de assinatura · '+new Date(row.created_at).toLocaleString('pt-BR')+(row.note?' · '+row.note:'');const action=document.createElement('button');action.type='button';action.className='ghost sm';action.textContent='Abrir ficha da pendência';action.dataset.nsRegView=row.id;action.style.marginTop='6px';div.append(title,sub,action);el.appendChild(div);}
  }
  async function registrySave(){
   const btn=document.getElementById('ns-reg-save'),out=document.getElementById('ns-reg-status');if(!btn||!out)return;
@@ -128,10 +131,18 @@
    document.getElementById('ns-reg-title').value='';document.getElementById('ns-reg-note').value='';registryClinic=null;await registryLoad(true);
   }catch(err){out.textContent='Erro ao salvar: '+(err.message||'Falha de conexão');}finally{btn.disabled=false;}
  }
+ function viewRegistry(id){
+  const row=registryRows.find(r=>String(r.id)===String(id));if(!row)return;
+  const patient=(db.p||[]).find(p=>String(p.id)===String(row.patient_id));
+  const html=`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Ficha de pendência - ${e(row.title)}</title><style>body{font:15px Arial,sans-serif;max-width:760px;margin:40px auto;color:#222;line-height:1.6}h1{color:#d65b0a}dt{font-weight:bold;margin-top:14px}dd{margin-left:0;white-space:pre-wrap}.alert{padding:12px;border:1px solid #f97316;background:#fff7ed}@media print{body{margin:18mm}}</style></head><body><h1>Ficha de controle de documento</h1><p class="alert"><b>PENDENTE DE ASSINATURA</b> — Esta ficha é administrativa, não contém o documento clínico nem assinatura digital.</p><dl><dt>Paciente</dt><dd>${e(patient?.nome||'Paciente não carregado')}</dd><dt>Tipo</dt><dd>${e(row.document_type)}</dd><dt>Título</dt><dd>${e(row.title)}</dd><dt>Data do registro</dt><dd>${e(new Date(row.created_at).toLocaleString('pt-BR'))}</dd><dt>Observações administrativas</dt><dd>${e(row.note||'Nenhuma')}</dd></dl><p>Identificador do registro: ${e(row.id)}</p></body></html>`;
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='nexodent-ficha-pendencia.html';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+ }
+ document.addEventListener('input',ev=>{if(ev.target?.id==='ns-reg-search')registryRender()});
  document.addEventListener('change',ev=>{if(ev.target?.id==='ns-reg-patient')registryRender()});
  const regObserver=new MutationObserver(()=>{if(document.getElementById('ns-reg-list')){if(registryClinic!==activeClinic()){registryRows=[];registryClinic=null;}registryLoad();}});
  document.addEventListener('DOMContentLoaded',()=>regObserver.observe(document.body,{childList:true,subtree:true}));
  document.addEventListener('click',ev=>{
+  const regView=ev.target.closest('[data-ns-reg-view]');if(regView){viewRegistry(regView.dataset.nsRegView);return}
   if(ev.target.closest('#ns-reg-save')){registrySave();return}
   if(ev.target.closest('#ns-reg-refresh')){registryClinic=null;registryLoad(true);return}
   if(ev.target.closest('#ns-a1-check')){checkA1();return}
