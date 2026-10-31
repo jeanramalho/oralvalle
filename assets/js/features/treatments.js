@@ -176,6 +176,30 @@ function trResumoHtml(p){
   <p class="note" style="margin:10px 0 0">Valores de tratamentos cadastrados; não representam necessariamente pagamentos recebidos. Custos incluem estimativas dos procedimentos pendentes.</p>
   ${inconsistent.length?`<p class="note" style="color:#a14c00;margin:8px 0 0">Atenção: ${inconsistent.length} procedimento(s) com divergência entre status e registro de baixa. Confira antes de realizar novos lançamentos.</p>`:''}</div>`;
 }
+/* Atualização 229: conciliação somente leitura entre produção, recebimentos e repasses. */
+function trConciliacaoHtml(p){
+  const feitos=(p.trat||[]).filter(t=>t.vid&&t.status!=='Cancelado');
+  const ids=new Set(feitos.map(t=>String(t.vid)));
+  const vendas=(db.vd||[]).filter(v=>v.pid===p.id);
+  const ligadas=vendas.filter(v=>ids.has(String(v.id)));
+  const faltantes=feitos.filter(t=>!vendas.some(v=>String(v.id)===String(t.vid)));
+  const repetidas=feitos.filter((t,i)=>feitos.findIndex(z=>String(z.vid)===String(t.vid))!==i);
+  const prod=feitos.reduce((a,t)=>a+num(t.valor),0);
+  const recebidoTotal=vendas.reduce((a,v)=>a+recebido(v),0);
+  const saldo=vendas.reduce((a,v)=>a+saldoV(v),0);
+  const comissoes=feitos.reduce((a,t)=>a+num(t.rep),0);
+  const semDentista=feitos.filter(t=>!t.dt);
+  const alertas=[];
+  if(faltantes.length)alertas.push(faltantes.length+' baixa(s) sem atendimento financeiro correspondente');
+  if(repetidas.length)alertas.push(repetidas.length+' referência(s) de baixa repetida(s)');
+  if(semDentista.length)alertas.push(semDentista.length+' procedimento(s) concluído(s) sem dentista');
+  return `<details class="card" style="margin-bottom:12px"><summary style="cursor:pointer;font-weight:700">Conciliação clínica e financeira</summary>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:12px">
+  ${stat('Produção baixada',brl(prod))}${stat('Recebido',brl(recebidoTotal))}${stat('Saldo a receber',brl(saldo))}${stat('Comissões das baixas',brl(comissoes))}${stat('Baixas vinculadas',String(ligadas.length))}</div>
+  <p class="note">Recebimentos e saldos consideram todos os atendimentos financeiros do paciente, inclusive registros não vinculados aos tratamentos desta lista. Produção e comissões consideram apenas tratamentos com baixa. Os totais têm bases diferentes e não devem ser subtraídos diretamente.</p>
+  ${alertas.length?`<div role="status" style="border-left:3px solid #d97706;padding:8px 12px;margin-top:8px"><strong>Itens para conferência</strong><ul>${alertas.map(a=>`<li>${esc(a)}</li>`).join('')}</ul></div>`:'<p class="note" style="color:var(--ok)">Nenhuma inconsistência de vínculo identificada nesta verificação.</p>'}
+  <p class="note">Painel somente leitura: não altera registros, pagamentos ou comissões.</p></details>`;
+}
 function tratHtml(p){
   const all=p.trat||[],tr=trList(p),dr=view.trDraft||{},dec=(view.dent||'perm')==='dec';
   const orcOpts=p.orcs.filter(o=>o.status!=='Recusado');
@@ -204,7 +228,7 @@ function tratHtml(p){
     <div class="note" data-trc="${x.id}" style="margin:4px 0 0">${trCom(x)}</div>
     ${x.vid?`<div class="note" style="margin:8px 0 0;color:var(--ok)">Baixa realizada em ${fd(x.data||'')} · dentista: ${esc(dName(x.dt))} · comissão registrada: ${brl(x.rep||0)}</div>`:`<div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="sm" data-act="trbaixa" data-id="${x.id}">Dar baixa no procedimento</button><button class="danger sm" data-act="rmtr" data-id="${x.id}">${delArm===x.id?'Toque de novo para excluir':'Excluir'}</button></div>`}</div>`}).join(''):'<div class="empty">Nenhum tratamento cadastrado.</div>';
   const bar=`<div class="tr-bar"><button type="button" id="trbarbtn" class="tr-add" data-act="addtr">${trBarInner()}</button></div>`;
-  return `${trResumoHtml(p)}${trAuditoriaHtml(p)}<div class="card">${flt}<h2 style="margin-top:16px">Odontograma</h2>${seg}${odxHtml(p,tr)}${lg}<div id="trchips" style="margin-top:10px">${trChips()}</div><div id="trbasket">${ttBasketHtml(p)}</div><div id="trteeth">${ttPanelHtml(p)}</div><div id="trshared">${ttSharedHtml(p)}</div></div>${form}<h2>Tratamentos (${tr.length})</h2>${lista}${bar}`;
+  return `${trResumoHtml(p)}${trAuditoriaHtml(p)}${trConciliacaoHtml(p)}<div class="card">${flt}<h2 style="margin-top:16px">Odontograma</h2>${seg}${odxHtml(p,tr)}${lg}<div id="trchips" style="margin-top:10px">${trChips()}</div><div id="trbasket">${ttBasketHtml(p)}</div><div id="trteeth">${ttPanelHtml(p)}</div><div id="trshared">${ttSharedHtml(p)}</div></div>${form}<h2>Tratamentos (${tr.length})</h2>${lista}${bar}`;
 }
 function tabOrc(p){
   return prList()+`<button data-act="addo" style="width:100%;margin-bottom:12px">Novo orçamento</button>`+(p.orcs.length?p.orcs.map(orcHtml).join(''):'<div class="empty">Nenhum orçamento para este paciente.</div>');
