@@ -74,7 +74,9 @@ async function rxDoc(p){
   const st=rxState(p);
   if(!String(st.texto||'').trim()){toast('Selecione um modelo ou preencha a prescrição antes de emitir.',3500);return null}
   const cl=Object.assign({},CL_DEF,db.cl||{}),dd=db.dt.find(d=>d.id===st.dt);
-  const {jsPDF}=window.jspdf,doc=new jsPDF({unit:'mm',format:'a4'});
+  const jsPDF=window.jspdf?.jsPDF;
+  if(typeof jsPDF!=='function'){toast('Biblioteca PDF indisponível. Atualize a página e tente novamente.',4000);return null}
+  const doc=new jsPDF({unit:'mm',format:'a4'});
   const S=v=>String(v==null?'':v).replace(/[−–—]/g,'-').replace(/[^\u0000-\u00FF]/g,'?');
   const ORG=[217,106,0],GRAY=[239,239,239],L=15,R=195,W=R-L,MAXY=278;
   let y=12;
