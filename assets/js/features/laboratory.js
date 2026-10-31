@@ -42,6 +42,19 @@ function input(label,id,value='',type='text',extra=''){
 function select(label,id,values,value){return `<label class="nxlab-field"><span>${label}</span><select id="${id}">${options(values,value)}</select></label>`;}
 function textarea(label,id,value=''){return `<label class="nxlab-field nxlab-wide"><span>${label}</span><textarea id="${id}" rows="3">${safe(value)}</textarea></label>`;}
 function patientName(id){return db.p?.find(p=>String(p.id)===String(id))?.nome||'Paciente não encontrado';}
+// Integração de consulta: utiliza tratamentos já cadastrados, sem modificar registros financeiros.
+function patientTreatments(pid){
+ const patient=(db.p||[]).find(p=>String(p.id)===String(pid));
+ return Array.isArray(patient?.trat)?patient.trat:[];
+}
+function money(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
+function treatmentSummary(pid){
+ const list=patientTreatments(pid);
+ if(!list.length)return '<span>Nenhum tratamento cadastrado para este paciente.</span>';
+ const completed=list.filter(t=>t.vid||['concluído','concluido','realizado'].includes(String(t.status||'').toLowerCase()));
+ const cost=list.reduce((sum,t)=>sum+(Number(t.custo)||0),0);
+ return `<span><b>Tratamentos:</b> ${list.length} (${completed.length} concluídos)</span><span><b>Custos cadastrados:</b> ${safe(money(cost))}</span>`;
+}
 function form(o={}){
  const patients=(db.p||[]).filter(p=>!p.arq);
  return `<section class="card nxlab-form"><h3>${o.id?'Editar trabalho':'Novo trabalho para laboratório'}</h3>
@@ -64,7 +77,7 @@ function card(o){
  const comments=Array.isArray(o.comments)?o.comments:[];
  const obs=o.status==='Em observação';
  return `<article class="card nxlab-card"><div class="nxlab-head"><div><strong>${safe(patientName(o.patient_id))}</strong><div class="nxlab-sub">${safe(o.work_description)} · ${safe(o.teeth||'Sem região')}</div></div><span class="nxlab-pill ${obs?'nxlab-alert':''}">${safe(o.status)}</span></div>
- <div class="nxlab-details"><span><b>Laboratório:</b> ${safe(o.laboratory)}</span><span><b>Cor:</b> ${safe(o.shade||'—')}</span><span><b>Etapa:</b> ${safe(o.stage)}</span><span><b>Envio:</b> ${safe(date(o.sent_at)||'—')}</span><span><b>Entrega prevista:</b> ${safe(date(o.due_at)||'—')}</span><span><b>Recebido:</b> ${safe(date(o.received_at)||'—')}</span></div>
+ <div class="nxlab-details"><span><b>Laboratório:</b> ${safe(o.laboratory)}</span><span><b>Cor:</b> ${safe(o.shade||'—')}</span><span><b>Etapa:</b> ${safe(o.stage)}</span><span><b>Envio:</b> ${safe(date(o.sent_at)||'—')}</span><span><b>Entrega prevista:</b> ${safe(date(o.due_at)||'—')}</span><span><b>Recebido:</b> ${safe(date(o.received_at)||'—')}</span>${treatmentSummary(o.patient_id)}</div>
  ${obs?`<p class="nxlab-note"><b>Em observação:</b> ${safe(o.observation_reason||'Motivo não informado')}</p>`:''}
  ${o.instructions?`<p><b>Instruções:</b> ${safe(o.instructions)}</p>`:''}
  <div class="nxlab-actions"><button class="ghost sm" data-lab="details" data-id="${safe(o.id)}">Histórico e comentários (${events.length+comments.length})</button>${canEdit()?`<button class="ghost sm" data-lab="edit" data-id="${safe(o.id)}">Editar</button><button class="sm" data-lab="advance" data-id="${safe(o.id)}">Avançar etapa →</button>`:''}</div>
@@ -104,11 +117,11 @@ async function persist(o){
 }
 function readForm(){const v=id=>($id(id)?.value||'').trim();return {patient_id:v('nxlab-patient'),laboratory:v('nxlab-lab'),work_description:v('nxlab-work'),shade:v('nxlab-shade'),teeth:v('nxlab-teeth'),sent_at:v('nxlab-sent')||null,due_at:v('nxlab-due')||null,received_at:v('nxlab-received')||null,stage:v('nxlab-stage'),status:v('nxlab-status'),observation_reason:v('nxlab-observation'),instructions:v('nxlab-instructions')};}
 function exportCsv(){
- const fields=['Paciente','Laboratório','Trabalho','Dentes','Cor','Etapa','Situação','Envio','Previsão','Recebimento','Observação'];
+ const fields=['Paciente','Laboratório','Trabalho','Dentes','Cor','Etapa','Situação','Envio','Previsão','Recebimento','Observação','Tratamentos cadastrados','Tratamentos concluídos','Custos cadastrados'];
  const today=new Date().toISOString().slice(0,10);
  const active=o=>!['Entregue','Cancelado'].includes(o.status);
  const filtered=orders.filter(o=>filter==='todos'||(filter==='observacao'?o.status==='Em observação':filter==='atrasados'?active(o)&&o.due_at&&date(o.due_at)<today:filter==='proximos'?active(o)&&o.due_at&&date(o.due_at)>=today&&date(o.due_at)<=new Date(Date.now()+7*86400000).toISOString().slice(0,10):filter==='sem-prazo'?active(o)&&!o.due_at:active(o))).filter(o=>!search||[patientName(o.patient_id),o.laboratory,o.work_description,o.teeth].some(t=>String(t||'').toLowerCase().includes(search.toLowerCase())));
- const rows=filtered.map(o=>[patientName(o.patient_id),o.laboratory,o.work_description,o.teeth,o.shade,o.stage,o.status,date(o.sent_at),date(o.due_at),date(o.received_at),o.observation_reason]);
+ const rows=filtered.map(o=>[patientName(o.patient_id),o.laboratory,o.work_description,o.teeth,o.shade,o.stage,o.status,date(o.sent_at),date(o.due_at),date(o.received_at),o.observation_reason,patientTreatments(o.patient_id).length,patientTreatments(o.patient_id).filter(t=>t.vid||['concluído','concluido','realizado'].includes(String(t.status||'').toLowerCase())).length,patientTreatments(o.patient_id).reduce((sum,t)=>sum+(Number(t.custo)||0),0).toFixed(2)]);
  const cell=v=>'"'+String(v??'').replace(/^[=+@\-\t\r]/,v=>"'"+v).replace(/"/g,'""')+'"';
  const csv='\uFEFF'+[fields,...rows].map(row=>row.map(cell).join(';')).join('\r\n');
  const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
