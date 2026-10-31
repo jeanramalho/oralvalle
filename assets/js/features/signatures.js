@@ -4,6 +4,9 @@
  const e=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const types=['Termo de consentimento','Contrato de tratamento','Orçamento','Declaração','Outro documento'];
  let signatures={dentista:null,paciente:null}, signedAt={};
+ let registryClinic=null,registryRows=[],registryBusy=false,registryError='';
+ const activeClinic=()=>window.OralCloud?.clinicId||null;
+ const registryAvailable=()=>!!(window.OralCloud?.enabled&&activeClinic());
  function clear(){signatures={dentista:null,paciente:null};signedAt={};}
  window.nexoSignHtml=function(){
   const patients=(db.p||[]).filter(p=>!p.arq),dentists=(db.dt||[]).filter(d=>d.ativo!==false);
@@ -24,6 +27,17 @@
     <label style="display:block;margin-top:10px"><input type="checkbox" id="ns-a1-ack"> Confirmo que sou titular do certificado, autorizo esta assinatura e estou utilizando somente um PDF de teste sem dados de pacientes.</label>
     <button type="button" id="ns-a1-sign" style="background:#f97316;margin-top:10px">Assinar PDF de teste</button>
     <p class="note" id="ns-a1-sign-result" role="status" aria-live="polite">Selecione o certificado A1 e informe a senha acima; escolha também um PDF de teste.</p>
+   </section>
+   <section style="padding:16px;border:1px solid #fed7aa;border-radius:12px;margin:16px 0;background:#fffaf5" aria-label="Registro de documentos por paciente">
+    <h3 style="margin-top:0">Documentos do prontuário — controle de pendências</h3>
+    <p class="note">Cadastre a pendência de assinatura por paciente. Este registro <strong>não é um PDF assinado</strong> e não comprova assinatura ICP-Brasil. A assinatura digital permanece em testes.</p>
+    <div class="row" style="flex-wrap:wrap"><div><label>Paciente</label><select id="ns-reg-patient"><option value="">Selecione</option>${patients.map(p=>`<option value="${e(p.id)}">${e(p.nome)}</option>`).join('')}</select></div><div><label>Tipo</label><select id="ns-reg-type"><option>Receita</option><option>Atestado</option><option>Relatório</option><option>Termo de consentimento</option><option>Outro</option></select></div></div>
+    <label>Título</label><input id="ns-reg-title" maxlength="180" placeholder="Ex.: Receita pós-operatória">
+    <label>Observações internas (sem dados sensíveis)</label><textarea id="ns-reg-note" maxlength="500" rows="2" placeholder="Informações administrativas sobre a pendência"></textarea>
+    <button type="button" id="ns-reg-save" style="background:#f97316">Registrar pendência</button>
+    <button type="button" class="ghost" id="ns-reg-refresh">Atualizar histórico</button>
+    <p id="ns-reg-status" class="note" role="status">${registryAvailable()?'Carregando histórico...':'Disponível somente com clínica conectada ao Supabase.'}</p>
+    <div id="ns-reg-list"></div>
    </section>
    <div class="row"><div><label>Paciente</label><select id="ns-patient"><option value="">Selecione</option>${patients.map(p=>`<option value="${e(p.id)}">${e(p.nome)}</option>`).join('')}</select></div><div><label>Dentista</label><select id="ns-dentist"><option value="">Selecione</option>${dentists.map(d=>`<option value="${e(d.id)}">${e(d.nome)}${d.cro?' — '+e(d.cro):''}</option>`).join('')}</select></div></div>
    <label>Tipo de documento</label><select id="ns-type">${types.map(t=>`<option>${e(t)}</option>`).join('')}</select>
@@ -84,7 +98,42 @@
   }catch(err){out.textContent='Erro: '+(err?.message||'Falha ao assinar PDF de teste')}
   finally{pwd.value='';btn.disabled=false}
  }
+ async function registryLoad(force=false){
+  const id=activeClinic();if(!registryAvailable())return;
+  if(registryBusy||(!force&&registryClinic===id))return;
+  registryBusy=true;registryClinic=id;registryError='';
+  try{const rows=await OralCloud.request('/rest/v1/nexodent_patient_document_register?select=id,patient_id,document_type,title,note,status,created_at&clinic_id=eq.'+encodeURIComponent(id)+'&order=created_at.desc&limit=200');
+   if(activeClinic()!==id)return;registryRows=Array.isArray(rows)?rows:[];
+  }catch(err){registryRows=[];registryError=err.message||'Falha ao consultar registros';}
+  finally{registryBusy=false;registryRender();}
+ }
+ function registryRender(){
+  const el=document.getElementById('ns-reg-list'),status=document.getElementById('ns-reg-status');if(!el||!status)return;
+  if(!registryAvailable()){status.textContent='Selecione uma clínica conectada ao Supabase.';el.replaceChildren();return;}
+  status.textContent=registryError?'Erro: '+registryError:registryRows.length+' registro(s) recentes — pendentes de assinatura.';
+  const chosen=document.getElementById('ns-reg-patient')?.value||'';
+  const rows=registryRows.filter(x=>!chosen||String(x.patient_id)===chosen);
+  el.replaceChildren();
+  for(const row of rows){const p=(db.p||[]).find(x=>String(x.id)===String(row.patient_id));const div=document.createElement('div');div.style.cssText='border-top:1px solid #eee;padding:10px 0';
+   const title=document.createElement('strong');title.textContent=(p?.nome||'Paciente não carregado')+' — '+row.document_type+' — '+row.title;
+   const sub=document.createElement('div');sub.className='note';sub.textContent='Pendente de assinatura · '+new Date(row.created_at).toLocaleString('pt-BR')+(row.note?' · '+row.note:'');div.append(title,sub);el.appendChild(div);}
+ }
+ async function registrySave(){
+  const btn=document.getElementById('ns-reg-save'),out=document.getElementById('ns-reg-status');if(!btn||!out)return;
+  const id=activeClinic(),patient=document.getElementById('ns-reg-patient')?.value,title=document.getElementById('ns-reg-title')?.value.trim(),note=document.getElementById('ns-reg-note')?.value.trim(),kind=document.getElementById('ns-reg-type')?.value;
+  if(!registryAvailable()){out.textContent='Clínica não conectada.';return;}
+  if(!(db.p||[]).some(x=>String(x.id)===patient)||!title){out.textContent='Selecione o paciente e informe o título.';return;}
+  btn.disabled=true;out.textContent='Salvando pendência...';
+  try{await OralCloud.request('/rest/v1/nexodent_patient_document_register',{method:'POST',body:{clinic_id:id,patient_id:patient,document_type:kind,title,note:note||null}});
+   document.getElementById('ns-reg-title').value='';document.getElementById('ns-reg-note').value='';registryClinic=null;await registryLoad(true);
+  }catch(err){out.textContent='Erro ao salvar: '+(err.message||'Falha de conexão');}finally{btn.disabled=false;}
+ }
+ document.addEventListener('change',ev=>{if(ev.target?.id==='ns-reg-patient')registryRender()});
+ const regObserver=new MutationObserver(()=>{if(document.getElementById('ns-reg-list')){if(registryClinic!==activeClinic()){registryRows=[];registryClinic=null;}registryLoad();}});
+ document.addEventListener('DOMContentLoaded',()=>regObserver.observe(document.body,{childList:true,subtree:true}));
  document.addEventListener('click',ev=>{
+  if(ev.target.closest('#ns-reg-save')){registrySave();return}
+  if(ev.target.closest('#ns-reg-refresh')){registryClinic=null;registryLoad(true);return}
   if(ev.target.closest('#ns-a1-check')){checkA1();return}
   if(ev.target.closest('#ns-a1-sign')){signPdfTest();return}
   const c=ev.target.closest('[data-ns-clear]');if(c){const r=c.dataset.nsClear,cv=document.getElementById('ns-'+r);cv?.getContext('2d').clearRect(0,0,cv.width,cv.height);signatures[r]=null;delete signedAt[r];document.getElementById('ns-status-'+r).textContent='Ainda não assinou';return}
