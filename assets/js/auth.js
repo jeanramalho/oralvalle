@@ -16,8 +16,8 @@ async function hashPw(pw,salt){
 const lgn=v=>String(v||'').trim().toLowerCase();
 const recNorm=v=>String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
 const newCode=()=>{const c=rnd(6).toUpperCase();return c.slice(0,4)+'-'+c.slice(4,8)+'-'+c.slice(8,12)};
-function sGet(){try{let s=JSON.parse(sessionStorage.getItem(SK)||'null');if(s)return s;s=JSON.parse(localStorage.getItem(SK+'_l')||'null');if(s&&s.exp>Date.now())return s}catch(e){}return null}
-function sSet(uid,keep){try{sessionStorage.setItem(SK,JSON.stringify({uid,keep:!!keep}));if(keep)localStorage.setItem(SK+'_l',JSON.stringify({uid,keep:true,exp:Date.now()+30*864e5}))}catch(e){}}
+function sGet(){try{const s=JSON.parse(sessionStorage.getItem(SK)||'null');return s&&s.uid?{uid:s.uid,keep:false}:null}catch(e){return null}}
+function sSet(uid,keep){try{localStorage.removeItem(SK+'_l');sessionStorage.setItem(SK,JSON.stringify({uid,keep:false}))}catch(e){}}
 function sClear(){try{sessionStorage.removeItem(SK);localStorage.removeItem(SK+'_l')}catch(e){}}
 function failGet(){try{return JSON.parse(localStorage.getItem(FK)||'{}')}catch(e){return{}}}
 function failSet(o){try{localStorage.setItem(FK,JSON.stringify(o))}catch(e){}}
@@ -49,7 +49,7 @@ function lockShow(mode,msg,code){
   else body=`<h1>Entrar</h1>${err}
     <label for="lkuser">Usuário</label><input id="lkuser" autocomplete="username" autocapitalize="none">
     <label for="lkpw">Senha</label><input id="lkpw" type="password" autocomplete="current-password">
-    <label class="lk-chk"><input id="lkkeep" type="checkbox"> Manter conectado neste aparelho</label>
+    <p class="lk-t">Por segurança, este acesso não permanece conectado após fechar a aba.</p>
     <button data-lk="login" data-primary>Entrar</button><button class="lk-link" data-lk="toforgot">Esqueci a senha</button>`;
   el.innerHTML=`<div class="lk-box">${logo}${body}</div>`;
   const f=el.querySelector('input');if(f)setTimeout(()=>f.focus(),50);
@@ -64,6 +64,7 @@ function doLogout(msg){
   lockShow('login',msg||'');
 }
 function authBoot(){
+  try{localStorage.removeItem(SK+'_l')}catch(e){}
   AUTH=aLoad();
   if(!AUTH.users.length){lockShow('setup');return}
   const s=sGet(),u=s&&AUTH.users.find(x=>x.id===s.uid);
@@ -86,7 +87,7 @@ const LK={
   codeok:()=>{sSet(AUTH.users[0].id,false);unlock(AUTH.users[0],false)},
   async login(b){
     const fl=failGet();if(fl.until&&fl.until>Date.now()){lockShow('login','Muitas tentativas. Aguarde '+Math.ceil((fl.until-Date.now())/1000)+' segundos.');return}
-    const login=lgn($('lkuser').value),pw=$('lkpw').value,keep=$('lkkeep').checked;
+    const login=lgn($('lkuser').value),pw=$('lkpw').value,keep=false;
     b.disabled=true;
     const u=AUTH.users.find(x=>x.login===login);
     const ok=u&&(await hashPw(pw,u.salt))===u.hash;
