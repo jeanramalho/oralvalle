@@ -8,6 +8,15 @@
  window.nexoSignHtml=function(){
   const patients=(db.p||[]).filter(p=>!p.arq),dentists=(db.dt||[]).filter(d=>d.ativo!==false);
   return `<div class="ov-page-head"><div><h1>Documentos e Assinaturas</h1><p class="sub">Coleta manual gratuita de assinaturas — versão de testes.</p></div></div>
+  <section class="card" style="border-top:4px solid #f97316;max-width:980px;margin-bottom:18px" aria-label="Certificados digitais ICP-Brasil">
+   <h2 style="color:#c75d05">Certificados digitais ICP-Brasil — preparação</h2>
+   <p class="note">O NexoDent ainda não possui um assinador ICP-Brasil integrado. Esta tela orienta o uso seguro dos certificados e não solicita o arquivo nem a senha.</p>
+   <div class="row" style="gap:14px;flex-wrap:wrap">
+    <div style="flex:1;min-width:240px;padding:12px;border:1px solid #f3c59d;border-radius:10px"><strong>e-CPF A1 — Dentista</strong><p class="note">Uso individual do profissional para documentos clínicos. Cada dentista deverá autorizar pessoalmente a assinatura.</p><span style="font-weight:600;color:#a44b00">Integração pendente</span></div>
+    <div style="flex:1;min-width:240px;padding:12px;border:1px solid #f3c59d;border-radius:10px"><strong>e-CNPJ A1 — Administração</strong><p class="note">Reservado a operações empresariais do administrador autorizado; não substitui o e-CPF do dentista.</p><span style="font-weight:600;color:#a44b00">Integração pendente</span></div>
+   </div>
+   <p class="note" style="margin-top:12px"><strong>Segurança:</strong> não envie arquivos .pfx/.p12 nem senhas por WhatsApp, e-mail ou formulários não preparados para custódia segura. A assinatura ICP-Brasil exigirá um serviço de assinatura criptográfica com controle de identidade, autorização e auditoria.</p>
+  </section>
   <section class="card" style="border-top:4px solid #f97316;max-width:980px">
    <p class="note" style="padding:12px;background:#fff3e8;border-radius:8px"><strong>Atenção:</strong> este módulo é um protótipo local. Não salva documentos assinados no Supabase, não oferece trilha de auditoria verificável, não comprova identidade e <strong>não realiza assinatura digital ICP-Brasil</strong>. Não use como substituto de assinaturas exigidas por lei em receitas, atestados ou documentos clínicos. Imprima e colha assinatura física quando necessário.</p>
    <div class="row"><div><label>Paciente</label><select id="ns-patient"><option value="">Selecione</option>${patients.map(p=>`<option value="${e(p.id)}">${e(p.nome)}</option>`).join('')}</select></div><div><label>Dentista</label><select id="ns-dentist"><option value="">Selecione</option>${dentists.map(d=>`<option value="${e(d.id)}">${e(d.nome)}${d.cro?' — '+e(d.cro):''}</option>`).join('')}</select></div></div>
