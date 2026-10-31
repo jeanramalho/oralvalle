@@ -7,9 +7,10 @@
   const nativeFilesTab = tabArquivos;
   PM_SAFE.add('cloudfileopen');
   PM_SAFE.add('cloudfilesretry');
+  PM_SAFE.add('cloudfilefilter');
   function entry(patient) {
     const key = JSON.stringify(patient.id);
-    if (!cache.has(key)) cache.set(key, { rows: null, loading: false, error: '', signatures: new Set() });
+    if (!cache.has(key)) cache.set(key, { rows: null, loading: false, error: '', signatures: new Set(), filter: 'Todos' });
     return cache.get(key);
   }
   function redraw(patient, token) {
@@ -109,17 +110,35 @@
     if (!state.rows && !state.loading && !state.error) metadata(patient).catch(() => {});
     const base = nativeFilesTab({ ...patient, arquivos: [] });
     const list = state.rows?.filter(row => row.slot === 'arquivos' && row.position >= 0) || [];
+    const categories = ['Todos', 'Receituário', 'Atestado', 'Relatório', 'Outros'];
+    const classified = list.map((row, index) => ({ row, index, category: String(row.dados?.categoria || 'Outros') }));
+    const categoryOf = item => categories.includes(item.category) && item.category !== 'Todos' ? item.category : 'Outros';
+    const count = category => category === 'Todos' ? classified.length : classified.filter(item => categoryOf(item) === category).length;
+    const active = categories.includes(state.filter) ? state.filter : 'Todos';
+    const filters = categories.map((category, index) => `<button type="button" class="${category === active ? 'primary' : 'ghost'} sm" data-act="cloudfilefilter" data-category-index="${index}" aria-pressed="${category === active}">${esc(category)} (${count(category)})</button>`).join(' ');
+    const visible = classified.filter(item => active === 'Todos' || categoryOf(item) === active);
     const content = state.error
       ? `<p role="alert">${esc(state.error)}</p><button data-act="cloudfilesretry">Tentar novamente</button>`
       : state.loading ? '<p role="status">Carregando arquivos...</p>'
-        : list.map((row, index) => `<article class="ov-file-card"><strong>${esc(row.dados?.nome || 'Arquivo')}</strong>
-          <p>${esc(row.dados?.categoria || '')} ${esc(row.dados?.dataEnvio || '')}</p>
+        : visible.map(({row, index}) => `<article class="ov-file-card"><strong>${esc(row.dados?.nome || 'Arquivo')}</strong>
+          <p>${esc(row.dados?.categoria || 'Outros')} · ${esc(row.dados?.dataEnvio || 'Data não informada')}</p>
           <button class="ghost sm" data-act="cloudfileopen" data-index="${index}">Abrir / baixar</button>
-          <button class="danger sm" data-act="cloudfiledelete" data-index="${index}">Excluir</button></article>`).join('') || '<p>Nenhum arquivo anexado.</p>';
-    return base.slice(0, base.indexOf('<h2>Arquivos anexados'))
+          <button class="danger sm" data-act="cloudfiledelete" data-index="${index}">Excluir</button></article>`).join('') || '<p>Nenhum documento nesta categoria.</p>';
+    const marker = '<h2>Arquivos anexados';
+    const markerAt = base.indexOf(marker);
+    const header = markerAt >= 0 ? base.slice(0, markerAt) : base;
+    return header
       .replace('Para evitar que o navegador fique sem espaço, cada arquivo pode ter até 1,5 MB.', 'Cada novo arquivo pode ter até 1,5 MB.')
       .replace('Os anexos ficam salvos neste navegador; faça backups regularmente.', 'Os anexos ficam no Supabase; faça backups regularmente.')
-      + `<div id="nexo-signature-upload-slot"></div><h2>Arquivos anexados (${list.length})</h2><div class="ov-file-grid">${content}</div>`;
+      + `<div id="nexo-signature-upload-slot"></div><h2>Arquivos anexados (${list.length})</h2><div class="ov-file-filters" style="display:flex;flex-wrap:wrap;gap:6px;margin:12px 0">${filters}</div><div class="ov-file-grid">${content}</div>`;
+  };
+  A.cloudfilefilter = (button, data, patient) => {
+    if (!patient) return;
+    const categories = ['Todos', 'Receituário', 'Atestado', 'Relatório', 'Outros'];
+    const category = categories[Number(data.categoryIndex)];
+    if (!category) return;
+    entry(patient).filter = category;
+    render();
   };
   A.cloudfilesretry = () => { const patient = cur(); if (!patient) return; cache.delete(JSON.stringify(patient.id)); render(); };
   A.cloudfileopen = async (button, data, patient) => {
