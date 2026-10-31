@@ -138,6 +138,24 @@ function trMatPrev(sn){return sn.length?`<div class="termo" style="margin-top:8p
 function trCom(x){return (!x.vid&&x.dt&&num(x.valor)>0)?'Comissão prevista: '+brl(comCalc(x.dt,x.proc,num(x.valor),qOf(x)).rep):''}
 function syncItemToTrat(p,it){if(!it.tid)return;const t=(p.trat||[]).find(x=>x.id===it.tid);if(t&&!t.vid){t.valor=it.valor;t.dente=it.dente;t.obs=it.obs||'';t.dt=it.dt;t.qtd=it.qtd;t.unit=it.unit}}
 function syncTratToItem(p,t){if(!t.oiid)return;const o=getO(p,t.oid),it=o&&o.itens.find(i=>i.id===t.oiid);if(it){it.valor=String(t.valor);it.dente=t.dente||'';it.obs=t.obs||'';it.dt=t.dt;it.qtd=t.qtd;it.unit=t.unit}}
+/* Resumo clínico-financeiro por paciente; somente leitura, sem alterar baixas. */
+function trResumoHtml(p){
+  const all=(p.trat||[]).filter(x=>x.status!=='Cancelado');
+  const done=all.filter(x=>x.status==='Concluído'||!!x.vid);
+  const pending=all.filter(x=>x.status!=='Concluído'&&!x.vid);
+  const totalVal=all.reduce((a,x)=>a+num(x.valor),0);
+  const doneVal=done.reduce((a,x)=>a+num(x.valor),0);
+  const costs=all.reduce((a,x)=>a+num(x.custo),0);
+  const reps=done.reduce((a,x)=>a+num(x.rep),0);
+  const inconsistent=all.filter(x=>(x.status==='Concluído'&&!x.vid)||(x.vid&&x.status!=='Concluído'));
+  return `<div class="card"><h2 style="margin-top:0">Resumo dos tratamentos</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">
+  ${stat('A realizar',String(pending.length))}${stat('Concluídos',String(done.length))}
+  ${stat('Valor previsto',brl(totalVal))}${stat('Produção concluída',brl(doneVal))}
+  ${stat('Custos previstos',brl(costs))}${stat('Comissões registradas',brl(reps))}</div>
+  <p class="note" style="margin:10px 0 0">Valores de tratamentos cadastrados; não representam necessariamente pagamentos recebidos. Custos incluem estimativas dos procedimentos pendentes.</p>
+  ${inconsistent.length?`<p class="note" style="color:#a14c00;margin:8px 0 0">Atenção: ${inconsistent.length} procedimento(s) com divergência entre status e registro de baixa. Confira antes de realizar novos lançamentos.</p>`:''}</div>`;
+}
 function tratHtml(p){
   const all=p.trat||[],tr=trList(p),dr=view.trDraft||{},dec=(view.dent||'perm')==='dec';
   const orcOpts=p.orcs.filter(o=>o.status!=='Recusado');
@@ -166,7 +184,7 @@ function tratHtml(p){
     <div class="note" data-trc="${x.id}" style="margin:4px 0 0">${trCom(x)}</div>
     ${x.vid?`<div class="note" style="margin:8px 0 0;color:var(--ok)">Baixa realizada em ${fd(x.data||'')} · dentista: ${esc(dName(x.dt))} · comissão registrada: ${brl(x.rep||0)}</div>`:`<div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="sm" data-act="trbaixa" data-id="${x.id}">Dar baixa no procedimento</button><button class="danger sm" data-act="rmtr" data-id="${x.id}">${delArm===x.id?'Toque de novo para excluir':'Excluir'}</button></div>`}</div>`}).join(''):'<div class="empty">Nenhum tratamento cadastrado.</div>';
   const bar=`<div class="tr-bar"><button type="button" id="trbarbtn" class="tr-add" data-act="addtr">${trBarInner()}</button></div>`;
-  return `<div class="card">${flt}<h2 style="margin-top:16px">Odontograma</h2>${seg}${odxHtml(p,tr)}${lg}<div id="trchips" style="margin-top:10px">${trChips()}</div><div id="trbasket">${ttBasketHtml(p)}</div><div id="trteeth">${ttPanelHtml(p)}</div><div id="trshared">${ttSharedHtml(p)}</div></div>${form}<h2>Tratamentos (${tr.length})</h2>${lista}${bar}`;
+  return `${trResumoHtml(p)}<div class="card">${flt}<h2 style="margin-top:16px">Odontograma</h2>${seg}${odxHtml(p,tr)}${lg}<div id="trchips" style="margin-top:10px">${trChips()}</div><div id="trbasket">${ttBasketHtml(p)}</div><div id="trteeth">${ttPanelHtml(p)}</div><div id="trshared">${ttSharedHtml(p)}</div></div>${form}<h2>Tratamentos (${tr.length})</h2>${lista}${bar}`;
 }
 function tabOrc(p){
   return prList()+`<button data-act="addo" style="width:100%;margin-bottom:12px">Novo orçamento</button>`+(p.orcs.length?p.orcs.map(orcHtml).join(''):'<div class="empty">Nenhum orçamento para este paciente.</div>');
