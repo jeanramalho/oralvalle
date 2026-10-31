@@ -5,6 +5,7 @@ function tabDados(p){
   const aviso=delArm===p.id?'Toque de novo para excluir definitivamente':'Excluir definitivamente';
   return `<div class="card">${fld('nome','Nome completo',p)}<div class="row" style="align-items:flex-start"><div style="min-width:0">${fld('tel','Telefone',p,'tel')}</div><div style="min-width:0">${fld('cpf','CPF',p)}</div></div>${fld('nasc','Data de nascimento',p,'date')}<label>Observações</label><textarea data-k="obs">${esc(p.obs)}</textarea></div></div>
   <section class="card" style="margin-top:14px;border-left:4px solid #f97316"><h2>🟠 WhatsApp do paciente</h2><p class="note">Gratuito: prepara a mensagem e abre o WhatsApp para envio manual. Nenhuma mensagem é enviada automaticamente.</p><label for="nexo-wa-template">Tipo de mensagem</label><select id="nexo-wa-template"><option value="consulta">Confirmar consulta</option><option value="lembrete">Lembrete de consulta</option><option value="retorno">Agendar retorno</option><option value="pos">Acompanhamento pós-atendimento</option><option value="aniversario">Aniversário</option><option value="personalizada">Personalizada</option></select><label for="nexo-wa-msg">Mensagem (editável)</label><textarea id="nexo-wa-msg" rows="5" placeholder="Escreva sua mensagem"></textarea><div class="row" style="margin-top:10px;flex-wrap:wrap"><button type="button" id="nexo-wa-open" style="background:#f97316;color:white">Abrir no WhatsApp ↗</button><button type="button" class="ghost" id="nexo-wa-copy">Copiar mensagem</button></div><p class="note">Confira o número e evite incluir informações clínicas sensíveis sem necessidade.</p></section>
+  <section class="card" style="margin-top:14px;border-left:4px solid #f97316" aria-label="Documentos do paciente"><h2>📄 Documentos do paciente</h2><p class="note">Receitas, atestados e relatórios registrados em Documentos e Assinaturas. Rascunhos não assinados.</p><button type="button" class="ghost" id="nexo-patient-doc-load" data-patient-id="${esc(p.id)}">Consultar documentos</button><div id="nexo-patient-doc-results" style="margin-top:10px" aria-live="polite"></div></section>
   <button class="ghost" data-act="arq" style="width:100%">${p.arq?'Reativar paciente':'Arquivar paciente'}</button>
   ${p.arq?`<p class="note" style="margin-top:16px">O prontuário normalmente precisa ser guardado por muitos anos (confira o prazo exigido pelo seu conselho). Prefira manter arquivado. A exclusão não é permitida se houver vendas ou consultas ligadas ao paciente.</p><button class="danger" data-act="del" style="width:100%">${aviso}</button>`:''}`;
 }
@@ -213,3 +214,25 @@ function trChips(){
   return s.length?'<span class="note" style="margin:0">Dentes selecionados:</span> '+s.map(n=>`<span class="badge stt-wr">${n}</span>`).join(' '):'<span class="note" style="margin:0">Toque nos dentes para escolher. Sem dente marcado, o tratamento é geral.</span>';
 }
 
+
+/* NexoDent 211 — consulta sob demanda dos rascunhos vinculados ao paciente. */
+(function(){
+ 'use strict';
+ const safe=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ document.addEventListener('click',async event=>{
+  const button=event.target.closest('#nexo-patient-doc-load');if(!button)return;
+  const target=document.getElementById('nexo-patient-doc-results');if(!target||button.disabled)return;
+  const patientId=String(button.dataset.patientId||'');
+  const clinic=String(window.OralCloud?.clinicId||'');
+  if(!patientId||!clinic||typeof window.OralCloud?.request!=='function'){target.textContent='Clínica não carregada. Atualize a página.';return;}
+  button.disabled=true;target.textContent='Carregando documentos...';
+  try{
+   const query='/rest/v1/nexodent_patient_document_register?select=id,document_type,title,body,note,status,created_at&clinic_id=eq.'+encodeURIComponent(clinic)+'&patient_id=eq.'+encodeURIComponent(patientId)+'&order=created_at.desc&limit=100';
+   const rows=await OralCloud.request(query);
+   if(!target.isConnected||String(window.OralCloud?.clinicId||'')!==clinic||button.dataset.patientId!==patientId)return;
+   if(!Array.isArray(rows))throw new Error('Resposta inesperada do servidor');
+   target.innerHTML=rows.length?rows.map(row=>'<details style="border-top:1px solid var(--line);padding:9px 0"><summary><strong>'+safe(row.document_type||'Documento')+'</strong> · '+safe(row.title||'Sem título')+' <small class="note">('+safe(row.created_at?new Date(row.created_at).toLocaleDateString('pt-BR'):'sem data')+')</small></summary><p class="note">'+safe(row.status||'Pendente de assinatura')+' — RASCUNHO NÃO ASSINADO</p><div style="white-space:pre-wrap;overflow-wrap:anywhere">'+safe(row.body||'Sem conteúdo registrado.')+'</div>'+(row.note?'<p class="note">Observações: '+safe(row.note)+'</p>':'')+'</details>').join(''):'<p class="note">Nenhum documento cadastrado para este paciente.</p>';
+  }catch(err){if(target.isConnected)target.textContent='Não foi possível carregar os documentos: '+(err?.message||'erro desconhecido');}
+  finally{if(button.isConnected)button.disabled=false;}
+ });
+})();
