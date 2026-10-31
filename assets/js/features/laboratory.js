@@ -20,6 +20,14 @@ function publishOrders(){
  window.NexoLabRead={clinicId:clinic()||'local',loaded:!!loadedClinic,orders:orders.map(o=>({id:o.id,patient_id:o.patient_id,treatment_id:linkFor(o.id).treatment_id||'',laboratory_cost:linkFor(o.id).cost||0,status:o.status,stage:o.stage,laboratory:o.laboratory,work_description:o.work_description,due_at:o.due_at,received_at:o.received_at}))};
  window.dispatchEvent(new CustomEvent('nexodent:lab-orders-updated'));
 }
+// Consulta sob demanda por outros módulos: carrega apenas os dados da clínica ativa.
+// Não cria despesas, pagamentos ou comissões.
+window.NexoLabLoad = async function(force=false){
+ if(!allowed())throw new Error('Sem permissão para consultar laboratório.');
+ await fetchOrders(!!force);
+ if(error)throw new Error(error);
+ return window.NexoLabRead;
+};
 function allowed(){return typeof pmSee!=='function'||pmSee('pac');}
 function canEdit(){return typeof pmLvl!=='function'||pmLvl('pac')>=2;}
 function renderLab(){if(isLab()&&typeof render==='function')render();}

@@ -216,7 +216,7 @@ function trLabCostMap(p){
 }
 function trMargemDetalhadaHtml(p){
  const map=trLabCostMap(p);
- if(!map)return `<details class="card" style="margin-bottom:12px"><summary style="cursor:pointer;font-weight:700">Margem por procedimento</summary><p class="note">Abra Laboratório para carregar os custos vinculados e depois retorne a Tratamentos.</p></details>`;
+ if(!map)return `<details class="card" style="margin-bottom:12px"><summary style="cursor:pointer;font-weight:700">Margem por procedimento</summary><p class="note">Clique em “Carregar custos do laboratório” para consultar os trabalhos desta clínica.</p></details>`;
  const tratamentos=(p.trat||[]).filter(t=>t.status!=='Cancelado');
  const totals={valor:0,base:0,lab:0,rep:0};
  const linhas=tratamentos.map(t=>{
@@ -232,7 +232,7 @@ function trMargemDetalhadaHtml(p){
 /* NexoDent 251: consulta de trabalhos protéticos e custos sem criar lançamentos duplicados. */
 function trLabResumoHtml(p){
  const snapshot=window.NexoLabRead;
- if(!snapshot||!snapshot.loaded||snapshot.clinicId!==(window.OralCloud?.clinicId||'local'))return `<details class="card"><summary>Laboratório vinculado aos tratamentos</summary><p class="note">Abra a aba Laboratório para carregar os trabalhos desta clínica. Depois retorne aos tratamentos.</p></details>`;
+ if(!snapshot||!snapshot.loaded||snapshot.clinicId!==(window.OralCloud?.clinicId||'local'))return `<details class="card"><summary>Laboratório vinculado aos tratamentos</summary><p class="note">Clique no botão abaixo para consultar os trabalhos vinculados, sem sair do prontuário.<br><button type="button" data-nexo-lab-load="1" style="margin-top:8px">Carregar custos do laboratório</button><span id="nexo-lab-load-status" role="status"></span></p></details>`;
  const items=(snapshot.orders||[]).filter(o=>String(o.patient_id)===String(p.id)&&o.treatment_id);
  const trs=p.trat||[];
  const valid=items.filter(o=>trs.some(t=>String(t.id)===String(o.treatment_id)));
@@ -273,4 +273,25 @@ function tratHtml(p){
 }
 function tabOrc(p){
   return prList()+`<button data-act="addo" style="width:100%;margin-bottom:12px">Novo orçamento</button>`+(p.orcs.length?p.orcs.map(orcHtml).join(''):'<div class="empty">Nenhum orçamento para este paciente.</div>');
+}
+
+// NexoDent 254 — carregamento sob demanda do laboratório no prontuário.
+if(!window.__nexoLabLoadButtonBound){
+ window.__nexoLabLoadButtonBound=true;
+ document.addEventListener('click',async function(event){
+  const button=event.target.closest('[data-nexo-lab-load]');
+  if(!button)return;
+  event.preventDefault();
+  const status=document.getElementById('nexo-lab-load-status');
+  button.disabled=true;
+  if(status)status.textContent=' Consultando...';
+  try{
+   if(typeof window.NexoLabLoad!=='function')throw new Error('Módulo Laboratório não foi carregado. Atualize a página.');
+   await window.NexoLabLoad(true);
+   if(typeof render==='function')render();
+  }catch(err){
+   if(status)status.textContent=' '+(err?.message||'Falha ao consultar laboratório.');
+   button.disabled=false;
+  }
+ });
 }
