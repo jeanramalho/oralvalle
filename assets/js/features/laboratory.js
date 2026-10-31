@@ -65,8 +65,14 @@ const linkKey=()=>`nexodent:lab-links:v1:${clinic()||'local'}`;
 function linksRead(){try{return JSON.parse(localStorage.getItem(linkKey())||'{}')}catch(_){return {}}}
 function linkFor(id){const order=orders.find(o=>String(o.id)===String(id));if(order&&(order.treatment_id!=null||order.laboratory_cost!=null))return {treatment_id:String(order.treatment_id||''),cost:Number(order.laboratory_cost)||0};return linksRead()[String(id)]||{}}
 function saveLink(id,tid,cost){const all=linksRead();all[String(id)]={treatment_id:String(tid||''),cost:Number(cost)||0};localStorage.setItem(linkKey(),JSON.stringify(all));}
+function missingTreatment(o){
+ const tid=String(linkFor(o.id).treatment_id||'');
+ const p=(db.p||[]).find(p=>String(p.id)===String(o.patient_id));
+ // Só sinaliza órfão quando a lista de tratamentos está efetivamente carregada.
+ return !!(tid&&Array.isArray(p?.trat)&&!p.trat.some(t=>String(t.id)===tid));
+}
 function linkedTreatment(o){const link=linkFor(o.id);return patientTreatments(o.patient_id).find(t=>String(t.id)===link.treatment_id);}
-function treatmentLabel(t){return [t.nome||t.procedimento||t.descricao||t.tipo||'Procedimento',t.dente?'Dente '+t.dente:'',money(t.valor)].filter(Boolean).join(' · ');}
+function treatmentLabel(t){return [t.proc||t.nome||t.procedimento||t.descricao||t.tipo||'Procedimento',t.dente?'Dente '+t.dente:'',money(t.valor)].filter(Boolean).join(' · ');}
 function money(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
 function isoToday(){const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');}
 function validateOrder(f,original){
@@ -110,9 +116,10 @@ function card(o){
  const obs=o.status==='Em observação';
  return `<article class="card nxlab-card"><div class="nxlab-head"><div><strong>${safe(patientName(o.patient_id))}</strong><div class="nxlab-sub">${safe(o.work_description)} · ${safe(o.teeth||'Sem região')}</div></div><span class="nxlab-pill ${obs?'nxlab-alert':''}">${safe(o.status)}</span></div>
  <div class="nxlab-details"><span><b>Laboratório:</b> ${safe(o.laboratory)}</span><span><b>Cor:</b> ${safe(o.shade||'—')}</span><span><b>Etapa:</b> ${safe(o.stage)}</span><span><b>Envio:</b> ${safe(date(o.sent_at)||'—')}</span><span><b>Entrega prevista:</b> ${safe(date(o.due_at)||'—')}</span><span><b>Recebido:</b> ${safe(date(o.received_at)||'—')}</span>${treatmentSummary(o.patient_id)}<span><b>Tratamento vinculado:</b> ${safe(linkedTreatment(o)?treatmentLabel(linkedTreatment(o)):'Não vinculado')}</span><span><b>Custo laboratório:</b> ${safe(money(linkFor(o.id).cost))}</span></div>
+ ${missingTreatment(o)?'<p class="nxlab-note"><b>Atenção:</b> o procedimento vinculado foi excluído do prontuário. Este trabalho não aparece na lista Em aberto; use Excluir para removê-lo definitivamente.</p>':''}
  ${obs?`<p class="nxlab-note"><b>Em observação:</b> ${safe(o.observation_reason||'Motivo não informado')}</p>`:''}
  ${o.instructions?`<p><b>Instruções:</b> ${safe(o.instructions)}</p>`:''}
- <div class="nxlab-actions"><button class="ghost sm" data-lab="details" data-id="${safe(o.id)}">Histórico e comentários (${events.length+comments.length})</button>${canEdit()?`<button class="ghost sm" data-lab="edit" data-id="${safe(o.id)}">Editar</button><button class="sm" data-lab="advance" data-id="${safe(o.id)}">Avançar etapa →</button>`:''}</div>
+ <div class="nxlab-actions"><button class="ghost sm" data-lab="details" data-id="${safe(o.id)}">Histórico e comentários (${events.length+comments.length})</button>${canEdit()?`<button class="ghost sm" data-lab="edit" data-id="${safe(o.id)}">Editar</button><button class="sm" data-lab="advance" data-id="${safe(o.id)}">Avançar etapa →</button><button class="danger sm" data-lab="delete" data-id="${safe(o.id)}">Excluir trabalho</button>`:''}</div>
  ${view.labDetails===o.id?`<div class="nxlab-timeline">${events.slice().reverse().map(h=>`<div><small>${safe(new Date(h.at).toLocaleString('pt-BR'))}</small> · ${safe(h.text)}</div>`).join('')}${comments.map(c=>`<div><small>${safe(new Date(c.at).toLocaleString('pt-BR'))}</small> · 💬 ${safe(c.text)}</div>`).join('')||'<p>Sem comentários.</p>'}${canEdit()?`<label class="nxlab-field"><span>Novo comentário</span><textarea id="nxlab-comment-${safe(o.id)}" maxlength="2000" rows="2" placeholder="Registre orientações, ajustes, ocorrências..."></textarea></label><button class="sm" data-lab="comment" data-id="${safe(o.id)}">Adicionar comentário</button>`:''}</div>`:''}
  </article>`;
 }
@@ -123,12 +130,12 @@ window.nexoLabHtml=function(){
  if(!allowed())return '<div class="card">Você não possui permissão para consultar os trabalhos de laboratório.</div>';
  if(loadedClinic!==(clinic()||'local')&&!loading&&loadAttemptedClinic!==(clinic()||'local'))setTimeout(()=>fetchOrders(),0);
  const today=isoToday();
- const active=o=>!['Entregue','Cancelado'].includes(o.status);
+ const active=o=>!missingTreatment(o)&&!['Entregue','Cancelado'].includes(o.status);
  const late=o=>active(o)&&!!o.due_at&&date(o.due_at)<today;
  const soon=o=>active(o)&&!!o.due_at&&date(o.due_at)>=today&&date(o.due_at)<=new Date(Date.now()+7*86400000).toLocaleDateString('en-CA');
  const noDeadline=o=>active(o)&&!o.due_at;
  const totals={open:orders.filter(active).length,late:orders.filter(late).length,observed:orders.filter(o=>o.status==='Em observação').length,delivered:orders.filter(o=>o.status==='Entregue').length,soon:orders.filter(soon).length,noDeadline:orders.filter(noDeadline).length};
- const items=orders.filter(o=>filter==='todos'||(filter==='observacao'?o.status==='Em observação':filter==='atrasados'?late(o):filter==='proximos'?soon(o):filter==='sem-prazo'?noDeadline(o):active(o))).filter(o=>!search||[patientName(o.patient_id),o.laboratory,o.work_description,o.teeth].some(t=>String(t||'').toLowerCase().includes(search.toLowerCase())));
+ const items=orders.filter(o=>filter==='todos'||(!missingTreatment(o)&&(filter==='observacao'?o.status==='Em observação':filter==='atrasados'?late(o):filter==='proximos'?soon(o):filter==='sem-prazo'?noDeadline(o):active(o)))).filter(o=>!search||[patientName(o.patient_id),o.laboratory,o.work_description,o.teeth].some(t=>String(t||'').toLowerCase().includes(search.toLowerCase())));
 
  return `${style()}<div class="nxlab-top"><div><h2>Laboratório</h2><p>Controle de trabalhos, etapas, prazos e comunicação.</p></div><div class="nxlab-actions">${canEdit()?'<button data-lab="new">+ Novo trabalho</button>':''}<button class="ghost" data-lab="export">Exportar CSV (filtro atual)</button><button class="ghost" data-lab="refresh">Atualizar</button></div></div>
  ${error?`<p class="nxlab-error">${safe(error)}</p>`:''}${loading?'<p>Carregando trabalhos...</p>':''}
@@ -151,8 +158,8 @@ function readForm(){const v=id=>($id(id)?.value||'').trim();return {patient_id:v
 function exportCsv(){
  const fields=['Paciente','Laboratório','Trabalho','Dentes','Cor','Etapa','Situação','Envio','Previsão','Recebimento','Observação','Tratamentos cadastrados','Tratamentos concluídos','Custos cadastrados','Tratamento vinculado','Custo laboratório'];
  const today=isoToday();
- const active=o=>!['Entregue','Cancelado'].includes(o.status);
- const filtered=orders.filter(o=>filter==='todos'||(filter==='observacao'?o.status==='Em observação':filter==='atrasados'?active(o)&&o.due_at&&date(o.due_at)<today:filter==='proximos'?active(o)&&o.due_at&&date(o.due_at)>=today&&date(o.due_at)<=new Date(Date.now()+7*86400000).toLocaleDateString('en-CA'):filter==='sem-prazo'?active(o)&&!o.due_at:active(o))).filter(o=>!search||[patientName(o.patient_id),o.laboratory,o.work_description,o.teeth].some(t=>String(t||'').toLowerCase().includes(search.toLowerCase())));
+ const active=o=>!missingTreatment(o)&&!['Entregue','Cancelado'].includes(o.status);
+ const filtered=orders.filter(o=>filter==='todos'||(!missingTreatment(o)&&(filter==='observacao'?o.status==='Em observação':filter==='atrasados'?active(o)&&o.due_at&&date(o.due_at)<today:filter==='proximos'?active(o)&&o.due_at&&date(o.due_at)>=today&&date(o.due_at)<=new Date(Date.now()+7*86400000).toLocaleDateString('en-CA'):filter==='sem-prazo'?active(o)&&!o.due_at:active(o)))).filter(o=>!search||[patientName(o.patient_id),o.laboratory,o.work_description,o.teeth].some(t=>String(t||'').toLowerCase().includes(search.toLowerCase())));
  const rows=filtered.map(o=>[patientName(o.patient_id),o.laboratory,o.work_description,o.teeth,o.shade,o.stage,o.status,date(o.sent_at),date(o.due_at),date(o.received_at),o.observation_reason,patientTreatments(o.patient_id).length,patientTreatments(o.patient_id).filter(t=>t.vid||['concluído','concluido','realizado'].includes(String(t.status||'').toLowerCase())).length,patientTreatments(o.patient_id).reduce((sum,t)=>sum+(Number(t.custo)||0),0).toFixed(2),linkedTreatment(o)?treatmentLabel(linkedTreatment(o)):'',Number(linkFor(o.id).cost||0).toFixed(2)]);
  const cell=v=>'"'+String(v??'').replace(/^[=+@\-\t\r]/,v=>"'"+v).replace(/"/g,'""')+'"';
  const csv='\uFEFF'+[fields,...rows].map(row=>row.map(cell).join(';')).join('\r\n');
@@ -168,6 +175,17 @@ async function execute(action,id){
  if(action==='new'){editing='new';renderLab();return;}
  if(action==='cancel'){editing=null;renderLab();return;}
  if(action==='edit'){editing=id;renderLab();return;}
+ if(action==='delete'){
+  const target=orders.find(o=>String(o.id)===String(id));if(!target)return;
+  if(!confirm('Excluir definitivamente o trabalho de laboratório de '+patientName(target.patient_id)+'? Esta ação não pode ser desfeita.'))return;
+  busy=true;try{
+   if(cloud()){await OralCloud.request('/rest/v1/nexodent_lab_orders?id=eq.'+encodeURIComponent(id)+'&clinic_id=eq.'+encodeURIComponent(clinic()),{method:'DELETE'});await fetchOrders(true);}
+   else{orders=orders.filter(o=>String(o.id)!==String(id));localWrite();}
+   const links=linksRead();delete links[String(id)];localStorage.setItem(linkKey(),JSON.stringify(links));
+   if(editing===id)editing=null;publishOrders();renderLab();if(typeof toast==='function')toast('Trabalho excluído.');
+  }catch(e){alert('Não foi possível excluir: '+(e.message||'Sem permissão ou erro de conexão'));}
+  finally{busy=false;}return;
+ }
  const old=orders.find(o=>o.id===id);
  if(action!=='save'&&!old)return;
  let o;
