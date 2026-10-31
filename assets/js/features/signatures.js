@@ -15,6 +15,15 @@
     <div style="flex:1;min-width:240px;padding:12px;border:1px solid #f3c59d;border-radius:10px"><strong>e-CPF A1 — Dentista</strong><p class="note">Uso individual do profissional para documentos clínicos. Cada dentista deverá autorizar pessoalmente a assinatura.</p><span style="font-weight:600;color:#a44b00">Integração pendente</span></div>
     <div style="flex:1;min-width:240px;padding:12px;border:1px solid #f3c59d;border-radius:10px"><strong>e-CNPJ A1 — Administração</strong><p class="note">Reservado a operações empresariais do administrador autorizado; não substitui o e-CPF do dentista.</p><span style="font-weight:600;color:#a44b00">Integração pendente</span></div>
    </div>
+   <div style="margin-top:14px;padding:14px;border:1px solid #f3c59d;border-radius:10px;background:#fffaf5">
+    <h3>Verificação local do arquivo A1 (sem envio)</h3>
+    <p class="note">Selecione um arquivo .pfx ou .p12 para verificar formato, tamanho e integridade do arquivo no seu navegador. <strong>Não valida titular, validade, senha, cadeia ICP-Brasil ou capacidade de assinar.</strong> Nenhum arquivo será enviado ou armazenado.</p>
+    <label for="ns-cert-file">Arquivo do certificado A1</label>
+    <input id="ns-cert-file" type="file" accept=".pfx,.p12,application/x-pkcs12" autocomplete="off">
+    <div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap"><button type="button" id="ns-cert-check" class="ghost sm">Verificar arquivo localmente</button><button type="button" id="ns-cert-clear" class="ghost sm">Limpar seleção</button></div>
+    <p id="ns-cert-result" class="note" role="status" aria-live="polite">Nenhum arquivo selecionado.</p>
+    <p class="note"><strong>e-CNPJ:</strong> utilize esta verificação somente no dispositivo do administrador. Não compartilhe o certificado com funcionários.</p>
+   </div>
    <p class="note" style="margin-top:12px"><strong>Segurança:</strong> não envie arquivos .pfx/.p12 nem senhas por WhatsApp, e-mail ou formulários não preparados para custódia segura. A assinatura ICP-Brasil exigirá um serviço de assinatura criptográfica com controle de identidade, autorização e auditoria.</p>
   </section>
   <section class="card" style="border-top:4px solid #f97316;max-width:980px">
@@ -38,7 +47,26 @@
  }
  const obs=new MutationObserver(()=>{['dentista','paciente'].forEach(r=>setup(document.getElementById('ns-'+r)))});
  document.addEventListener('DOMContentLoaded',()=>obs.observe(document.body,{childList:true,subtree:true}));
+ async function inspectCertificate(){
+  const input=document.getElementById('ns-cert-file'),out=document.getElementById('ns-cert-result');
+  if(!input||!out)return;
+  const file=input.files&&input.files[0];
+  if(!file){out.textContent='Selecione um arquivo .pfx ou .p12.';return}
+  if(!/\.(pfx|p12)$/i.test(file.name)){out.textContent='Formato não permitido. Escolha um arquivo .pfx ou .p12.';return}
+  if(file.size<16||file.size>5*1024*1024){out.textContent='Arquivo vazio, muito pequeno ou maior que 5 MB. Verifique o arquivo.';return}
+  out.textContent='Analisando localmente...';
+  try{
+   const data=await file.arrayBuffer();
+   // PKCS#12 uses ASN.1 DER SEQUENCE. This is a structural sanity check, not certificate validation.
+   if(new Uint8Array(data)[0]!==0x30){out.textContent='O arquivo não apresenta o cabeçalho ASN.1 esperado para PKCS#12.';return}
+   let fingerprint='indisponível';
+   if(window.crypto&&crypto.subtle){const hash=new Uint8Array(await crypto.subtle.digest('SHA-256',data));fingerprint=Array.from(hash,b=>b.toString(16).padStart(2,'0')).join('').toUpperCase()}
+   out.textContent='Arquivo com extensão e cabeçalho compatíveis com PKCS#12 ('+(file.size/1024).toFixed(1)+' KB). SHA-256 do ARQUIVO: '+fingerprint+'. Isto NÃO confirma que o certificado é válido ou que a senha está correta.';
+  }catch(_){out.textContent='Não foi possível ler o arquivo localmente.'}
+ }
  document.addEventListener('click',ev=>{
+  if(ev.target.closest('#ns-cert-check')){inspectCertificate();return}
+  if(ev.target.closest('#ns-cert-clear')){const input=document.getElementById('ns-cert-file'),out=document.getElementById('ns-cert-result');if(input)input.value='';if(out)out.textContent='Nenhum arquivo selecionado.';return}
   const c=ev.target.closest('[data-ns-clear]');if(c){const r=c.dataset.nsClear,cv=document.getElementById('ns-'+r);cv?.getContext('2d').clearRect(0,0,cv.width,cv.height);signatures[r]=null;delete signedAt[r];document.getElementById('ns-status-'+r).textContent='Ainda não assinou';return}
   if(ev.target.closest('#ns-reset')){if(confirm('Limpar texto e assinaturas desta sessão?')){clear();render()}return}
   if(!ev.target.closest('#ns-print'))return;
