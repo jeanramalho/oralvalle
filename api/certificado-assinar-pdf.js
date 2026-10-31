@@ -4,6 +4,7 @@ const { PDFDocument } = require('pdf-lib');
 const { pdflibAddPlaceholder } = require('@signpdf/placeholder-pdf-lib');
 const { SignPdf } = require('@signpdf/signpdf');
 const { P12Signer } = require('@signpdf/signer-p12');
+const { isCorporateCertificate } = require('./certificate-policy');
 const MAX_PDF=5*1024*1024, MAX_P12=1024*1024;
 function decode(input, max) {
  if(typeof input!=='string'||input.length>Math.ceil(max*4/3)+8||!input.length||!/^[A-Za-z0-9+/]+={0,2}$/.test(input)) throw new Error('Arquivo inválido');
@@ -29,8 +30,7 @@ module.exports=async function handler(req,res){
   try{pkcs=forge.pkcs12.pkcs12FromAsn1(forge.asn1.fromDer(p12.toString('binary')),false,password);}catch(_){return res.status(422).json({error:'Certificado ou senha inválidos'});}
   const bags=pkcs.getBags({bagType:forge.pki.oids.certBag})[forge.pki.oids.certBag]||[];
   const cert=bags[0]?.cert;if(!cert)return res.status(422).json({error:'Certificado não encontrado'});
-  const subject=cert.subject.attributes.map(x=>String(x.value)).join(' ');
-  if(/(?:^|\D)\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}(?:\D|$)/.test(subject))return res.status(403).json({error:'e-CNPJ indisponível nesta etapa: falta validar o perfil de administrador'});
+  if(isCorporateCertificate(cert,forge))return res.status(403).json({error:'e-CNPJ indisponível nesta etapa: falta validar o perfil de administrador'});
   const now=new Date();if(now<cert.validity.notBefore||now>cert.validity.notAfter)return res.status(422).json({error:'Certificado fora da validade'});
   const doc=await PDFDocument.load(pdf,{ignoreEncryption:false});
   pdflibAddPlaceholder({pdfDoc:doc,reason:'Assinatura digital de documento',name:cert.subject.getField('CN')?.value||'Titular',contactInfo:'',location:'Brasil',signatureLength:16000});
