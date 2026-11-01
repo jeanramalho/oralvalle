@@ -98,6 +98,7 @@
     return false;
   }
   async function signature(patient, slot, values) {
+    if (patient[slot]) throw new Error('Assinatura já registrada e protegida. Não é permitido sobrescrever ou apagar.');
     await OralCloudSync.fileOperation(patient.id, 'signature', { slot, values });
     const state = entry(patient);
     state.rows = null;
@@ -208,6 +209,7 @@
     A[action] = async (button, data, patient) => {
       if (!patient || !signatureReady(patient, slot)) return;
       const names = slot === 'sign' ? ['sign', 'signDate', 'signTermo'] : ['evolSign', 'evolSignDate'];
+      if (patient[slot]) { report(new Error('Assinatura já registrada e protegida; não pode ser apagada.')); return; }
       try { await signature(patient, slot, Object.fromEntries(names.map(name => [name, '']))); }
       catch (error) { report(error); }
     };
