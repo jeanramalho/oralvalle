@@ -38,3 +38,38 @@ html[data-ov-mode] table { border-collapse:separate;border-spacing:0; }
 html[data-ov-mode] th { font-weight:600; }
 @media(prefers-reduced-motion:reduce){html[data-ov-mode] button,html[data-ov-mode] .ov-nav-btn{transition:none}}
 @media print {html[data-ov-mode] .card,html[data-ov-mode] .ov-panel {box-shadow:none}}
+
+/* NexoDent: padronizacao visual exclusiva dos botoes de receitas e atestados. */
+button[data-act="rxsign"],
+button[data-act="rxicp"],
+button[data-act="rxpdf"],
+button[data-act="rxprint"],
+button[data-act="rxsave"],
+button[data-act="rxmodel"],
+button[data-act="rxreset"],
+button[data-act="atsign"],
+button[data-act="aticp"],
+button[data-act="atpdf"],
+button[data-act="atprint"],
+button[data-act="atsave"] {
+  background:#17191d !important;
+  color:#f7f7f7 !important;
+  border:1px solid #41454d !important;
+  box-shadow:none !important;
+}
+button[data-act="rxsign"]:hover,
+button[data-act="rxicp"]:hover,
+button[data-act="rxpdf"]:hover,
+button[data-act="rxprint"]:hover,
+button[data-act="rxsave"]:hover,
+button[data-act="rxmodel"]:hover,
+button[data-act="rxreset"]:hover,
+button[data-act="atsign"]:hover,
+button[data-act="aticp"]:hover,
+button[data-act="atpdf"]:hover,
+button[data-act="atprint"]:hover,
+button[data-act="atsave"]:hover {
+  background:#292d33 !important;
+  color:#ffffff !important;
+  border-color:#626873 !important;
+}
