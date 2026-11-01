@@ -3,7 +3,7 @@ const start=()=>{
  const pane=document.getElementById('nx-diagnostics');
  if(!pane||document.getElementById('nx-preventive-alerts'))return;
  const box=document.createElement('section');box.id='nx-preventive-alerts';box.style.marginTop='20px';
- const title=document.createElement('h2');title.textContent='Alertas preventivos — atualização 71';
+ const title=document.createElement('h2');title.textContent='Alertas preventivos';
  const info=document.createElement('p');info.textContent='Consulta manual, somente leitura, de até 100 eventos automáticos e ocorrências manuais. Não é monitoramento contínuo nem comprova a ausência de falhas.';
  const button=document.createElement('button');button.type='button';button.textContent='Verificar alertas';
  const status=document.createElement('p');status.setAttribute('role','status');

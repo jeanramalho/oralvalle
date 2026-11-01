@@ -21,7 +21,7 @@ async function refresh(){btn.disabled=true;status.textContent='Consultando...';l
 const pane=document.getElementById('nx-diagnostics');
 if(!pane || !window.OralCloud || typeof window.OralCloud.request!=='function')return;
 const section=document.createElement('section');section.style.marginTop='18px';
-const heading=document.createElement('h2');heading.textContent='Análise de estabilidade — Atualização 69';section.appendChild(heading);
+const heading=document.createElement('h2');heading.textContent='Análise de estabilidade';section.appendChild(heading);
 const explanation=document.createElement('p');explanation.textContent='Resumo dos últimos registros disponíveis (até 100 eventos automáticos e ocorrências manuais retornadas pelo servidor). Não executa testes clínicos nem altera dados.';section.appendChild(explanation);
 const button=document.createElement('button');button.type='button';button.textContent='Analisar erros registrados';section.appendChild(button);
 const status=document.createElement('p');status.setAttribute('role','status');section.appendChild(status);

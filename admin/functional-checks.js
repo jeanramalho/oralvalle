@@ -2,7 +2,7 @@
 // Verificações locais e não destrutivas. Nenhum teste grava no banco.
 const pane=document.getElementById('nx-diagnostics');if(!pane)return;
 const section=document.createElement('section');section.style.marginTop='18px';
-const heading=document.createElement('h2');heading.textContent='Testes funcionais seguros — atualização 68';
+const heading=document.createElement('h2');heading.textContent='Testes funcionais seguros';
 const description=document.createElement('p');description.textContent='Testes de interface e disponibilidade, somente leitura. Não comprovam operações reais, permissões no servidor ou geração/assinatura de PDFs.';
 const button=document.createElement('button');button.type='button';button.textContent='Executar testes seguros';
 const status=document.createElement('p');status.setAttribute('role','status');

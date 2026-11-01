@@ -3,7 +3,7 @@
 const pane=document.getElementById('nx-reports');
 if(!pane)return;
 const section=document.createElement('section');section.style.marginTop='20px';
-const title=document.createElement('h2');title.textContent='Relatório de estabilidade — atualização 77';section.append(title);
+const title=document.createElement('h2');title.textContent='Relatório de estabilidade';section.append(title);
 const note=document.createElement('p');note.textContent='Consulta até 100 erros automáticos e ocorrências manuais. A versão só aparece quando retornada pela consulta administrativa. Sem eventos não significa ausência de falhas.';section.append(note);
 const btn=document.createElement('button');btn.type='button';btn.textContent='Gerar relatório de estabilidade';section.append(btn);
 const status=document.createElement('p');status.setAttribute('role','status');section.append(status);

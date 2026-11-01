@@ -2,7 +2,7 @@
 // NexoDent 80: somente leitura; não chama operações de escrita nem executa código dos módulos.
 const pane=document.getElementById('nx-diagnostics');if(!pane)return;
 const box=document.createElement('section');box.style.marginTop='18px';
-const title=document.createElement('h2');title.textContent='Diagnóstico consolidado — versão 80';
+const title=document.createElement('h2');title.textContent='Diagnóstico consolidado';
 const info=document.createElement('p');info.textContent='Verifica disponibilidade e conteúdo básico de componentes. Não simula cadastros, pagamentos, assinaturas ou permissões do servidor. Nenhum dado clínico é alterado.';
 const button=document.createElement('button');button.type='button';button.textContent='Executar diagnóstico consolidado';
 const exportButton=document.createElement('button');exportButton.type='button';exportButton.className='secondary';exportButton.textContent='Exportar resultado JSON';exportButton.disabled=true;exportButton.style.marginLeft='8px';

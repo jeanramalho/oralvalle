@@ -3,7 +3,7 @@
 const pane=document.getElementById('nx-diagnostics');
 if(!pane || !window.OralCloud || typeof window.OralCloud.request!=='function')return;
 const section=document.createElement('section');section.style.marginTop='22px';
-const heading=document.createElement('h2');heading.textContent='Painel de saúde — Atualização 70';section.appendChild(heading);
+const heading=document.createElement('h2');heading.textContent='Painel de saúde';section.appendChild(heading);
 const note=document.createElement('p');note.textContent='Indicadores baseados apenas nos registros retornados (até 100 eventos automáticos). Ausência de registros não comprova ausência de bugs. Consultas somente de leitura.';section.appendChild(note);
 const button=document.createElement('button');button.type='button';button.textContent='Atualizar painel de saúde';section.appendChild(button);
 const status=document.createElement('p');status.setAttribute('role','status');section.appendChild(status);
