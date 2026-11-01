@@ -31,7 +31,7 @@
       if(!hasInk||!box.querySelector('[data-confirm]').checked){alert('O dentista deve desenhar a assinatura e confirmar sua autorização.');return;}
       const d=dentists.find(x=>String(x.id)===select.value);if(!d)return;
       if(!window.OralCloud?.enabled||!window.OralCloud?.clinicId||!window.OralCloudSync?.fileOperation){alert('Conecte a clínica ao Supabase antes de arquivar.');return;}
-      if(!window.jspdf?.jsPDF){alert('Biblioteca de PDF não disponível.');return;}
+      if(typeof ensureJsPDF!=='function' || !(await ensureJsPDF())){alert('Não foi possível carregar a biblioteca de PDF. Verifique se assets/vendor/jspdf.umd.min.js está disponível.');return;}
       const button=box.querySelector('[data-archive]');button.disabled=true;button.textContent='Arquivando...';
       try{
         const {jsPDF}=window.jspdf,doc=new jsPDF({unit:'mm',format:'a4'});
