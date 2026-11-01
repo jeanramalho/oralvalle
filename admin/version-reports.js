@@ -1,0 +1,32 @@
+/* NexoDent Admin 72 - Relatorios de estabilidade: somente leitura. */
+(()=>{'use strict';
+const pane=document.getElementById('nx-reports');
+if(!pane)return;
+const section=document.createElement('section');section.style.marginTop='20px';
+const title=document.createElement('h2');title.textContent='Relatório de estabilidade — atualização 72';section.append(title);
+const note=document.createElement('p');note.textContent='Consulta até 100 erros automáticos e as ocorrências manuais retornadas pelo servidor. Não é possível comparar versões anteriores: a versão ainda não é registrada nos eventos. Ausência de eventos não significa ausência de falhas.';section.append(note);
+const btn=document.createElement('button');btn.type='button';btn.textContent='Gerar relatório de estabilidade';section.append(btn);
+const status=document.createElement('p');status.setAttribute('role','status');section.append(status);
+const output=document.createElement('div');section.append(output);
+const download=document.createElement('button');download.type='button';download.textContent='Exportar relatório JSON';download.hidden=true;section.append(download);
+pane.append(section);
+let report=null;
+function item(label,value){const el=document.createElement('div');el.className='nx-result';el.textContent=label+': '+value;output.append(el)}
+btn.addEventListener('click',async()=>{btn.disabled=true;download.hidden=true;output.replaceChildren();status.textContent='Consultando registros...';
+const errors=[];let automatic=[],manual=[];
+if(typeof window.OralCloud?.request!=='function'){status.textContent='Cliente de dados indisponível.';btn.disabled=false;return}
+try{const x=await window.OralCloud.request('/rest/v1/rpc/nexodent_admin_client_errors',{method:'POST',body:{p_limit:100}});if(!Array.isArray(x))throw Error('Resposta inesperada');automatic=x}catch(e){errors.push('Erros automáticos: consulta indisponível')}
+try{const x=await window.OralCloud.request('/rest/v1/rpc/nexodent_admin_incidents',{method:'POST',body:{p_action:'list',p_module:null,p_severity:null,p_description:null,p_id:null,p_status:null}});if(!Array.isArray(x))throw Error('Resposta inesperada');manual=x}catch(e){errors.push('Ocorrências manuais: consulta indisponível')}
+const clinics={};for(const e of automatic){const id=typeof e.clinic_id==='string'&&e.clinic_id?e.clinic_id:'Não identificada';clinics[id]=(clinics[id]||0)+1}
+const modules={};for(const e of manual){const m=String(e.module||'Não informado').slice(0,80);modules[m]=(modules[m]||0)+1}
+const dates=[...automatic,...manual].map(e=>Date.parse(e.created_at)).filter(Number.isFinite);
+report={generated_at:new Date().toISOString(),sample_limit_automatic:100,automatic_events:automatic.length,manual_incidents:manual.length,automatic_by_clinic:clinics,manual_by_module:modules,first_event:dates.length?new Date(Math.min(...dates)).toISOString():null,last_event:dates.length?new Date(Math.max(...dates)).toISOString():null,version_comparison:'indisponível: versão não registrada nos eventos',warnings:errors};
+item('Erros automáticos',report.automatic_events);item('Ocorrências manuais',report.manual_incidents);
+for(const [k,v] of Object.entries(clinics))item('Clínica '+k,v+' evento(s)');
+for(const [k,v] of Object.entries(modules))item('Módulo '+k,v+' ocorrência(s)');
+item('Comparação de versões','Indisponível até que os eventos incluam versão');
+for(const warning of errors)item('Atenção',warning);
+status.textContent=errors.length?'Relatório parcial — fontes indisponíveis.':'Relatório gerado (amostra limitada).';download.hidden=false;btn.disabled=false;
+});
+download.addEventListener('click',()=>{if(!report)return;const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='nexodent-estabilidade-72.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});
+})();
