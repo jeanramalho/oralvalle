@@ -125,6 +125,30 @@ function card(o){
 }
 function style(){return `<style>
  .nxlab-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:0 0 16px}.nxlab-metrics>div{padding:14px;border:1px solid #d9dfe6 !important;background:#ffffff !important;border-radius:12px;display:flex;flex-direction:column;gap:4px}.nxlab-metrics strong{font-size:25px;color:#222222 !important}.nxlab-metrics span{font-size:12px;color:#555555 !important}.nxlab-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}.nxlab-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.nxlab-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}.nxlab-field{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:600}.nxlab-field input,.nxlab-field select,.nxlab-field textarea{width:100%;padding:10px;border:1px solid #d7d7d7;border-radius:9px;background:#fff;color:#222;font:inherit}.nxlab-wide{grid-column:1/-1}.nxlab-card{margin:12px 0}.nxlab-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.nxlab-sub{color:#666;margin-top:5px}.nxlab-pill{display:inline-flex;align-items:center;justify-content:center;text-align:center;line-height:1.3;min-height:30px;max-width:190px;white-space:normal;flex-shrink:0;padding:6px 12px;border-radius:99px;background:#fff0df;color:#9a4d00;font-size:12px;font-weight:700}.nxlab-alert{background:#ffe1e1;color:#a70000}.nxlab-details{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:9px;margin-top:14px;font-size:13px}.nxlab-note{background:#fff3e2;border-left:3px solid #f80;padding:10px}.nxlab-timeline{border-top:1px solid #ddd;margin-top:14px;padding-top:12px}.nxlab-timeline>div{padding:7px 0;border-bottom:1px solid #eee}.nxlab-form{margin-bottom:20px}.nxlab-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.nxlab-filters input,.nxlab-filters select{padding:10px;border:1px solid #ddd;border-radius:8px;min-width:180px}.nxlab-empty{padding:20px;color:#555}.nxlab-error{background:#fff0f0;padding:12px;border-radius:8px;color:#a00000}
+
+ /* NexoDent 105: escala visual exclusiva da pagina Laboratorio. */
+ .nxlab-top{margin-bottom:24px;gap:18px}
+ .nxlab-top h2{font-size:clamp(24px,2.2vw,30px);font-weight:800;line-height:1.2;letter-spacing:-.025em;margin:0 0 8px;color:#172338}
+ .nxlab-top p{font-size:14px;line-height:1.55;color:#64748b;margin:0}
+ .nxlab-actions{margin-top:0;gap:10px;align-items:center}
+ .nxlab-actions button{font-size:13px;min-height:40px;padding:10px 15px;border-radius:10px;font-weight:700}
+ .nxlab-metrics{gap:12px;margin-bottom:22px}
+ .nxlab-metrics>div{padding:18px 16px;min-height:94px;border:1px solid #e5eaf1 !important;border-radius:15px;box-shadow:0 5px 16px rgba(28,39,60,.055);justify-content:center;gap:6px}
+ .nxlab-metrics strong{font-size:28px;line-height:1.1;font-weight:800;color:#172338 !important}
+ .nxlab-metrics span{font-size:13px;line-height:1.4;color:#526176 !important}
+ .nxlab-filters{gap:12px;margin-bottom:18px}
+ .nxlab-filters input,.nxlab-filters select{font-size:14px;min-height:43px;padding:11px 14px;border:1px solid #dfe5ed;border-radius:12px;background:#fff;color:#243247}
+ .nxlab-filters input{flex:1;min-width:220px}
+ .nxlab-card{padding:20px !important;border-radius:16px !important;box-shadow:0 6px 20px rgba(28,39,60,.065);margin:14px 0}
+ .nxlab-head{gap:16px;align-items:flex-start}
+ .nxlab-head strong{font-size:16px;line-height:1.4}
+ .nxlab-sub{font-size:13px;line-height:1.5;margin-top:6px}
+ .nxlab-details{font-size:14px;line-height:1.6;gap:12px 16px;margin-top:17px}
+ .nxlab-pill{font-size:12px;min-height:34px;padding:7px 13px}
+ .nxlab-card button{font-size:13px;min-height:36px;border-radius:9px}
+ .nxlab-field{font-size:14px}
+ .nxlab-field input,.nxlab-field select,.nxlab-field textarea{font-size:14px;min-height:42px}
+ @media(max-width:700px){.nxlab-top{align-items:stretch}.nxlab-actions{width:100%}.nxlab-actions button{flex:1}.nxlab-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.nxlab-metrics>div{padding:14px;min-height:82px}.nxlab-metrics strong{font-size:24px}.nxlab-card{padding:15px !important}.nxlab-filters input,.nxlab-filters select{width:100%;min-width:0}}
  </style>`;}
 window.nexoLabHtml=function(){
  if(!allowed())return '<div class="card">Você não possui permissão para consultar os trabalhos de laboratório.</div>';
