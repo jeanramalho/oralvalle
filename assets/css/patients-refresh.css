@@ -1,0 +1,22 @@
+/* NexoDent — acabamento visual isolado da listagem de pacientes.
+   Não modifica elementos funcionais, scripts, filtros ou eventos. */
+.ov-patients-page{max-width:1120px!important;width:100%;margin:0 auto!important;padding:8px 16px 28px;box-sizing:border-box}
+.ov-patients-page .ov-page-head{padding:20px 22px 22px;border-radius:22px;background:linear-gradient(115deg,#fff 48%,#fff3e9 100%);border:1px solid #ffebdf;margin-bottom:18px;position:relative}
+.ov-patients-page .ov-page-head h1{font-size:clamp(25px,3vw,34px);font-weight:800;letter-spacing:-.7px;margin:0 0 6px;color:#182338}
+.ov-patients-page .ov-page-head .sub{font-size:14px;color:#64748b;margin:0}
+.ov-patients-page .ov-patients-panel{border-radius:20px!important;border:1px solid #f0e9e3!important;box-shadow:0 7px 28px rgba(39,47,65,.055)!important;padding:22px!important;background:#fff!important;margin-bottom:18px}
+.ov-patients-page .ov-patients-head{gap:14px;margin-bottom:18px;flex-wrap:wrap}
+.ov-patients-page .ov-patients-count{font-size:21px;font-weight:800;color:#ec6c00;letter-spacing:-.35px}
+.ov-patients-page .ov-patients-actions{gap:9px}
+.ov-patients-page .ov-new-patient{border-radius:12px!important;background:#ff7900!important;box-shadow:0 4px 12px rgba(255,121,0,.17);font-weight:700}
+.ov-patients-page .ov-archived-patients{border-radius:12px;background:#fff;border-color:#e2e6ec;color:#334155;font-weight:600}
+.ov-patients-page .ov-patient-search input{border-radius:13px!important;background:#fbfcfe!important;height:49px;min-height:49px;font-size:15px;box-shadow:none!important}
+.ov-patients-page .ov-patient-search input:focus{border-color:#ff9d4b!important;outline:2px solid #fff0e4!important}
+.ov-patients-page .ov-patient-filter{font-size:13px;color:#64748b}
+.ov-patients-page .ov-patient-list{max-width:none!important;gap:10px!important}
+.ov-patients-page .ov-patient-row{border-radius:15px!important;min-height:75px!important;padding:15px 19px!important;box-shadow:0 4px 15px rgba(28,38,54,.055)!important;transition:border-color .15s,box-shadow .15s,transform .15s}
+.ov-patients-page .ov-patient-row:hover{border-color:#ffb078!important;box-shadow:0 7px 19px rgba(28,38,54,.09)!important;transform:translateY(-1px)}
+.ov-patients-page .ov-patient-row-name{font-size:15px;font-weight:750;color:#172338}
+.ov-patients-page .ov-patient-row small{margin-top:5px;font-size:12px;color:#7c8796}
+.ov-patients-page .ov-patient-arrow{display:flex;align-items:center;justify-content:center;border:1px solid #ff9a45;border-radius:50%;width:32px;height:32px;flex:0 0 32px;font-size:24px;color:#f47700}
+@media(max-width:700px){.ov-patients-page{padding:5px 8px 18px}.ov-patients-page .ov-page-head{padding:17px}.ov-patients-page .ov-patients-panel{padding:15px!important}.ov-patients-page .ov-patient-row{min-height:66px!important;padding:12px 13px!important}.ov-patients-page .ov-patient-row-name{font-size:14px}.ov-patients-page .ov-patients-actions{flex-wrap:wrap}.ov-patients-page .ov-new-patient,.ov-patients-page .ov-archived-patients{min-height:40px}}
