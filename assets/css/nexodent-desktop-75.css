@@ -1,0 +1,6 @@
+/* NexoDent - escala compacta solicitada, somente desktop.
+   Reproduz aproximadamente o zoom de 75% do navegador Chromium.
+   Para reverter, remova a referencia deste arquivo no index.html. */
+@media screen and (min-width: 900px) and (pointer: fine) {
+  html { zoom: 0.75; }
+}
