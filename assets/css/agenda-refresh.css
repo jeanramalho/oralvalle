@@ -1,0 +1,47 @@
+/* NexoDent | refinamento visual exclusivo da Agenda. Nenhuma regra funcional. */
+.ag-date-panel,.ag-new-form,.ag-rental-panel,.ov-agenda-chairs > .card{
+  background:#fff!important;border:1px solid #e8edf0!important;border-radius:18px!important;
+  box-shadow:0 5px 22px rgba(28,42,54,.055)!important;
+}
+.ag-date-panel{padding:20px 22px!important;border-top:3px solid #f28a35!important}
+.ag-date-panel strong{color:#253342;font-size:18px;letter-spacing:-.025em}
+.ag-date-panel .note{color:#7a8794}
+.ag-date-panel input,.ag-date-panel select,.ag-new-form input,.ag-new-form select,
+.ag-rental-panel input,.ag-rental-panel select{
+  background:#fff!important;border:1px solid #dfe5ea!important;border-radius:10px!important;
+  color:#283646!important;min-height:40px;box-shadow:none!important;
+}
+.ag-date-panel input:focus,.ag-date-panel select:focus,.ag-new-form input:focus,
+.ag-new-form select:focus,.ag-rental-panel input:focus,.ag-rental-panel select:focus{
+  outline:2px solid rgba(234,112,0,.18)!important;border-color:#ed9a58!important;
+}
+.ag-new-form,.ag-rental-panel{padding:20px 22px!important;margin-bottom:16px!important}
+.ag-new-form h2{font-size:19px!important;letter-spacing:-.03em;color:#243342;margin:0 0 18px!important}
+.ag-new-form label,.ag-rental-panel label,.ag-date-panel label{font-size:12px!important;font-weight:700;color:#657487!important}
+.ag-new-form .row,.ag-rental-panel .row{gap:12px!important}
+.ag-new-form button[data-act="addag"]{border-radius:11px!important;min-height:44px;font-weight:700;box-shadow:0 4px 12px rgba(234,112,0,.13)}
+.ag-rental-head strong{font-size:17px;color:#293747}
+.ov-agenda-chairs{gap:18px!important}
+.ov-agenda-chairs>.card{overflow:hidden;padding:16px!important}
+.ov-agenda-chairs>.card>.ag{border-radius:12px!important;background:#fff8f2!important;
+  border:1px solid #fae8d9!important;padding:12px 14px!important;margin-bottom:12px!important}
+.ov-agenda-chairs>.card>.ag strong{font-size:16px!important;color:#263748!important}
+.ov-agenda-chairs>.card>.ag .badge{background:#fff!important;color:#c76517!important;
+  border:1px solid #f4d5bd!important;border-radius:999px!important;padding:5px 10px!important}
+.ag-flow-list{border:1px solid #edf0f2!important;border-radius:12px!important;overflow:hidden}
+.ag-flow-row{border-bottom:1px solid #edf0f2!important;background:#fff!important}
+.ag-flow-row:last-child{border-bottom:0!important}
+.ag-flow-row.ag-flow-free:nth-child(even){background:#fbfcfd!important}
+.ag-flow-time{color:#687787!important;font-weight:650!important;font-variant-numeric:tabular-nums}
+.ag-flow-content .slot-free{color:#86949f!important;border-radius:8px!important}
+.ag-flow-content .slot-free:hover{background:#fff4e9!important;color:#c76517!important}
+.ag-flow-booked .ag-appointment{border-radius:10px!important;box-shadow:0 1px 4px rgba(27,42,55,.045)!important}
+.ag-appointment .ag-patient{font-weight:700!important}
+.ag-appointment .ag-actions button{border-radius:8px!important}
+.ag-sug{border-radius:12px!important;box-shadow:0 12px 32px rgba(27,42,55,.12)!important}
+@media(max-width:760px){
+  .ag-date-panel,.ag-new-form,.ag-rental-panel{padding:15px!important;border-radius:14px!important}
+  .ov-agenda-chairs>.card{padding:10px!important;border-radius:14px!important}
+  .ag-new-form .row,.ag-rental-panel .row{gap:9px!important}
+  .ag-date-panel input,.ag-date-panel select,.ag-new-form input,.ag-new-form select{font-size:16px!important}
+}
