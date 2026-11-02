@@ -229,7 +229,7 @@ const A={
     const v=r2(num(it.valor)*fac(o));if(!(v>0)){toast('Informe o valor do item');return}
     view.obx=o.id+':'+it.id;view.obxAll=null;render()},
   obcancel:()=>{view.obx=null;view.obxAll=null;render()},
-  lemtab:(b,d)=>{view.lemTab=d.t;render()},
+  lemtab:(b,d)=>{const tabs=b?.closest?.('.lem-tabs')||document.querySelector('.lem-tabs');const previousScroll=tabs?tabs.scrollLeft:0;view.lemTab=d.t;render();const updatedTabs=document.querySelector('.lem-tabs');if(updatedTabs)updatedTabs.scrollLeft=previousScroll},
   lemgo:()=>{view.lemTab='ret';view.h='lem';view.id=null;render();topo()},
   orthowa:(b,d)=>{const p=db.p.find(x=>x.id===d.id);if(!p)return;const nome=String(p.nome||'').trim().split(/\s+/)[0]||'Olá';waOpen(p.tel,'Olá, '+nome+'! Está na hora do seu retorno mensal de ortodontia. Podemos agendar sua próxima manutenção?')},
   retwa:(b,d)=>{const p=db.p.find(x=>x.id===d.id);if(!p)return;waOpen(p.tel,retMsg(p,retLast(p)));p.retCont=tdy();save();render()},
