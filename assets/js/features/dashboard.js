@@ -24,6 +24,13 @@ function ovIcon(name){
     mt:'<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3.3 7.5 12 12.5l8.7-5M12 22V12.5"/>',
     pf:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 10.5v7M14 12c-.4-.5-1.1-.8-2-.8-1.1 0-1.9.5-1.9 1.3 0 1.9 3.9.9 3.9 2.8 0 .8-.8 1.4-2 1.4-.9 0-1.6-.3-2-.8"/>',
     cfg:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+    ortho:'<path d="M7 3C4.5 3 3 5 3 7.5c0 2 1 3.5 1.5 5.5.5 2 .7 4.5 1.5 7 .3 1 1.7 1 2-.2.4-1.8.8-4.3 2-4.3s1.6 2.5 2 4.3c.3 1.2 1.7 1.2 2 .2.8-2.5 1-5 1.5-7 .5-2 1.5-3.5 1.5-5.5C21 5 19.5 3 17 3c-1.8 0-3 1-5 1S8.8 3 7 3z"/><path d="M5 9h14M6 12h12M9 9v3m6-3v3"/>',
+    impl:'<path d="M8 3h8M9 6h6M12 6v15M8 10h8M9 14h6M10 18h4M10 3v3m4-3v3"/>',
+    prot:'<path d="M7 3C4.5 3 3 5 3 7.5c0 2 1 3.5 1.5 5.5.5 2 .7 4.5 1.5 7 .3 1 1.7 1 2-.2.4-1.8.8-4.3 2-4.3s1.6 2.5 2 4.3c.3 1.2 1.7 1.2 2 .2.8-2.5 1-5 1.5-7 .5-2 1.5-3.5 1.5-5.5C21 5 19.5 3 17 3c-1.8 0-3 1-5 1S8.8 3 7 3z"/><path d="M7 8h10M8 11h8"/>',
+    lab:'<path d="M9 3h6M10 3v7l-5.5 8.5A2 2 0 0 0 6.2 21h11.6a2 2 0 0 0 1.7-2.5L14 10V3M7 16h10"/>',
+    wa:'<path d="M20 11.5a8 8 0 0 1-11.8 7L4 20l1.5-4.2A8 8 0 1 1 20 11.5z"/><path d="M9 9c.4 2 2 3.6 4 4l1.4-1.1 1.5 1.2c-.4 1.7-1.6 2.1-3 1.7-2.6-.8-4.7-2.9-5.5-5.5-.4-1.4 0-2.6 1.7-3l1.2 1.5z"/>',
+    sigdoc:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M7 12h7M7 16h4M12 19l6-6 2 2-6 6-3 1z"/>',
+    reports:'<path d="M4 20V4M4 20h17M8 17v-5h3v5M13 17V8h3v9M18 17V5h3v12"/>',
     bk:'<path d="M7 18a5 5 0 1 1 1-9.9A6 6 0 0 1 19.5 11 3.7 3.7 0 0 1 18 18"/><path d="M12 20v-8M9 14.5l3-3 3 3"/>'
   };
   return P[name]?`<svg viewBox="0 0 24 24" aria-hidden="true">${P[name]}</svg>`:'•';
@@ -37,17 +44,17 @@ function ovSidebar(active){
     <nav class="ov-nav">
       ${item('ag','Agenda')}
       ${item('pac','Pacientes')}
-      ${pmSee('lem')?`<button class="ov-nav-btn${active==='ortho'?' on':''}" data-act="orthonav"><span class="ico">◷</span><span>Ortodontia</span></button>`:''}
-      ${pmSee('lem')?`<button class="ov-nav-btn${active==='impl'?' on':''}" data-act="implnav"><span class="ico">◈</span><span>Implantodontia</span></button>`:''}
-      ${pmSee('lem')?`<button class="ov-nav-btn${active==='prot'?' on':''}" data-act="protnav"><span class="ico">◇</span><span>Prótese</span></button>`:''}
+      ${pmSee('lem')?`<button class="ov-nav-btn${active==='ortho'?' on':''}" data-act="orthonav"><span class="ico">${ovIcon('ortho')}</span><span>Ortodontia</span></button>`:''}
+      ${pmSee('lem')?`<button class="ov-nav-btn${active==='impl'?' on':''}" data-act="implnav"><span class="ico">${ovIcon('impl')}</span><span>Implantodontia</span></button>`:''}
+      ${pmSee('lem')?`<button class="ov-nav-btn${active==='prot'?' on':''}" data-act="protnav"><span class="ico">${ovIcon('prot')}</span><span>Prótese</span></button>`:''}
       ${item('lem','Lembretes')}
-      ${item('lab','Laboratório','pr')}
-      ${item('wa','WhatsApp','pac')}
-      ${item('sigdoc','Documentos e Assinaturas','pr')}
+      ${item('lab','Laboratório')}
+      ${item('wa','WhatsApp')}
+      ${item('sigdoc','Documentos e Assinaturas')}
       ${pmSee('dt')||pmSee('cm')?`<button class="ov-nav-btn${active==='dt'||active==='cm'?' on':''}" data-act="nav" data-t="${pmSee('dt')?'dt':'cm'}"><span class="ico">${ovIcon('dt')}</span><span>Dentistas</span></button>`:''}
       ${item('vd','Pagamentos Recebidos','pg')}
       ${item('vd','Vendas')}
-      ${pmSee('vd')||pmSee('cm')||pmSee('pac')?`<button class="ov-nav-btn${active==='reports'?' on':''}" data-act="nav" data-t="reports"><span class="ico">▥</span><span>Relatórios</span></button>`:''}
+      ${pmSee('vd')||pmSee('cm')||pmSee('pac')?`<button class="ov-nav-btn${active==='reports'?' on':''}" data-act="nav" data-t="reports"><span class="ico">${ovIcon('reports')}</span><span>Relatórios</span></button>`:''}
     </nav>
     <div class="ov-section">Negociação</div>
     <nav class="ov-nav">
