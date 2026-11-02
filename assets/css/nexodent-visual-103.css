@@ -38,3 +38,13 @@
 .ov-modern-page .ret-act button{border-radius:11px!important}
 @media(max-width:1050px){.nexo-agenda-page .nexo-page-stats,.ov-modern-page .ov-modern-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:650px){.nexo-agenda-page,.ov-modern-page{padding:5px 6px 18px!important}.nexo-agenda-page .nexo-page-hero,.ov-modern-page>.ov-modern-head{padding:17px!important;border-radius:17px!important}.ov-modern-page .ov-modern-title:before{width:46px;height:46px;flex-basis:46px;font-size:23px}.nexo-agenda-page .nexo-page-stats,.ov-modern-page .ov-modern-stats{gap:9px!important}.nexo-agenda-page .nexo-stat,.ov-modern-page .ov-modern-stats>div{padding:13px!important;min-height:85px!important}.nexo-agenda-page .nexo-stat strong,.ov-modern-page .ov-modern-stats strong{font-size:25px!important}.nexo-agenda-page .ag-new-form,.nexo-agenda-page .ag-rental-panel,.nexo-agenda-page .ag-date-panel,.nexo-agenda-page .ov-agenda-chairs>.card{padding:13px!important;border-radius:15px!important}.ov-modern-page .ov-modern-row{padding:0 12px!important}.ov-modern-page .ov-modern-summary{padding:12px 0!important}.ov-modern-page .ov-modern-name strong{font-size:14px!important}}
+
+/* Ajuste pontual v104: ocultar apenas os quadrados decorativos dos cabeçalhos.
+   Não afeta cartões, botões, indicadores nem eventos. */
+.ov-patients-page .nd-patient-hero-icon,
+.ov-modern-page .ov-modern-title::before {
+  display: none !important;
+  content: none !important;
+}
+/* Evita espaço vazio deixado pelo ícone removido. */
+.ov-modern-page .ov-modern-title { gap: 0 !important; }
