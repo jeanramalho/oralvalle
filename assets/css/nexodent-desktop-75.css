@@ -1,6 +1,9 @@
-/* NexoDent - escala compacta solicitada, somente desktop.
-   Reproduz aproximadamente o zoom de 75% do navegador Chromium.
-   Para reverter, remova a referencia deste arquivo no index.html. */
+/* NexoDent: escala desktop 75% e compensacao de altura do layout.
+   Alteracao isolada de CSS; nenhuma rotina de agenda e modificada. */
 @media screen and (min-width: 900px) and (pointer: fine) {
-  html { zoom: 0.75; }
+  html { zoom: .75; }
+  /* A grade principal usa altura de viewport e rolagem interna.
+     Compensar a escala evita que o rodape fique descoberto. */
+  #app { min-height: 133.333333dvh; }
+  .ov-shell { height: 133.333333dvh; min-height: 0; }
 }
