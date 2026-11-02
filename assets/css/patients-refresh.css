@@ -63,3 +63,11 @@
 .ov-patients-page .ov-patient-arrow{margin-left:auto}
 @media(max-width:1000px){.nd-patient-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.nd-patient-info{display:none}}
 @media(max-width:600px){.nd-patient-stats{gap:9px}.nd-patient-stat{min-height:78px;padding:12px;gap:9px}.nd-stat-icon{font-size:23px}.nd-patient-stat strong{font-size:22px}.nd-patient-stat div span{font-size:11px}.nd-patient-hero-icon{width:50px;height:50px;font-size:30px}.nd-patient-hero-decoration{display:none}.ov-patients-page .nd-patient-hero{gap:12px;padding:12px!important}.ov-patients-page .ov-patient-row{padding:12px!important;gap:10px!important}.nd-patient-avatar{width:40px;height:40px;font-size:23px}}
+
+/* Patient detail: consistent card widths regardless of browser zoom. */
+.nexo-patient-data-card,.nexo-patient-extra-card{width:100%;max-width:100%;min-width:0;box-sizing:border-box;display:block}
+.nexo-patient-data-card *, .nexo-patient-extra-card *{box-sizing:border-box}
+.nexo-patient-data-card input,.nexo-patient-data-card textarea,.nexo-patient-extra-card select,.nexo-patient-extra-card textarea{max-width:100%;min-width:0}
+.nexo-patient-data-card>.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%}
+.nexo-patient-data-card>.row>div{min-width:0;width:100%}
+@media(max-width:600px){.nexo-patient-data-card>.row{grid-template-columns:minmax(0,1fr)}}
