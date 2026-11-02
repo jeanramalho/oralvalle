@@ -1,0 +1,27 @@
+/* NexoDent 101 — estrutura visual real, limitada à Agenda e aos módulos de tratamento. */
+.nexo-page-shell,.ov-modern-page{--nexo-ink:#18243b;--nexo-accent:#ec7418;color:var(--nexo-ink)}
+.nexo-page-hero{background:linear-gradient(110deg,#fff 55%,#fff3e9);border:1px solid #f2e5db;border-radius:22px;padding:24px 28px;margin:0 0 17px;box-shadow:0 8px 24px #18243b0a}
+.nexo-page-eyebrow{font-size:11px;font-weight:800;letter-spacing:.14em;color:#d76a18;margin-bottom:10px}
+.nexo-page-title-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.nexo-page-title-row h1{margin:0 0 5px;font-size:clamp(25px,3vw,34px);letter-spacing:-.04em;color:#17243a}
+.nexo-page-title-row p{margin:0;color:#738092;font-size:14px}
+.nexo-page-symbol{width:58px;height:58px;border-radius:17px;background:#fff0e3;color:#e77723;display:grid;place-items:center;font-size:30px;flex:none}
+.nexo-page-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:0 0 20px}
+.nexo-stat{background:#fff;border:1px solid #e9edf3;border-radius:17px;padding:17px 19px;box-shadow:0 5px 17px #17243a09;min-width:0}
+.nexo-stat>span{font-size:12px;color:#67768a;font-weight:700;display:block}
+.nexo-stat strong{font-size:30px;line-height:1.45;display:block;color:#e6741e;font-weight:800}
+.nexo-stat small{font-size:11px;color:#8b96a5;display:block}
+.nexo-agenda-tools{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr);gap:16px;align-items:start;margin:0 0 18px}
+.nexo-agenda-tools .ag-new-form,.nexo-agenda-tools .ag-rental-panel{margin:0!important;height:100%}
+.nexo-section-title{margin:22px 2px 14px}.nexo-section-title h2{font-size:21px;letter-spacing:-.025em;color:#19263b;margin:0 0 5px}.nexo-section-title p{color:#7b8795;margin:0;font-size:13px}
+.nexo-agenda-page .ag-date-panel{margin-top:4px!important}
+.nexo-agenda-page .ov-agenda-chairs>.card{box-shadow:0 6px 23px #18243b10!important}
+/* Tratamentos: reaproveita todos os campos, ações e dados já existentes. */
+.ov-modern-page>.ov-modern-head{padding:23px 26px;background:linear-gradient(110deg,#fff 58%,#fff2e8);border:1px solid #f2e5db;border-radius:22px;box-shadow:0 8px 24px #18243b0a}
+.ov-modern-page>.ov-modern-list{border-radius:20px!important;border:1px solid #e9edf3!important;box-shadow:0 8px 24px #18243b0b!important;padding:22px!important}
+.ov-modern-page .ov-modern-row{border:1px solid #edf0f4!important;border-radius:14px!important;margin:9px 0!important;overflow:hidden;background:#fff!important;box-shadow:0 3px 12px #18243b08}
+.ov-modern-page .ov-modern-summary{padding:15px 18px!important}
+.ov-modern-page .ov-modern-name strong{color:#1b293d;font-weight:750}
+.ov-modern-page .ov-modern-status{border-radius:999px!important}
+@media(max-width:1050px){.nexo-agenda-tools{grid-template-columns:1fr}.nexo-page-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.nexo-page-hero{padding:18px}.nexo-page-stats{gap:9px}.nexo-stat{padding:12px}.nexo-stat strong{font-size:25px}.nexo-stat small{font-size:10px}.nexo-page-symbol{width:44px;height:44px}.ov-modern-page>.ov-modern-list{padding:13px!important}}
