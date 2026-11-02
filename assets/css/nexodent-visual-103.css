@@ -1,0 +1,40 @@
+/* NexoDent — identidade visual das quatro páginas, v103.
+   Escopo: Agenda, Ortodontia, Prótese, Implantodontia. Sem eventos ou alterações de dados. */
+.nexo-agenda-page,.ov-modern-page{--nd-orange:#f47719;--nd-ink:#19253a;--nd-line:#e8edf3;--nd-soft:#f8fafc;max-width:1480px;width:100%;margin:0 auto;padding:8px 12px 28px;box-sizing:border-box;color:var(--nd-ink)}
+/* Hero igual à página de Pacientes */
+.nexo-agenda-page .nexo-page-hero,.ov-modern-page>.ov-modern-head{background:linear-gradient(106deg,#fff 52%,#fff0e5 100%)!important;border:1px solid #f8e6d9!important;border-radius:23px!important;box-shadow:0 8px 24px #19253a0a!important;padding:28px 30px!important;margin-bottom:23px!important;min-height:108px;box-sizing:border-box}
+.nexo-agenda-page .nexo-page-title-row h1,.ov-modern-page .ov-modern-title h1{font-size:clamp(28px,3vw,37px)!important;font-weight:800!important;color:#152238!important;letter-spacing:-.045em!important}
+.nexo-agenda-page .nexo-page-title-row p,.ov-modern-page .ov-modern-title .sub{color:#52637a!important;font-size:14px!important;line-height:1.5!important}
+.nexo-agenda-page .nexo-page-symbol{background:linear-gradient(135deg,#ff9a38,#f16b0a)!important;color:white!important;width:68px!important;height:68px!important;border-radius:20px!important;box-shadow:0 9px 22px #ee77002a!important}
+.ov-modern-page .ov-modern-title{margin:0!important;gap:18px!important}.ov-modern-page .ov-modern-title:before{content:'✦';width:64px;height:64px;flex:0 0 64px;display:grid;place-items:center;border-radius:19px;background:linear-gradient(135deg,#ff9a38,#f16b0a);color:white;font-size:29px;box-shadow:0 9px 22px #ee77002a}
+/* Indicadores com números e labels claramente visíveis */
+.nexo-agenda-page .nexo-page-stats,.ov-modern-page .ov-modern-stats{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:15px!important;margin:0 0 26px!important}
+.nexo-agenda-page .nexo-stat,.ov-modern-page .ov-modern-stats>div{background:#fff!important;border:1px solid #e5eaf0!important;border-radius:19px!important;box-shadow:0 7px 22px #1b2a4110!important;padding:19px 21px!important;min-height:106px!important;box-sizing:border-box}
+.nexo-agenda-page .nexo-stat:first-child,.ov-modern-page .ov-modern-stats>div:first-child{background:#fff4eb!important;border-color:#ffdfc8!important}
+.nexo-agenda-page .nexo-stat strong,.ov-modern-page .ov-modern-stats strong{font-size:32px!important;color:#172238!important;font-weight:800!important;line-height:1.35!important}
+.nexo-agenda-page .nexo-stat>span,.ov-modern-page .ov-modern-stats span{font-size:13px!important;color:#526176!important;font-weight:650!important}
+/* O bloco de indicadores de tratamento está dentro do hero: retira o encaixe antigo */
+.ov-modern-page>.ov-modern-head .ov-modern-stats{margin:24px 0 0!important}
+/* Cartões de atendimento e formulários */
+.nexo-agenda-page .ag-new-form,.nexo-agenda-page .ag-rental-panel,.nexo-agenda-page .ag-date-panel,.nexo-agenda-page .ov-agenda-chairs>.card{background:#fff!important;border:1px solid var(--nd-line)!important;border-radius:21px!important;box-shadow:0 7px 24px #18273e0d!important;padding:22px!important;box-sizing:border-box}
+.nexo-agenda-page .ag-new-form h2,.nexo-agenda-page .nexo-section-title h2,.ov-modern-page .ov-modern-list>h2{font-size:21px!important;font-weight:800!important;color:#1a273d!important;letter-spacing:-.025em!important}
+.nexo-agenda-page input,.nexo-agenda-page select,.ov-modern-page input,.ov-modern-page select,.ov-modern-page textarea{border-radius:12px!important;border-color:#dce4ec!important;background:#fff!important;min-height:40px;box-sizing:border-box}
+.nexo-agenda-page input:focus,.nexo-agenda-page select:focus,.ov-modern-page input:focus,.ov-modern-page select:focus,.ov-modern-page textarea:focus{outline:2px solid #ffdbc2!important;outline-offset:1px}
+.nexo-agenda-page .ag-flow-row{border-bottom:1px solid #edf0f4!important}.nexo-agenda-page .ag-flow-free:hover{background:#fff7f1!important}
+.nexo-agenda-page .ov-agenda-chairs>.card>.ag{background:linear-gradient(110deg,#fff5ec,#fff)!important;border-radius:13px!important;padding:15px!important}
+/* Tratamentos: cada paciente vira um cartão de listagem */
+.ov-modern-page>.ov-modern-list{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important}
+.ov-modern-page .ov-modern-list>h2{border-left:4px solid #f47719!important;padding-left:14px!important;margin-bottom:19px!important}
+.ov-modern-page .ov-modern-row{background:#fff!important;border:1px solid #e5eaf0!important;border-radius:19px!important;box-shadow:0 6px 19px #1b2a4110!important;margin:0 0 11px!important;padding:0 20px!important;transition:border-color .16s,box-shadow .16s!important}
+.ov-modern-page .ov-modern-row:hover{border-color:#ffbc8c!important;box-shadow:0 9px 25px #1b2a4119!important}
+.ov-modern-page .ov-modern-row[open]{border-color:#f4aa74!important;background:#fffdfa!important}
+.ov-modern-page .ov-modern-summary{padding:18px 0!important;min-height:76px!important}
+.ov-modern-page .ov-modern-name strong{font-size:16px!important;font-weight:800!important;color:#18253a!important}
+.ov-modern-page .ov-modern-name small{font-size:12px!important;color:#8a96a6!important}
+.ov-modern-page .ov-modern-date{font-size:13px!important;color:#536177!important}
+.ov-modern-page .ov-modern-status{border-radius:999px!important;padding:8px 14px!important;font-size:12px!important}
+.ov-modern-page .ov-care-arrow{color:#f47719!important;font-size:26px!important}
+.ov-modern-page .ret-act{display:flex!important;flex-wrap:wrap!important;gap:9px!important;padding-bottom:12px!important}
+.ov-modern-page .ret-act button{border-radius:11px!important}
+@media(max-width:1050px){.nexo-agenda-page .nexo-page-stats,.ov-modern-page .ov-modern-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:650px){.nexo-agenda-page,.ov-modern-page{padding:5px 6px 18px!important}.nexo-agenda-page .nexo-page-hero,.ov-modern-page>.ov-modern-head{padding:17px!important;border-radius:17px!important}.ov-modern-page .ov-modern-title:before{width:46px;height:46px;flex-basis:46px;font-size:23px}.nexo-agenda-page .nexo-page-stats,.ov-modern-page .ov-modern-stats{gap:9px!important}.nexo-agenda-page .nexo-stat,.ov-modern-page .ov-modern-stats>div{padding:13px!important;min-height:85px!important}.nexo-agenda-page .nexo-stat strong,.ov-modern-page .ov-modern-stats strong{font-size:25px!important}.nexo-agenda-page .ag-new-form,.nexo-agenda-page .ag-rental-panel,.nexo-agenda-page .ag-date-panel,.nexo-agenda-page .ov-agenda-chairs>.card{padding:13px!important;border-radius:15px!important}.ov-modern-page .ov-modern-row{padding:0 12px!important}.ov-modern-page .ov-modern-summary{padding:12px 0!important}.ov-modern-page .ov-modern-name strong{font-size:14px!important}}
