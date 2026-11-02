@@ -1,0 +1,47 @@
+/* NexoDent 100 — identidade visual compartilhada.
+   CSS exclusivamente decorativo. Sem alterações em JS, banco, eventos ou layout estrutural.
+   Não modifica a página Pacientes já aprovada. */
+html[data-ov-mode="light"] {
+  --nd-card-border:#e9eaf0;
+  --nd-card-shadow:0 7px 23px rgba(31,41,55,.065);
+  --nd-heading:#172238;
+  --nd-orange:#f47712;
+}
+/* Conteúdo interno de módulos: mantém grid, tamanho e fluxo originais. */
+html[data-ov-mode="light"] .ov-content .ov-page-head:not(.ov-patients-page .ov-page-head),
+html[data-ov-mode="light"] .ov-content .ov-panel-head {
+  border-radius:17px;
+}
+html[data-ov-mode="light"] .ov-content .ov-page-head h1,
+html[data-ov-mode="light"] .ov-content .ov-page-head h2 {
+  color:var(--nd-heading);font-weight:800;letter-spacing:-.035em;
+}
+html[data-ov-mode="light"] .ov-content .ov-page-head .sub {color:#64748b;}
+/* Cartões e painéis dos módulos, excluindo os componentes já personalizados. */
+html[data-ov-mode="light"] .ov-content .card:not(.ov-patients-page .card):not(.ov-agenda-chairs .card),
+html[data-ov-mode="light"] .ov-content .ov-panel:not(.ov-patients-page .ov-panel),
+html[data-ov-mode="light"] .ov-content .dt-card,
+html[data-ov-mode="light"] .ov-content .nxlab-card {
+  border-radius:16px;
+  border-color:var(--nd-card-border);
+  box-shadow:var(--nd-card-shadow);
+}
+/* Controles: apenas acabamento, sem mudar dimensões, eventos ou estados. */
+html[data-ov-mode="light"] .ov-content input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+html[data-ov-mode="light"] .ov-content select,
+html[data-ov-mode="light"] .ov-content textarea {border-radius:12px;}
+html[data-ov-mode="light"] .ov-content .tabs button {border-radius:11px;}
+html[data-ov-mode="light"] .ov-content .badge {border-radius:999px;font-weight:650;}
+html[data-ov-mode="light"] .ov-content .note {color:#64748b;}
+/* Acessibilidade e responsividade: não substitui regras dos módulos. */
+html[data-ov-mode="light"] .ov-content :is(button,a,input,select,textarea):focus-visible {
+  outline:2px solid #ed8a32;outline-offset:2px;
+}
+@media (max-width:700px){
+  html[data-ov-mode="light"] .ov-content .card:not(.ov-patients-page .card):not(.ov-agenda-chairs .card),
+  html[data-ov-mode="light"] .ov-content .ov-panel {border-radius:13px;}
+}
+@media print {
+  html[data-ov-mode="light"] .ov-content .card,
+  html[data-ov-mode="light"] .ov-content .ov-panel {box-shadow:none;}
+}
