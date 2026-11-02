@@ -11,16 +11,16 @@
  window.nexoSignHtml=function(){
   const patients=(db.p||[]).filter(p=>!p.arq),dentists=(db.dt||[]).filter(d=>d.ativo!==false);
   return `<div class="ov-page-head"><div><h1>Documentos e Assinaturas</h1><p class="sub">Coleta manual gratuita de assinaturas — versão de testes.</p></div></div>
-  <section class="card" style="border-top:1px solid #383838;max-width:980px">
-   <p class="note" style="padding:12px;background:#202020;border:1px solid #383838;border-radius:8px"><strong>Atenção:</strong> este módulo é um protótipo local. Não salva documentos assinados no Supabase, não oferece trilha de auditoria verificável, não comprova identidade e <strong>não realiza assinatura digital ICP-Brasil</strong>. Não use como substituto de assinaturas exigidas por lei em receitas, atestados ou documentos clínicos. Imprima e colha assinatura física quando necessário.</p>
-   <section style="padding:16px;border:1px solid #383838;border-radius:12px;margin:16px 0;background:#181818" aria-label="Inspeção de certificado A1">
+  <section class="card" style="border-top:1px solid #d9dfe6;max-width:980px">
+   <p class="note" style="padding:12px;background:#ffffff;color:#222;border:1px solid #d9dfe6;border-radius:8px"><strong>Atenção:</strong> este módulo é um protótipo local. Não salva documentos assinados no Supabase, não oferece trilha de auditoria verificável, não comprova identidade e <strong>não realiza assinatura digital ICP-Brasil</strong>. Não use como substituto de assinaturas exigidas por lei em receitas, atestados ou documentos clínicos. Imprima e colha assinatura física quando necessário.</p>
+   <section style="padding:16px;border:1px solid #d9dfe6;border-radius:12px;margin:16px 0;background:#ffffff;color:#222" aria-label="Inspeção de certificado A1">
     <h3 style="margin-top:0">Verificar certificado digital A1</h3>
     <p class="note">Selecione um arquivo .pfx ou .p12 e informe a senha para verificar titular e validade. Esta operação NÃO assina documentos e NÃO confirma a cadeia ICP-Brasil.</p>
     <div class="row" style="flex-wrap:wrap"><div><label for="ns-a1-file">Certificado A1</label><input id="ns-a1-file" type="file" accept=".pfx,.p12,application/x-pkcs12"></div><div><label for="ns-a1-password">Senha do certificado</label><input id="ns-a1-password" type="password" autocomplete="off" placeholder="Senha do A1"></div></div>
     <button type="button" id="ns-a1-check" style="background:#f97316">Verificar certificado</button>
     <p class="note" id="ns-a1-result" role="status" aria-live="polite">Nenhum certificado verificado. O arquivo e a senha serão enviados somente ao serviço HTTPS da Vercel para inspeção transitória, sem armazenamento intencional.</p>
    </section>
-   <section style="padding:16px;border:1px solid #383838;border-radius:12px;margin:16px 0;background:#181818" aria-label="Assinatura PDF A1 em teste">
+   <section style="padding:16px;border:1px solid #d9dfe6;border-radius:12px;margin:16px 0;background:#ffffff;color:#222" aria-label="Assinatura PDF A1 em teste">
     <h3 style="margin-top:0">Assinar PDF com A1 — teste técnico</h3>
     <p class="note"><strong>Não use para documentos clínicos reais nesta etapa.</strong> O serviço ainda não comprova que o certificado pertence ao profissional autenticado, não valida toda a cadeia ICP-Brasil e não salva o arquivo no prontuário. Use apenas PDF de teste, sem dados de pacientes.</p>
     <label for="ns-pdf-file">PDF de teste (até 5 MB)</label><input type="file" id="ns-pdf-file" accept="application/pdf,.pdf">
@@ -28,7 +28,7 @@
     <button type="button" id="ns-a1-sign" style="background:#f97316;margin-top:10px">Assinar PDF de teste</button>
     <p class="note" id="ns-a1-sign-result" role="status" aria-live="polite">Selecione o certificado A1 e informe a senha acima; escolha também um PDF de teste.</p>
    </section>
-   <section style="padding:16px;border:1px solid #383838;border-radius:12px;margin:16px 0;background:#181818" aria-label="Registro de documentos por paciente">
+   <section style="padding:16px;border:1px solid #d9dfe6;border-radius:12px;margin:16px 0;background:#ffffff;color:#222" aria-label="Registro de documentos por paciente">
     <h3 style="margin-top:0">Documentos do prontuário — controle de pendências</h3>
     <p class="note">Cadastre a pendência de assinatura por paciente. Este registro <strong>não é um PDF assinado</strong> e não comprova assinatura ICP-Brasil. A assinatura digital permanece em testes.</p>
     <div class="row" style="flex-wrap:wrap"><div><label>Paciente</label><select id="ns-reg-patient"><option value="">Selecione</option>${patients.map(p=>`<option value="${e(p.id)}">${e(p.nome)}</option>`).join('')}</select></div><div><label>Tipo</label><select id="ns-reg-type"><option>Receita</option><option>Atestado</option><option>Relatório</option><option>Termo de consentimento</option><option>Outro</option></select></div></div>
