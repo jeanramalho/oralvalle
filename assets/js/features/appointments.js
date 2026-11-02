@@ -136,5 +136,10 @@ function agHtml(){
     }
     return `<section class="card" style="margin:0"><div class="ag"><span><strong>${label}</strong></span><span class="badge">${rows.length} atendimento${rows.length===1?'':'s'}</span></div><div class="ag-flow-list">${html.join('')}</div></section>`;
   };
-  return avsCardHtml()+dateNav+rentalPanel+form+`<div class="ov-agenda-chairs">${chairCard('1','Consultório 1')}${chairCard('2','Consultório 2')}</div>`;
+  // Painel visual: indicadores calculados exclusivamente dos agendamentos já carregados.
+  const total=list.length, confirmados=list.filter(a=>a.st==='Confirmado').length;
+  const encerrados=list.filter(a=>['Compareceu','Faltou','Cancelado'].includes(a.st)||Boolean(a.vid)).length;
+  const aguardando=list.filter(a=>!['Compareceu','Faltou','Cancelado'].includes(a.st)&&!a.vid&&a.st!=='Confirmado').length;
+  const visualHead=`<header class="nexo-page-hero"><div class="nexo-page-eyebrow">GESTÃO DE CONSULTAS</div><div class="nexo-page-title-row"><div><h1>Agenda</h1><p>Organize os atendimentos e acompanhe seus consultórios.</p></div><span class="nexo-page-symbol" aria-hidden="true">▦</span></div></header><div class="nexo-page-stats"><div class="nexo-stat"><span>Consultas no dia</span><strong>${total}</strong><small>Na data e filtro selecionados</small></div><div class="nexo-stat"><span>Confirmadas</span><strong>${confirmados}</strong><small>Presenças confirmadas</small></div><div class="nexo-stat"><span>Aguardando</span><strong>${aguardando}</strong><small>Ainda sem confirmação</small></div><div class="nexo-stat"><span>Encerradas</span><strong>${encerrados}</strong><small>Finalizadas, faltas ou cancelamentos</small></div></div>`;
+  return `<div class="nexo-page-shell nexo-agenda-page">${visualHead}${avsCardHtml()}${dateNav}<div class="nexo-agenda-tools">${form}${rentalPanel}</div><div class="nexo-section-title"><h2>Horários dos consultórios</h2><p>Selecione um horário livre para agendar ou abra um atendimento existente.</p></div><div class="ov-agenda-chairs">${chairCard('1','Consultório 1')}${chairCard('2','Consultório 2')}</div></div>`;
 }
