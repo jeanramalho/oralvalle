@@ -60,7 +60,7 @@ function unlock(user,keep){
   $('app').style.display='';render();idleReset();
 }
 function doLogout(msg){
-  sClear();ME=null;LOCKED=true;view.id=null;view.h='pac';view.trForm=false;view.trDraft=null;delArm=null;
+  sClear();ME=null;LOCKED=true;view.id=null;view.h='ag';view.trForm=false;view.trDraft=null;delArm=null;
   lockShow('login',msg||'');
 }
 function authBoot(){

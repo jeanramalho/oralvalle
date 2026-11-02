@@ -16,17 +16,9 @@ function ovSaveNavigation() {
   } catch (_) {}
 }
 function ovRestoreNavigation() {
-  try {
-    const saved = JSON.parse(sessionStorage.getItem(OV_NAV_KEY) || 'null');
-    if (!saved || saved.clinicId !== (window.OralCloud?.clinicId || null) || saved.userId !== (ME?.id || null)) return;
-    if (typeof saved.h === 'string' && saved.h.length < 24) view.h = saved.h;
-    if (saved.id != null && db.p.some(p => String(p.id) === String(saved.id))) view.id = saved.id;
-    if (typeof saved.tab === 'string' && saved.tab.length < 32) view.tab = saved.tab;
-    if (typeof saved.agDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(saved.agDate)) view.agDate = saved.agDate;
-    if (typeof saved.sv === 'string') view.sv = saved.sv;
-    if (typeof saved.ag === 'string') view.ag = saved.ag;
-    if (typeof saved.q === 'string') q = saved.q.slice(0, 150);
-  } catch (_) {}
+  // Ao entrar no sistema, abrir sempre a Agenda, sem restaurar paciente/aba anterior.
+  view.id = null;
+  view.h = 'ag';
 }
 window.addEventListener('pagehide', ovSaveNavigation);
 function render() {
