@@ -26,7 +26,24 @@ document.addEventListener('change',e=>{
 });
 document.addEventListener('input',e=>{
   const t=e.target,p=cur();
-  if(t.id==='q'){q=t.value;view.pPage=0;render();setTimeout(()=>{const e=document.getElementById('q');if(e){e.focus();e.setSelectionRange(q.length,q.length)}},0);return}
+  if(t.id==='q'){
+    // Atualiza apenas os resultados: recriar o input fecha o teclado no iOS.
+    q=t.value;
+    view.pPage=0;
+    const currentList=document.getElementById('list');
+    if(currentList && typeof homePac==='function'){
+      const page=document.createElement('div');
+      page.innerHTML=homePac();
+      const updatedList=page.querySelector('#list');
+      if(updatedList) currentList.innerHTML=updatedList.innerHTML;
+      const currentPager=document.querySelector('.ov-patient-pager');
+      const updatedPager=page.querySelector('.ov-patient-pager');
+      if(currentPager && updatedPager) currentPager.replaceWith(updatedPager);
+      else if(currentPager) currentPager.remove();
+      else if(updatedPager) currentList.insertAdjacentElement('afterend',updatedPager);
+    }
+    return;
+  }
   if(t.id==='pendOnly'){view.pendOnly=t.checked;render();return}
   if(t.id==='pfQ'){view.pfQ=t.value;const pos=t.selectionStart;render();setTimeout(()=>{const e=document.getElementById('pfQ');if(e){e.focus();try{e.setSelectionRange(pos,pos)}catch(_){}}},0);return}
   if(t.id==='prq'){
