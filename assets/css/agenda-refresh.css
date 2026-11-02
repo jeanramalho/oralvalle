@@ -66,3 +66,51 @@
 .ag-new-form,.ag-rental-panel{border:1px solid #e9eaf0!important;box-shadow:0 8px 25px rgba(31,42,62,.055)!important}
 .ag-new-form button,.ag-rental-panel button{border-radius:11px!important}
 @media(max-width:760px){.ag-date-panel strong{font-size:21px!important}.ov-agenda-chairs>.card>.ag{padding:13px!important}.ov-agenda-chairs>.card{border-radius:15px!important}}
+
+/* NexoDent 111 — reorganização exclusiva dos formulários da Agenda.
+   Mantém IDs, botões, eventos e toda a lógica JavaScript existente. */
+.nexo-agenda-page .nexo-agenda-tools{align-items:start!important;grid-template-columns:minmax(0,1.45fr) minmax(340px,1fr)!important;gap:18px!important}
+.nexo-agenda-page .nexo-agenda-tools .ag-new-form,
+.nexo-agenda-page .nexo-agenda-tools .ag-rental-panel{height:auto!important;min-height:0!important;padding:24px!important;border-radius:20px!important;background:#fff!important;box-shadow:0 8px 26px rgba(25,38,59,.075)!important}
+.nexo-agenda-page .ag-new-form h2{font-size:21px!important;margin:0 0 19px!important;color:#17233a!important}
+.nexo-agenda-page .ag-new-form>.row,
+.nexo-agenda-page .ag-rental-panel>.row{display:grid!important;gap:14px!important;align-items:end!important;margin-bottom:14px!important}
+.nexo-agenda-page .ag-new-form>.row:nth-of-type(1){grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)!important}
+.nexo-agenda-page .ag-new-form>.row:nth-of-type(2){grid-template-columns:repeat(4,minmax(0,1fr))!important}
+.nexo-agenda-page .ag-new-form>.row:nth-of-type(3){grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.nexo-agenda-page .ag-rental-panel>.row{grid-template-columns:minmax(0,1.35fr) repeat(2,minmax(0,1fr))!important}
+.nexo-agenda-page .ag-new-form>.row>div,
+.nexo-agenda-page .ag-rental-panel>.row>div{min-width:0!important;width:100%!important;flex:none!important}
+.nexo-agenda-page .ag-new-form label,
+.nexo-agenda-page .ag-rental-panel label{display:block!important;font-size:12px!important;font-weight:700!important;color:#536276!important;margin-bottom:7px!important}
+.nexo-agenda-page .ag-new-form input,
+.nexo-agenda-page .ag-new-form select,
+.nexo-agenda-page .ag-rental-panel input,
+.nexo-agenda-page .ag-rental-panel select{display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;box-sizing:border-box!important;min-height:46px!important;padding:9px 12px!important;border:1px solid #dfe5ec!important;border-radius:11px!important;background:#fff!important;color:#1d2b3e!important;font-size:14px!important;line-height:1.35!important;opacity:1!important}
+.nexo-agenda-page .ag-new-form input::placeholder{color:#8b97a6!important;opacity:1!important}
+.nexo-agenda-page .ag-new-form input:focus,
+.nexo-agenda-page .ag-new-form select:focus,
+.nexo-agenda-page .ag-rental-panel input:focus,
+.nexo-agenda-page .ag-rental-panel select:focus{border-color:#f28a35!important;outline:2px solid #ffead9!important}
+.nexo-agenda-page .ag-new-form button[data-act="addag"]{min-height:46px!important;font-size:14px!important;border-radius:11px!important}
+.nexo-agenda-page .ag-rental-head{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:6px!important;margin-bottom:20px!important}
+.nexo-agenda-page .ag-rental-head strong{font-size:20px!important;color:#17233a!important}
+.nexo-agenda-page .ag-rental-head .note{font-size:12px!important;color:#68778a!important}
+.nexo-agenda-page .ag-rental-panel button[data-act="agrentadd"]{min-height:44px!important;width:100%!important;padding:10px 14px!important;border-radius:11px!important;white-space:normal!important;font-size:13px!important;line-height:1.25!important}
+.nexo-agenda-page .ag-rental-panel>.row>div:last-child{grid-column:1/-1!important}
+@media(max-width:1100px){
+ .nexo-agenda-page .nexo-agenda-tools{grid-template-columns:minmax(0,1fr)!important}
+}
+@media(max-width:650px){
+ .nexo-agenda-page .nexo-agenda-tools .ag-new-form,.nexo-agenda-page .nexo-agenda-tools .ag-rental-panel{padding:16px!important}
+ .nexo-agenda-page .ag-new-form>.row:nth-of-type(1),
+ .nexo-agenda-page .ag-new-form>.row:nth-of-type(2),
+ .nexo-agenda-page .ag-new-form>.row:nth-of-type(3),
+ .nexo-agenda-page .ag-rental-panel>.row{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .nexo-agenda-page .ag-new-form input,.nexo-agenda-page .ag-new-form select,.nexo-agenda-page .ag-rental-panel input,.nexo-agenda-page .ag-rental-panel select{font-size:16px!important}
+}
+@media(max-width:380px){
+ .nexo-agenda-page .ag-new-form>.row:nth-of-type(1),
+ .nexo-agenda-page .ag-new-form>.row:nth-of-type(3),
+ .nexo-agenda-page .ag-rental-panel>.row{grid-template-columns:1fr!important}
+}
