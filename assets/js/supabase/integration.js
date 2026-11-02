@@ -309,6 +309,31 @@
     else if (mode === 'password') body = `<h1>Definir senha</h1>${warning}<label for="cloudPassword">Nova senha</label><input id="cloudPassword" type="password" autocomplete="new-password" minlength="6" required><label for="cloudRepeat">Repita a senha</label><input id="cloudRepeat" type="password" autocomplete="new-password" minlength="6" required><button type="submit">Salvar senha</button>`;
     else body = `<h1>Entrar</h1><p class="lk-t">Entre com seu acesso da clínica no Supabase.</p>${warning}${email}<label for="cloudPassword">Senha</label><input id="cloudPassword" type="password" autocomplete="current-password" required><label class="lk-chk"><input id="cloudKeep" type="checkbox"> Manter conectado neste aparelho</label><button type="submit">Entrar</button><button type="button" class="lk-link" data-cloud-signup>Criar conta</button><button type="button" class="lk-link" data-cloud-forgot>Esqueci a senha</button>`;
     lock.innerHTML = `<div class="lk-box"><div class="lk-brand"><strong>${esc(clinic.marca)}</strong><span>${esc(clinic.sub)}</span></div><form>${body}</form></div>`;
+    // Controle visual de senha: não interfere na autenticação nem no valor digitado.
+    lock.querySelectorAll('input[type="password"]').forEach(input => {
+      const wrapper = document.createElement('span');
+      wrapper.style.cssText = 'display:block;position:relative;width:100%;';
+      input.parentNode.insertBefore(wrapper, input);
+      wrapper.appendChild(input);
+      input.style.paddingRight = '46px';
+      input.style.boxSizing = 'border-box';
+      const toggle = document.createElement('button');
+      toggle.type = 'button';
+      toggle.setAttribute('aria-label', 'Mostrar senha');
+      toggle.setAttribute('aria-pressed', 'false');
+      toggle.title = 'Mostrar senha';
+      toggle.textContent = '👁';
+      toggle.style.cssText = 'position:absolute;right:8px;top:50%;transform:translateY(-50%);width:34px;height:34px;min-height:0;padding:0;border:0;border-radius:6px;background:transparent;color:#667085;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:19px;box-shadow:none;';
+      toggle.addEventListener('click', () => {
+        const visible = input.type === 'password';
+        input.type = visible ? 'text' : 'password';
+        toggle.setAttribute('aria-label', visible ? 'Ocultar senha' : 'Mostrar senha');
+        toggle.setAttribute('aria-pressed', String(visible));
+        toggle.title = visible ? 'Ocultar senha' : 'Mostrar senha';
+        toggle.style.opacity = visible ? '0.55' : '1';
+      });
+      wrapper.appendChild(toggle);
+    });
     lock.querySelector('[data-cloud-signup]')?.addEventListener('click', () => { location.hash = 'cadastro'; });
     lock.querySelector('[data-cloud-back]')?.addEventListener('click', () => {
       if (location.hash === '#cadastro') history.replaceState(null, '', location.pathname + location.search);
