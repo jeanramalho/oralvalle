@@ -45,3 +45,24 @@
   .ag-new-form .row,.ag-rental-panel .row{gap:9px!important}
   .ag-date-panel input,.ag-date-panel select,.ag-new-form input,.ag-new-form select{font-size:16px!important}
 }
+
+/* NexoDent 90: acabamento premium apenas nos componentes da Agenda. */
+.ag-date-panel{background:linear-gradient(110deg,#fff 56%,#fff2e8 100%)!important;border:1px solid #f5e2d4!important;border-top:0!important;box-shadow:0 10px 28px rgba(31,42,62,.07)!important;position:relative;overflow:hidden}
+.ag-date-panel:before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#ff7200,#ffb87b)}
+.ag-date-panel strong{font-size:clamp(21px,2.4vw,28px)!important;color:#121d32!important;font-weight:800!important}
+.ag-date-panel .row{gap:12px}
+.ag-date-panel button[data-act="agtoday"]{background:#fff0e3!important;color:#db6200!important;border:1px solid #ffd6b7!important;border-radius:12px!important}
+.ag-date-panel button[data-act="agdate"]{border-radius:12px!important;min-width:36px!important}
+.ag-date-panel #agDate,.ag-date-panel #agDent{border-radius:12px!important;background:#fff!important;border-color:#e3e6ec!important}
+.ov-agenda-chairs{gap:18px!important}
+.ov-agenda-chairs>.card{background:#fff!important;border:1px solid #e7eaf0!important;border-radius:20px!important;box-shadow:0 10px 28px rgba(24,37,57,.075)!important;overflow:hidden}
+.ov-agenda-chairs>.card>.ag{background:linear-gradient(110deg,#fff7f0,#fff)!important;border:0!important;border-bottom:1px solid #f1e5da!important;border-radius:0!important;margin:-1px -1px 12px!important;padding:17px 19px!important}
+.ov-agenda-chairs>.card>.ag strong{font-size:18px!important;font-weight:800!important;color:#15233a!important}
+.ag-flow-list{border:0!important;border-radius:12px!important}
+.ag-flow-row{min-height:44px!important;border-bottom:1px solid #edf0f4!important}
+.ag-flow-time{color:#59677b!important;font-size:13px!important}
+.ag-flow-booked .ag-appointment{border:1px solid #e8eaf0!important;border-left:4px solid #ff7900!important;border-radius:12px!important;box-shadow:0 3px 10px rgba(31,42,62,.06)!important}
+.ag-appointment .ag-patient{color:#172238!important;font-weight:800!important}
+.ag-new-form,.ag-rental-panel{border:1px solid #e9eaf0!important;box-shadow:0 8px 25px rgba(31,42,62,.055)!important}
+.ag-new-form button,.ag-rental-panel button{border-radius:11px!important}
+@media(max-width:760px){.ag-date-panel strong{font-size:21px!important}.ov-agenda-chairs>.card>.ag{padding:13px!important}.ov-agenda-chairs>.card{border-radius:15px!important}}

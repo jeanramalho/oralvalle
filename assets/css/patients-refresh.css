@@ -20,3 +20,19 @@
 .ov-patients-page .ov-patient-row small{margin-top:5px;font-size:12px;color:#7c8796}
 .ov-patients-page .ov-patient-arrow{display:flex;align-items:center;justify-content:center;border:1px solid #ff9a45;border-radius:50%;width:32px;height:32px;flex:0 0 32px;font-size:24px;color:#f47700}
 @media(max-width:700px){.ov-patients-page{padding:5px 8px 18px}.ov-patients-page .ov-page-head{padding:17px}.ov-patients-page .ov-patients-panel{padding:15px!important}.ov-patients-page .ov-patient-row{min-height:66px!important;padding:12px 13px!important}.ov-patients-page .ov-patient-row-name{font-size:14px}.ov-patients-page .ov-patients-actions{flex-wrap:wrap}.ov-patients-page .ov-new-patient,.ov-patients-page .ov-archived-patients{min-height:40px}}
+
+/* NexoDent 90: novo acabamento visual da lista, sem tocar na pesquisa ou eventos. */
+.ov-patients-page{max-width:1320px!important}
+.ov-patients-page .ov-page-head{background:linear-gradient(105deg,#fff 45%,#fff1e6 100%)!important;border:1px solid #f8e9dc!important;padding:26px 28px!important;box-shadow:0 7px 23px rgba(24,37,57,.04)!important}
+.ov-patients-page .ov-page-head h1{font-size:clamp(27px,3vw,38px)!important;font-weight:850!important;color:#101a2e!important}
+.ov-patients-page .ov-page-head .sub{color:#53647b!important;font-size:14px!important}
+.ov-patients-page .ov-patients-panel{background:#fff!important;box-shadow:0 8px 28px rgba(24,37,57,.065)!important;border:1px solid #e8ebf0!important}
+.ov-patients-page .ov-patients-count{color:#172238!important;font-size:23px!important}
+.ov-patients-page .ov-new-patient{background:linear-gradient(110deg,#ff8b08,#f66b00)!important;color:white!important;border:0!important;border-radius:13px!important;padding:12px 18px!important}
+.ov-patients-page .ov-archived-patients{background:#fff!important;border:1px solid #e0e5eb!important;border-radius:13px!important;padding:12px 16px!important}
+.ov-patients-page .ov-patient-search input{border-radius:999px!important;background:#fff!important;border:1px solid #dce2eb!important;padding-left:19px!important}
+.ov-patients-page .ov-patient-row{background:#fff!important;border:1px solid #e6eaf0!important;border-radius:18px!important;min-height:78px!important;box-shadow:0 5px 16px rgba(23,37,58,.065)!important}
+.ov-patients-page .ov-patient-row:hover{background:#fffaf6!important;border-color:#ffb780!important}
+.ov-patients-page .ov-patient-row-name{font-size:16px!important;font-weight:800!important}
+.ov-patients-page .ov-patient-arrow{border:1.5px solid #ff7900!important;color:#f47700!important}
+@media(max-width:700px){.ov-patients-page .ov-page-head{padding:18px!important}.ov-patients-page .ov-patient-row{min-height:66px!important}.ov-patients-page .ov-patient-row-name{font-size:14px!important}}
