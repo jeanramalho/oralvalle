@@ -58,7 +58,7 @@ function ovCareRow(p,kind,stages){
  <div class="ret-act"><button class="sm" data-act="carebaixa" data-id="${esc(p.id)}" data-kind="${kind}">Dar baixa e evoluir</button><button class="ghost sm" data-act="carealta" data-id="${esc(p.id)}" data-kind="${kind}">Finalizar tratamento</button><button class="ghost sm" data-act="open" data-id="${esc(p.id)}">Ver ficha</button></div></details>`;
 }
 function ovModernHead(title,subtitle,total,second,third,fourth){
- return `<div class="ov-modern-head"><div class="ov-modern-title"><span class="ov-modern-symbol" aria-hidden="true">✦</span><div><h1>${title}</h1><p class="sub">${subtitle}</p></div></div><div class="ov-modern-stats"><div><strong>${total}</strong><span>Pacientes em acompanhamento</span></div><div><strong>${second[0]}</strong><span>${second[1]}</span></div><div><strong>${third[0]}</strong><span>${third[1]}</span></div><div><strong>${fourth[0]}</strong><span>${fourth[1]}</span></div></div></div>`;
+ return `<div class="ov-modern-head"><div class="ov-modern-title"><div><h1>${title}</h1><p class="sub">${subtitle}</p></div></div><div class="ov-modern-stats"><div><strong>${total}</strong><span>Pacientes em acompanhamento</span></div><div><strong>${second[0]}</strong><span>${second[1]}</span></div><div><strong>${third[0]}</strong><span>${third[1]}</span></div><div><strong>${fourth[0]}</strong><span>${fourth[1]}</span></div></div></div>`;
 }
 function orthoHtml(){
  const list=orthoLista(),mes=tdy().slice(0,7),emDia=list.filter(x=>(x.p.orthoBaixas||[]).includes(mes)).length;
