@@ -144,7 +144,12 @@ function prHtml(){
       <details class="proc-edit"${view.prOpen===x.id?' open':''}><summary>Editar cadastro</summary><div class="card"><label>Procedimento</label><input data-p="${x.id}" data-f="nome" value="${esc(x.nome)}"><div class="row" style="align-items:flex-start">${f('min','Tempo (min)')}${f('preco','Valor cobrado (R$)')}</div><div class="row" style="align-items:flex-start">${f('custo','Outros custos do procedimento (R$)')}${f('lab','Laboratório (R$)')}</div>${pmHtml(x)}<div class="row" style="align-items:flex-start"><div><label>Comissionamento</label><div class="row" style="align-items:flex-start"><select data-p="${x.id}" data-f="parTipo" aria-label="Tipo de comissão"><option value="reais"${(x.parTipo||'reais')==='reais'?' selected':''}>R$</option><option value="pct"${x.parTipo==='pct'?' selected':''}>%</option></select><input data-p="${x.id}" data-f="par" inputmode="decimal" value="${esc(x.par)}" placeholder="Valor"></div></div></div><label class="chk" style="margin-top:10px"><input type="checkbox" data-pc="${x.id}"${x.parc?' checked':''}>Executado por dentista parceiro</label><div data-pres="${x.id}" style="margin-top:10px">${prRes(x)}</div><div style="margin-top:14px;padding-top:12px;border-top:1px solid #eee;display:flex;justify-content:flex-end"><button class="danger sm" data-act="rmpr" data-id="${x.id}" type="button">${delArm===x.id?'Confirmar exclusão':'Excluir procedimento'}</button></div></div></details>
     </article>`;
   }).join('');
-  return `<div class="proc-page">
+  const priced=db.pr.filter(x=>num(x.preco)>0);
+  const avgPrice=priced.length?priced.reduce((sum,x)=>sum+num(x.preco),0)/priced.length:0;
+  const avgMargin=priced.length?priced.reduce((sum,x)=>sum+prCalc(x).mg,0)/priced.length:0;
+  return `<div class="proc-page proc-modern">
+    <header class="proc-modern-heading"><div><span class="proc-eyebrow">GESTÃO DE PROCEDIMENTOS</span><h2>Seus procedimentos</h2><p>Consulte valores, custos e rentabilidade em um só lugar.</p></div><span class="proc-modern-count">${count} cadastrados</span></header>
+    <div class="proc-modern-kpis"><div class="proc-kpi"><span>Procedimentos</span><strong>${count}</strong><small>No seu catálogo</small></div><div class="proc-kpi"><span>Preço médio</span><strong>${priced.length?brl(avgPrice):'—'}</strong><small>Com preço definido</small></div><div class="proc-kpi"><span>Margem média</span><strong>${priced.length?avgMargin.toFixed(1).replace('.',',')+'%':'—'}</strong><small>Procedimentos precificados</small></div></div>
     <div class="proc-toolbar proc-toolbar-search-only">
       <div class="proc-toolbar-right"><input class="proc-search-input" id="prq" type="search" placeholder="Buscar procedimento" value="${esc(view.prq||'')}"></div>
     </div>
