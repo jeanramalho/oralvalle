@@ -241,26 +241,6 @@ function trLabResumoHtml(p){
  const rows=valid.map(o=>{const t=trs.find(x=>String(x.id)===String(o.treatment_id));return `<tr><td>${esc(t?.proc||'Procedimento')}</td><td>${esc(o.work_description||'')}</td><td>${esc(o.status||'')}</td><td>${brl(Number(o.laboratory_cost)||0)}</td></tr>`}).join('');
  return `<details class="card" style="margin-bottom:12px"><summary style="cursor:pointer;font-weight:700">Laboratório vinculado aos tratamentos (${valid.length})</summary><div style="margin-top:12px">${stat('Custos laboratoriais vinculados',brl(total))}${stat('Trabalhos vinculados',String(valid.length))}</div>${valid.length?`<div style="overflow-x:auto"><table style="width:100%;margin-top:12px"><thead><tr><th>Tratamento</th><th>Trabalho</th><th>Situação</th><th>Custo</th></tr></thead><tbody>${rows}</tbody></table></div>`:'<p class="note">Nenhum trabalho vinculado a um tratamento deste paciente.</p>'}${orphan?`<p class="note" style="color:#a14c00">${orphan} vínculo(s) apontam para tratamentos não encontrados.</p>`:''}<p class="note">Consulta somente leitura. Os custos laboratoriais são exibidos separadamente dos custos cadastrados no tratamento para evitar dupla contagem. Não gera despesas, baixas ou comissões.</p></details>`;
 }
-/* Odontograma em arcadas: apresentação apenas; reutiliza seleção e estados existentes. */
-function trArchOdontogram(p, treatments){
-  const dec=(view.dent||'perm')==='dec';
-  const quadrants=ARC[dec?'dec':'perm'];
-  const status=trStatusMap(treatments);
-  const selected=new Set((view.trSel||[]).map(String));
-  const arch=(upper)=>{
-    const qs=upper?quadrants.slice(0,2):quadrants.slice(2,4);
-    const nums=qs.flatMap(q=>q[1]);
-    const count=nums.length;
-    const items=nums.map((n,i)=>{
-      const angle=Math.PI-(i+.5)*Math.PI/count;
-      const x=50+43*Math.cos(angle);
-      const y=upper?84-71*Math.sin(angle):16+71*Math.sin(angle);
-      return `<div class="nexo-arch-tooth" style="left:${x.toFixed(3)}%;top:${y.toFixed(3)}%">${toothBtn(n,dec,status[String(n)],selected.has(String(n)),upper)}</div>`;
-    }).join('');
-    return `<div class="nexo-arch ${upper?'upper':'lower'}" role="group" aria-label="Arcada ${upper?'superior':'inferior'}"><span class="nexo-arch-label">Arcada ${upper?'superior':'inferior'}</span>${items}</div>`;
-  };
-  return `<div class="nexo-odontogram" aria-label="Odontograma interativo"><div class="nexo-odo-help">Selecione um ou mais dentes para cadastrar procedimentos. As cores indicam a situação dos tratamentos.</div><div class="nexo-arch-board">${arch(true)}<div class="nexo-arch-divider" aria-hidden="true"></div>${arch(false)}</div></div>`;
-}
 function tratHtml(p){
   const all=p.trat||[],tr=trList(p),dr=view.trDraft||{},dec=(view.dent||'perm')==='dec';
   const orcOpts=p.orcs.filter(o=>o.status!=='Recusado');
@@ -289,7 +269,7 @@ function tratHtml(p){
     <div class="note" data-trc="${x.id}" style="margin:4px 0 0">${trCom(x)}</div>
     ${x.vid?`<div class="note" style="margin:8px 0 0;color:var(--ok)">Baixa realizada em ${fd(x.data||'')} · dentista: ${esc(dName(x.dt))} · comissão registrada: ${brl(x.rep||0)}</div>`:`<div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="sm" data-act="trbaixa" data-id="${x.id}">Dar baixa no procedimento</button><button class="danger sm" data-act="rmtr" data-id="${x.id}">${delArm===x.id?'Toque de novo para excluir':'Excluir'}</button></div>`}</div>`}).join(''):'<div class="empty">Nenhum tratamento cadastrado.</div>';
   const bar=`<div class="tr-bar"><button type="button" id="trbarbtn" class="tr-add" data-act="addtr">${trBarInner()}</button></div>`;
-  return `${trResumoHtml(p)}${trLabResumoHtml(p)}${trMargemDetalhadaHtml(p)}${trAuditoriaHtml(p)}${trConciliacaoHtml(p)}<div class="card">${flt}<h2 style="margin-top:16px">Odontograma</h2>${seg}${trArchOdontogram(p,tr)}${lg}<div id="trchips" style="margin-top:10px">${trChips()}</div><div id="trbasket">${ttBasketHtml(p)}</div><div id="trteeth">${ttPanelHtml(p)}</div><div id="trshared">${ttSharedHtml(p)}</div></div>${form}<h2>Tratamentos (${tr.length})</h2>${lista}${bar}`;
+  return `${trResumoHtml(p)}${trLabResumoHtml(p)}${trMargemDetalhadaHtml(p)}${trAuditoriaHtml(p)}${trConciliacaoHtml(p)}<div class="card">${flt}<h2 style="margin-top:16px">Odontograma</h2>${seg}${odxHtml(p,tr)}${lg}<div id="trchips" style="margin-top:10px">${trChips()}</div><div id="trbasket">${ttBasketHtml(p)}</div><div id="trteeth">${ttPanelHtml(p)}</div><div id="trshared">${ttSharedHtml(p)}</div></div>${form}<h2>Tratamentos (${tr.length})</h2>${lista}${bar}`;
 }
 function tabOrc(p){
   return prList()+`<button data-act="addo" style="width:100%;margin-bottom:12px">Novo orçamento</button>`+(p.orcs.length?p.orcs.map(orcHtml).join(''):'<div class="empty">Nenhum orçamento para este paciente.</div>');
