@@ -133,7 +133,8 @@
       };
       panel.append(backup, retry);
     }
-    panel.hidden = false;
+    // Avisos de sucesso ficam ocultos; erros continuam visíveis com ações de recuperação.
+    panel.hidden = !error;
   }
 
   function downloadBackup() {
