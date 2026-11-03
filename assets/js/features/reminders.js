@@ -123,7 +123,10 @@ function lembretesHtml(){
   return `<div class="ov-page-head"><div><h1>Lembretes</h1><p class="sub">Anote tarefas, retornos e assuntos importantes da clínica.</p></div><span class="badge" style="font-size:14px;padding:7px 12px">${pend} pendente${pend===1?'':'s'}</span></div>
   ${tabsHtml}${T==='aniversarios'?ovBirthdayHtml():T==='ret'?retHtml():T==='ortho'?orthoHtml():`${T==='todos'?ovBirthdayHtml():''}${T==='todos'&&rp?retNote:''}
   <div class="ov-reminder-grid">
-    <section class="ov-reminder-form">
+    <section class="ov-reminder-form" style="padding:0;border:0;background:transparent;box-shadow:none">
+      <details class="nd-lem-create" style="width:100%">
+        <summary style="cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:center;padding:12px 16px;border-radius:9px;background:var(--ac,#df750e);color:#fff;font-weight:700">+ Adicionar lembrete</summary>
+        <div style="padding:16px 0">
       <h2>Novo lembrete</h2>
       <label for="lemTitulo">O que você precisa lembrar?</label>
       <input id="lemTitulo" placeholder="Ex.: Ligar para paciente sobre retorno" autocomplete="off">
@@ -135,7 +138,12 @@ function lembretesHtml(){
       <select id="lemTipo">${TIPOS.map(t=>`<option${t===tipoSel?' selected':''}>${t}</option>`).join('')}</select>
       <label for="lemObs">Observação</label>
       <textarea id="lemObs" placeholder="Detalhes do lembrete..."></textarea>
-      <button data-act="addlem" style="width:100%;margin-top:12px">Adicionar lembrete</button>
+      <div class="row" style="margin-top:12px;gap:8px">
+        <button data-act="addlem" style="flex:1">Salvar lembrete</button>
+        <button type="button" class="ghost" style="flex:1" onclick="this.closest('details').open=false">Cancelar</button>
+      </div>
+        </div>
+      </details>
     </section>
     <section>
       ${shown.length?`<div class="ov-reminder-list">${shown.map(x=>{
