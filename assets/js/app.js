@@ -10,7 +10,7 @@ function ovSaveNavigation() {
   if (LOCKED || !ME) return;
   try {
     const state = { h: view.h, id: view.id, tab: view.tab, agDate: view.agDate,
-      sv: view.sv, ag: view.ag, q: typeof q === 'string' ? q : '',
+      sv: view.sv, ag: view.ag, // A pesquisa de pacientes não é armazenada na sessão.
       clinicId: window.OralCloud?.clinicId || null, userId: ME.id || null };
     sessionStorage.setItem(OV_NAV_KEY, JSON.stringify(state));
   } catch (_) {}
@@ -19,12 +19,15 @@ function ovRestoreNavigation() {
   // Ao entrar no sistema, abrir sempre a Agenda, sem restaurar paciente/aba anterior.
   view.id = null;
   view.h = 'ag';
+  q = '';
 }
 window.addEventListener('pagehide', ovSaveNavigation);
 function render() {
 	applyTheme();
 	if (LOCKED) return;
 	sanitizeView();
+	// Não conservar o último nome quando sair da lista de pacientes.
+	if (view.id || view.h !== 'pac') q = '';
 
 	const sidebar = document.querySelector('.ov-sidebar');
 	const content = document.querySelector('.ov-content');
