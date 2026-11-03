@@ -11,8 +11,25 @@
  window.nexoSignHtml=function(){
   const patients=(db.p||[]).filter(p=>!p.arq),dentists=(db.dt||[]).filter(d=>d.ativo!==false);
   return `<div class="ov-page-head"><div><h1>Documentos e Assinaturas</h1><p class="sub">Coleta manual gratuita de assinaturas — versão de testes.</p></div></div>
-  <section class="card" style="border-top:1px solid #d9dfe6;max-width:980px">
+
+  <style>
+  .ns-compact .ns-panel{border:1px solid var(--border,#d9dfe6);border-radius:12px;margin:12px 0;overflow:hidden;background:var(--card,#fff)}
+  .ns-compact .ns-panel>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px;min-height:62px;color:var(--text,inherit)}
+  .ns-compact .ns-panel>summary::-webkit-details-marker{display:none}
+  .ns-compact .ns-panel-label{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .ns-compact .ns-panel-label strong{font-size:14px}
+  .ns-compact .ns-panel-label small{font-size:12px;opacity:.7;font-weight:400}
+  .ns-compact .ns-panel-arrow{font-size:21px;color:#e97813;transition:transform .15s}
+  .ns-compact .ns-panel[open]>.ns-panel-arrow,.ns-compact .ns-panel[open]>summary .ns-panel-arrow{transform:rotate(180deg)}
+  .ns-compact .ns-panel[open]>summary{border-bottom:1px solid var(--border,#d9dfe6)}
+  .ns-compact .ns-panel>section{margin:12px!important}
+  .ns-compact .ns-panel>.row,.ns-compact .ns-panel>label,.ns-compact .ns-panel>input,.ns-compact .ns-panel>textarea,.ns-compact .ns-panel>select,.ns-compact .ns-panel>p,.ns-compact .ns-panel>div:not(.row){margin-left:14px;margin-right:14px}
+  .ns-compact .ns-panel>input,.ns-compact .ns-panel>textarea,.ns-compact .ns-panel>select{max-width:calc(100% - 28px)}
+  .ns-compact .ns-panel>details{margin:12px}
+  </style>
+  <section class="card ns-compact" style="border-top:1px solid #d9dfe6;max-width:980px">
    <p class="note" style="padding:12px;background:#ffffff;color:#222;border:1px solid #d9dfe6;border-radius:8px"><strong>Atenção:</strong> este módulo é um protótipo local. Não salva documentos assinados no Supabase, não oferece trilha de auditoria verificável, não comprova identidade e <strong>não realiza assinatura digital ICP-Brasil</strong>. Não use como substituto de assinaturas exigidas por lei em receitas, atestados ou documentos clínicos. Imprima e colha assinatura física quando necessário.</p>
+   <details class="ns-panel"><summary><span class="ns-panel-label"><strong>Certificado digital A1</strong><small>Verificar titular e validade do certificado</small></span><span class="ns-panel-arrow" aria-hidden="true">⌄</span></summary>
    <section style="padding:16px;border:1px solid #d9dfe6;border-radius:12px;margin:16px 0;background:#ffffff;color:#222" aria-label="Inspeção de certificado A1">
     <h3 style="margin-top:0">Verificar certificado digital A1</h3>
     <p class="note">Selecione um arquivo .pfx ou .p12 e informe a senha para verificar titular e validade. Esta operação NÃO assina documentos e NÃO confirma a cadeia ICP-Brasil.</p>
@@ -20,6 +37,8 @@
     <button type="button" id="ns-a1-check" style="background:#f97316">Verificar certificado</button>
     <p class="note" id="ns-a1-result" role="status" aria-live="polite">Nenhum certificado verificado. O arquivo e a senha serão enviados somente ao serviço HTTPS da Vercel para inspeção transitória, sem armazenamento intencional.</p>
    </section>
+   </details>
+   <details class="ns-panel"><summary><span class="ns-panel-label"><strong>Assinatura digital — teste</strong><small>Assinar PDF de teste com certificado A1</small></span><span class="ns-panel-arrow" aria-hidden="true">⌄</span></summary>
    <section style="padding:16px;border:1px solid #d9dfe6;border-radius:12px;margin:16px 0;background:#ffffff;color:#222" aria-label="Assinatura PDF A1 em teste">
     <h3 style="margin-top:0">Assinar PDF com A1 — teste técnico</h3>
     <p class="note"><strong>Não use para documentos clínicos reais nesta etapa.</strong> O serviço ainda não comprova que o certificado pertence ao profissional autenticado, não valida toda a cadeia ICP-Brasil e não salva o arquivo no prontuário. Use apenas PDF de teste, sem dados de pacientes.</p>
@@ -28,6 +47,8 @@
     <button type="button" id="ns-a1-sign" style="background:#f97316;margin-top:10px">Assinar PDF de teste</button>
     <p class="note" id="ns-a1-sign-result" role="status" aria-live="polite">Selecione o certificado A1 e informe a senha acima; escolha também um PDF de teste.</p>
    </section>
+   </details>
+   <details class="ns-panel"><summary><span class="ns-panel-label"><strong>Documentos do prontuário</strong><small>Pendências, cadastro e histórico por paciente</small></span><span class="ns-panel-arrow" aria-hidden="true">⌄</span></summary>
    <section style="padding:16px;border:1px solid #d9dfe6;border-radius:12px;margin:16px 0;background:#ffffff;color:#222" aria-label="Registro de documentos por paciente">
     <h3 style="margin-top:0">Documentos do prontuário — controle de pendências</h3>
     <p class="note">Cadastre a pendência de assinatura por paciente. Este registro <strong>não é um PDF assinado</strong> e não comprova assinatura ICP-Brasil. A assinatura digital permanece em testes.</p>
@@ -43,6 +64,8 @@
     <p id="ns-reg-status" class="note" role="status">${registryAvailable()?'Carregando histórico...':'Disponível somente com clínica conectada ao Supabase.'}</p>
     <div id="ns-reg-list"></div>
    </section>
+   </details>
+   <details class="ns-panel"><summary><span class="ns-panel-label"><strong>Assinatura manuscrita</strong><small>Paciente, dentista, documento e coleta de assinaturas</small></span><span class="ns-panel-arrow" aria-hidden="true">⌄</span></summary>
    <div class="row"><div><label>Paciente</label><select id="ns-patient"><option value="">Selecione</option>${patients.map(p=>`<option value="${e(p.id)}">${e(p.nome)}</option>`).join('')}</select></div><div><label>Dentista</label><select id="ns-dentist"><option value="">Selecione</option>${dentists.map(d=>`<option value="${e(d.id)}">${e(d.nome)}${d.cro?' — '+e(d.cro):''}</option>`).join('')}</select></div></div>
    <label>Tipo de documento</label><select id="ns-type">${types.map(t=>`<option>${e(t)}</option>`).join('')}</select>
    <label>Título</label><input id="ns-title" maxlength="160" placeholder="Ex.: Consentimento para procedimento">
@@ -51,6 +74,7 @@
    <label style="display:block;margin-top:18px"><input type="checkbox" id="ns-consent"> Confirmo que as pessoas identificadas revisaram o conteúdo e concordaram em registrar suas assinaturas nesta tela.</label>
    <div class="row" style="margin-top:18px;flex-wrap:wrap"><button type="button" id="ns-print" style="background:#f97316">Gerar versão para impressão / PDF</button><button type="button" class="ghost" id="ns-reset">Limpar formulário</button></div>
    <p class="note">Para salvar como PDF, escolha “Salvar como PDF” na janela de impressão. Não há envio automático, armazenamento central ou validação criptográfica.</p>
+   </details>
   </section>`;
  };
  function setup(canvas){if(!canvas||canvas.dataset.ready)return;canvas.dataset.ready='1';const ctx=canvas.getContext('2d'),role=canvas.id.slice(3);ctx.strokeStyle='#222';ctx.lineWidth=2.2;ctx.lineCap='round';ctx.lineJoin='round';let drawing=false,changed=false;
