@@ -114,3 +114,15 @@ html:not([data-ov-mode="dark"]) body .nexo-agenda-page :is(.ag-flow-row,.ag-flow
 html:not([data-ov-mode="dark"]) body .ov-modern-page .ov-modern-row,
 html:not([data-ov-mode="dark"]) body .ov-patients-page .ov-modern-row {background-color:#fff !important;border-color:#c4ccd5 !important;}
 /* Laranja continua reservado a botoes de acao e elementos de destaque. */
+
+/* NexoDent 162 — ajuste pontual: SOMENTE os dois paineis da Agenda.
+   Mantem campos, botoes, outras abas e modo escuro inalterados. */
+html:not([data-ov-mode="dark"]) body .nexo-agenda-page .nexo-agenda-tools > .ag-new-form.card,
+html:not([data-ov-mode="dark"]) body .nexo-agenda-page .nexo-agenda-tools > .ag-rental-panel.card,
+html:not([data-ov-mode="dark"]) body .nexo-agenda-page .nexo-agenda-tools .ag-new-form,
+html:not([data-ov-mode="dark"]) body .nexo-agenda-page .nexo-agenda-tools .ag-rental-panel {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+  border: 1px solid #b8c2cc !important;
+}
