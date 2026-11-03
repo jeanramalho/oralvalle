@@ -192,7 +192,7 @@ const A={
   addplan:(b,d,p)=>{const t=$('dpt').value.trim();if(!t){toast('Descreva o que precisa ser feito');return}(p.dplan=p.dplan||[]).push({id:uid(),n:view.tsel,txt:t,feito:false,data:tdy()});save();render();toast('Anotado no dente '+view.tsel)},
   planok:(b,d,p)=>{const x=(p.dplan||[]).find(y=>y.id===d.id);if(!x)return;x.feito=true;x.fdata=tdy();(p.evol=p.evol||[]).push({id:uid(),data:tdy(),n:x.n,txt:x.txt});save();render();toast('Lançado na evolução de hoje')},
   rmplan:(b,d,p)=>arm(d.id,()=>{p.dplan=p.dplan.filter(x=>x.id!==d.id);save();render()}),
-  addevol:(b,d,p)=>{const t=$('evt').value.trim();if(!t){toast('Descreva o que foi feito');return}(p.evol=p.evol||[]).push({id:uid(),data:$('evd').value||tdy(),n:$('evn').value,txt:t});save();render();toast('Evolução salva')},
+  addevol:(b,d,p)=>{const t=$('evt').value.trim();if(!t){toast('Descreva o que foi feito');return}(p.evol=p.evol||[]).push({id:uid(),data:$('evd').value||tdy(),n:$('evn').value,txt:t});save();window.__nexoEvolSavedPatient=String(p.id);render();toast('Evolução salva')},
   rmevol:(b,d,p)=>arm(d.id,()=>{p.evol=p.evol.filter(x=>x.id!==d.id);save();render()}),
   sigclr:(b,d,p)=>{p.sign='';p.signDate='';p.signTermo='';save();render()},
   addo:(b,d,p)=>{const nid=uid();(view.orcOpen=view.orcOpen||{})[nid]=true;p.orcs.unshift({id:nid,data:new Date().toLocaleDateString('pt-BR'),status:'Pendente',itens:[{id:uid(),proc:'',dente:'',valor:'',dt:defDt()}],desc:'',val:plusDays(15),cond:''});save();render()},

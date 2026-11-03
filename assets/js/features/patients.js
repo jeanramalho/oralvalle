@@ -166,7 +166,7 @@ function tabOdo(p){
   const lan=`<div class="card" style="margin-top:14px"><h2>Lançar evolução do dia</h2>
   <div class="row"><div><label for="evd">Data</label><input id="evd" type="date" value="${tdy()}"></div><div><label for="evn">Dente</label><select id="evn">${opts}</select></div></div>
   <label for="evt">Procedimento realizado e descrição</label><textarea id="evt" placeholder="Descreva este procedimento, materiais, conduta e observações. Cada salvamento será arquivado como um registro separado."></textarea>
-  <button data-act="addevol" style="width:100%;margin-top:10px">Salvar evolução</button></div>`;
+  <button data-act="addevol" id="nexo-save-evolution" ${window.__nexoEvolSavedPatient===String(p.id)?'disabled aria-disabled="true"':''} style="width:100%;margin-top:10px;${window.__nexoEvolSavedPatient===String(p.id)?'background:#777;color:#fff;opacity:.65;cursor:default;':''}">${window.__nexoEvolSavedPatient===String(p.id)?'✓ Evolução salva':'Salvar evolução'}</button></div>`;
   const hist=`<div class="card"><h2 style="margin:0 0 12px">Evolução do paciente, dia a dia</h2><p class="note">Cada vez que salvar uma evolução, ela ficará registrada separadamente no histórico, junto com a data e o dente informado. Os registros anteriores serão mantidos.</p>${nexoTimeline(p)}${evolHtml(p)}<h3 style="margin-top:20px">Assinatura do paciente</h3><p class="note">Peça ao paciente para assinar no espaço abaixo. A assinatura ficará salva junto ao prontuário e poderá sair na impressão da evolução.</p><canvas id="evsig" width="600" height="180" aria-label="Assinatura do paciente na evolução" style="display:block;width:100%;max-width:600px;height:180px;background:#fff;border:1px solid var(--line);border-radius:8px;touch-action:none"></canvas><div class="row" style="margin-top:8px"><button class="ghost sm" data-act="evsigclr">Limpar assinatura</button><span class="note" id="evsigst">${p.evolSign?"Assinatura salva"+(p.evolSignDate?" em "+esc(p.evolSignDate):""):"Assinatura ainda não registrada"}</span></div><div style="display:flex;justify-content:flex-end;align-items:stretch;gap:14px;max-width:100%;margin:16px 0 0;padding:12px 0 0;border-top:1px solid var(--line);box-sizing:border-box"><button class="sm" data-act="printevol" style="flex:1 1 0;min-width:0;margin:0;box-sizing:border-box;padding:10px 8px;font-size:14px !important;font-weight:600 !important;line-height:1.4 !important;min-height:48px !important">Imprimir evolução completa</button><button class="sm" data-act="evsignprint" style="background:#ea7000;color:white;flex:1 1 0;min-width:0;margin:0;box-sizing:border-box;padding:10px 8px;font-size:14px !important;font-weight:600 !important;line-height:1.4 !important;min-height:48px !important">Assinar evolução (dentista)</button><button class="ghost sm" data-act="evolicp" style="flex:1 1 0;min-width:0;margin:0;box-sizing:border-box;padding:10px 8px;font-size:14px !important;font-weight:600 !important;line-height:1.4 !important;min-height:48px !important">Preparar PDF para ICP-Brasil</button></div></div>`;
   const lg=(p.olog||[]).length?`<details><summary>Histórico de mudanças de situação</summary><div id="olog">${ologHtml(p)}</div></details>`:'';
   return `${evPendHtml(p)}<div class="odo-grid nexo-odo-integrado" style="margin-top:14px;display:block"><div style="width:100%;min-width:0">${arch}${lan}</div><div style="margin-top:16px">${toothPanel(p)}${hist}${lg}</div></div>`;
@@ -350,3 +350,20 @@ function trChips(){
   finally{if(button.isConnected)button.disabled=false;}
  });
 })();
+
+// Reativa o botão apenas quando o formulário da evolução é modificado.
+if (!window.__nexoEvolDirtyListener) {
+  window.__nexoEvolDirtyListener = true;
+  document.addEventListener('input', function(e) {
+    if (!e.target || !['evt','evd','evn'].includes(e.target.id)) return;
+    window.__nexoEvolSavedPatient = null;
+    const b = document.getElementById('nexo-save-evolution');
+    if (b) { b.disabled = false; b.removeAttribute('aria-disabled'); b.textContent = 'Salvar evolução'; b.style.background = ''; b.style.color = ''; b.style.opacity = ''; b.style.cursor = ''; }
+  });
+  document.addEventListener('change', function(e) {
+    if (!e.target || !['evd','evn'].includes(e.target.id)) return;
+    window.__nexoEvolSavedPatient = null;
+    const b = document.getElementById('nexo-save-evolution');
+    if (b) { b.disabled = false; b.removeAttribute('aria-disabled'); b.textContent = 'Salvar evolução'; b.style.background = ''; b.style.color = ''; b.style.opacity = ''; b.style.cursor = ''; }
+  });
+}
