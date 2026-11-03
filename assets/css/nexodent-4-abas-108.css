@@ -69,3 +69,12 @@
 .nexo-agenda-page .ag-flow-row.ag-flow-free:nth-child(even) {
   background: #e8edf1 !important;
 }
+
+/* NexoDent 156b: somente os dois paineis brancos indicados no print. */
+html body .nexo-page-shell.nexo-agenda-page .nexo-agenda-tools > .card.ag-new-form,
+html body .nexo-page-shell.nexo-agenda-page .nexo-agenda-tools > .card.ag-rental-panel {
+  background-color: #f0f2f4 !important;
+  background-image: none !important;
+  border-color: #dce2e8 !important;
+}
+/* Preserva os inputs brancos para boa leitura e os botoes originais. */
