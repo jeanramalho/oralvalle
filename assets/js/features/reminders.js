@@ -203,7 +203,7 @@ function homePac(){
         <div class="ov-patients-count">${active.length} ${active.length===1?'paciente':'pacientes'}${archivedMode?' arquivados':''}</div>
         <div class="ov-patients-actions"><button type="button" class="ov-archived-patients" data-act="arqt" aria-pressed="${archivedMode}" title="${archivedMode?'Voltar aos pacientes ativos':'Ver pacientes arquivados'}">${archivedMode?'← Pacientes ativos':'▤ Arquivados'}</button><button class="ov-new-patient" data-act="novoPac">Novo Paciente <b>+</b></button></div>
       </div>
-      <div class="ov-patient-search"><input id="q" type="search" placeholder="Pesquisar pelo nome" value="${esc(q)}" aria-label="Pesquisar pelo nome"></div>
+      <div class="ov-patient-search"><input id="q" type="search" name="nexodent-patient-filter" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Pesquisar pelo nome" value="${esc(q)}" aria-label="Pesquisar pelo nome"></div>
       <div class="ov-patient-filter" ${archivedMode?'style="display:none"':''}><span>Filtrar:</span><label><input id="pendOnly" type="checkbox" ${view.pendOnly?'checked':''}> Pacientes com pagamento pendente</label></div>
     </section>
     <div class="ov-patient-list" id="list">${rows}</div>${pager}
