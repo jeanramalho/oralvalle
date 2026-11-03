@@ -71,3 +71,8 @@
 .nexo-patient-data-card>.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%}
 .nexo-patient-data-card>.row>div{min-width:0;width:100%}
 @media(max-width:600px){.nexo-patient-data-card>.row{grid-template-columns:minmax(0,1fr)}}
+
+/* NexoDent 150: search icon and typed text must never overlap. */
+.ov-patients-page .ov-patient-search{position:relative!important}
+.ov-patients-page .ov-patient-search input#q{box-sizing:border-box!important;width:100%!important;padding-left:52px!important;padding-right:42px!important;text-indent:0!important}
+.ov-patients-page .ov-patient-search::before{left:17px!important;pointer-events:none!important;z-index:2!important}
