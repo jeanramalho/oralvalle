@@ -746,3 +746,30 @@ html[data-ov-mode="dark"] .ov-mt-table th{color:#f1f2f3 !important;border-color:
  .pf-observations textarea[data-pf-obs]{flex:1;min-width:0;width:0;height:32px;min-height:32px;max-height:32px;box-sizing:border-box;resize:none;overflow:hidden;white-space:nowrap;padding:5px 9px;margin:0;font:inherit;font-size:13px;line-height:20px;transition:none}
  .pf-observations textarea[data-pf-obs]:focus{height:90px;min-height:90px;max-height:90px;white-space:pre-wrap;overflow:auto;overflow-wrap:anywhere}
 }
+
+/* NexoDent 171 — renovação visual exclusiva da listagem de procedimentos */
+.proc-modern{max-width:1100px!important;margin:18px auto 0!important;color:#17243b}
+.proc-modern-heading{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:0 0 20px}
+.proc-modern-heading h2{margin:4px 0 5px;font-size:26px;line-height:1.2;color:#17243b;font-weight:700}
+.proc-modern-heading p{margin:0;color:#788396;font-size:13px}
+.proc-eyebrow{color:#f4770b;font-size:10px;font-weight:700;letter-spacing:1.4px}
+.proc-modern-count{background:#fff3e8;border:1px solid #ffdfc3;border-radius:24px;padding:9px 14px;color:#e56c00;font-size:12px;white-space:nowrap}
+.proc-modern-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:0 0 19px}
+.proc-kpi{background:#fff;border:1px solid #e9edf2;border-radius:15px;padding:17px 20px;box-shadow:0 4px 15px rgba(24,37,56,.035);display:flex;flex-direction:column;gap:7px}
+.proc-kpi span{color:#738094;font-size:12px}.proc-kpi strong{font-size:23px;color:#1d2c44;font-weight:700}.proc-kpi small{font-size:11px;color:#98a2b2}
+.proc-modern .proc-toolbar{margin:0 0 20px!important;padding:12px 16px!important;min-height:65px!important;border:1px solid #e8edf3!important;box-shadow:none!important;border-radius:14px!important}
+.proc-modern .proc-toolbar-right{width:100%!important}.proc-modern .proc-search-input{width:100%!important;max-width:none!important;border-radius:10px!important;border:1px solid #dce3ec!important;background:#fbfcfe!important;min-height:43px!important;font-size:13px!important}
+.proc-modern .proc-list-head{max-width:none!important;margin:0 0 15px!important;grid-template-columns:minmax(0,1fr) auto!important;padding:0 0 15px!important;border-color:#e8edf3!important}
+.proc-modern .proc-list-title{font-size:16px!important;color:#23334a!important;font-weight:650!important}
+.proc-modern .proc-add{min-width:140px!important;width:auto!important;height:42px!important;border-radius:11px!important;padding:0 18px!important;font-size:13px!important}
+.proc-modern .proc-cards{max-width:none!important;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;align-items:start}
+.proc-modern .pcx{margin:0!important;background:#fff!important;border:1px solid #e5eaf0!important;border-left:3px solid #ff850d!important;border-radius:15px!important;padding:18px!important;box-shadow:0 4px 16px rgba(23,39,61,.04)!important;min-width:0}
+.proc-modern .pcx-top{display:flex!important;gap:11px!important;align-items:flex-start!important}
+.proc-modern .pcx-num{background:#fff1e5!important;color:#ed780d!important;border-radius:10px!important;flex:0 0 34px!important;height:34px!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:13px!important}
+.proc-modern .pcx-id{min-width:0!important;flex:1!important}.proc-modern .pcx-name{font-size:14px!important;font-weight:600!important;line-height:1.4!important;color:#22334b!important;overflow-wrap:anywhere}
+.proc-modern .pcx-chips{display:flex!important;gap:5px!important;flex-wrap:wrap!important;margin-top:8px!important}.proc-modern .pcx-chip{background:#f3f5f8!important;border:0!important;border-radius:6px!important;color:#7a8696!important;font-size:10px!important;padding:4px 7px!important}
+.proc-modern .pcx-price{text-align:right!important;white-space:nowrap!important}.proc-modern .pcx-price b{font-size:16px!important;color:#182940!important}.proc-modern .pcx-tag{display:block!important;margin-top:6px!important;font-size:10px!important;border-radius:6px!important;padding:4px 6px!important}
+.proc-modern .pcx-stats{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important;margin-top:16px!important}.proc-modern .pcx-stats>div{min-width:0!important;background:#f5f7fa!important;border-radius:9px!important;padding:11px 9px!important}.proc-modern .pcx-stats small{display:block!important;text-transform:uppercase!important;font-size:9px!important;letter-spacing:.4px!important;color:#8b96a6!important;margin-bottom:5px!important}.proc-modern .pcx-stats b{font-size:12px!important;color:#2b3c53!important;overflow-wrap:anywhere}
+.proc-modern .proc-edit{margin-top:13px!important;border-top:1px solid #edf0f4!important;padding-top:12px!important}.proc-modern .proc-edit summary{font-size:12px!important;color:#ed760b!important;font-weight:600!important}.proc-modern .proc-edit summary:before{content:none!important}
+@media(max-width:850px){.proc-modern .proc-cards{grid-template-columns:1fr!important}}
+@media(max-width:560px){.proc-modern{margin-top:12px!important}.proc-modern-heading h2{font-size:21px}.proc-modern-count{display:none}.proc-modern-kpis{gap:7px}.proc-kpi{padding:11px 9px}.proc-kpi strong{font-size:16px}.proc-kpi span,.proc-kpi small{font-size:10px}.proc-modern .proc-add{min-width:110px!important;padding:0 10px!important}.proc-modern .pcx{padding:13px!important}.proc-modern .pcx-price b{font-size:13px!important}}
