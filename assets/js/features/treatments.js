@@ -261,7 +261,11 @@ function trArchOdontogram(p, treatments){
     }).join('');
     return `<div class="nexo-arch ${upper?'upper':'lower'}" role="group" aria-label="Arcada ${upper?'superior':'inferior'}"><span class="nexo-arch-label">ARCADA ${upper?'SUPERIOR':'INFERIOR'}</span>${items}</div>`;
   };
-  return `<div class="nexo-odontogram" aria-label="Odontograma interativo"><div class="nexo-odo-toolbar"><div><strong>Mapa odontológico</strong><small>Selecione um ou mais dentes para adicionar tratamentos</small></div><span class="nexo-odo-count">${selected.size} selecionado${selected.size===1?'':'s'}</span></div><div class="nexo-arch-board">${arch(true)}<div class="nexo-arch-divider" aria-hidden="true"></div>${arch(false)}</div><div class="nexo-odo-legend"><span><i style="background:#8bdda0"></i>Sem tratamento</span><span><i style="background:#b8bfc9"></i>Pendente</span><span><i style="background:#72b7db"></i>Concluído</span><span><i style="background:#efb465"></i>Misto</span><span><i class="nexo-odo-selected"></i>Selecionado</span></div></div>`;
+  const legend=[['#8bdda0','Sem tratamento'],['#b8bfc9','A realizar'],['#72b7db','Concluído'],['#efb465','Concluído / pendente']].map(([c,t])=>`<span><i style="background:${c}"></i>${t}</span>`).join('');
+  return `<div class="nexo-odontogram" aria-label="Odontograma interativo">
+    <div class="nexo-odo-toolbar"><div><strong>Odontograma interativo</strong><small>Selecione um ou mais dentes para registrar procedimentos</small></div><span class="nexo-odo-count">${selected.size} dente${selected.size===1?'':'s'} selecionado${selected.size===1?'':'s'}</span></div>
+    <div class="nexo-odo-layout"><div class="nexo-odo-main"><div class="nexo-arch-board">${arch(true)}<div class="nexo-arch-divider" aria-hidden="true"><span>Q1</span><span>Q2</span><span>Q4</span><span>Q3</span></div>${arch(false)}</div></div>
+    <aside class="nexo-odo-aside" aria-label="Legenda e ações"><h3>Legenda de situação</h3><div class="nexo-odo-legend">${legend}<span><i class="nexo-odo-selected"></i>Selecionado</span></div><div class="nexo-odo-aside-sep"></div><h3>Ações rápidas</h3><a href="#trbasket" class="nexo-odo-action">＋ Adicionar procedimento</a><a href="#trteeth" class="nexo-odo-action">◫ Procedimentos por dente</a><a href="#trshared" class="nexo-odo-action">☷ Dados do tratamento</a><p class="nexo-odo-help">Selecione os dentes no desenho e use as opções de tratamento abaixo.</p></aside></div></div>`;
 }
 function tratHtml(p){
   const all=p.trat||[],tr=trList(p),dr=view.trDraft||{},dec=(view.dent||'perm')==='dec';
