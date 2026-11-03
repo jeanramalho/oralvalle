@@ -109,9 +109,20 @@ function evPendHtml(p){
 }
 function tabOdo(p){
   const o=p.odo||{},k=view.dent||'perm',sel=String(view.tsel||''),pend=new Set([...(p.dplan||[]).filter(x=>!x.feito).map(x=>String(x.n)),...(p.trat||[]).filter(x=>!x.vid&&x.status!=='Concluído'&&x.status!=='Cancelado').flatMap(x=>trTeeth(x))]);
-  const arch=`<h2>Odontograma</h2><div class="row" style="margin-bottom:10px"><button class="sm${k==='perm'?'':' ghost'}" data-act="dent" data-t="perm">Permanentes</button><button class="sm${k==='dec'?'':' ghost'}" data-act="dent" data-t="dec">Decíduos (leite)</button></div><p class="sub">Toque em um dente para escolher. O ponto laranja indica serviço pendente.</p>`+
-  ARC[k].map(qd=>`<strong style="font-size:14px">${qd[0]}</strong><div class="arc${k==='dec'?' d5':''}" style="margin-top:4px">${qd[1].map(n=>{const v=o[n]||0;return `<button class="th${v?' s'+v:''}${sel===String(n)?' sel':''}" data-act="tooth" data-n="${n}" aria-label="Dente ${n}"><b>${n}</b><span>${ODO[v][2]}</span>${pend.has(String(n))?'<i class="dot"></i>':''}</button>`}).join('')}</div>`).join('')+
-  `<div class="lg">${ODO.map(x=>`<span class="${x[1]}">${x[2]?x[2]+' ':''}${x[0]}</span>`).join('')}</div>`;
+  const odoTooth=(n,up)=>{
+    const d=n%10,dec=k==='dec';
+    let typ=dec?(d<=2?'inc':d===3?'can':'mol'):(d<=2?'inc':d===3?'can':d<=5?'pre':'mol');
+    if(typ==='mol'&&!up)typ='mol2';
+    const T=TP[typ],v=o[n]||0,active=sel===String(n);
+    const fill=v?'var(--sf)':'var(--card)';
+    const tooth=`<svg viewBox="0 0 30 60" width="30" height="60" aria-hidden="true" style="display:block;overflow:visible"><g ${up?'':'transform="translate(0,60) scale(1,-1)"'} stroke="var(--mut)" stroke-width="1.2" stroke-linejoin="round"><path d="${T.r}" fill="none"/><path d="${T.c}" fill="${fill}"/></g></svg>`;
+    const faces=`<svg viewBox="0 0 30 30" width="30" height="30" aria-hidden="true" style="display:block"><g stroke="var(--mut)" stroke-width="1.1" fill="none"><rect x="2" y="2" width="26" height="26" rx="8"/><circle cx="15" cy="15" r="6"/><path d="M5 5l6 6M25 5l-6 6M5 25l6-6M25 25l-6-6"/></g></svg>`;
+    const number=`<span style="font-size:12px;color:var(--mut);line-height:18px">${n}</span>`;
+    return `<button type="button" class="nd-odo-tooth${active?' is-selected':''}" data-act="tooth" data-n="${n}" aria-label="Dente ${n}" style="position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:34px;padding:3px 1px;border:1px solid ${active?'var(--accent, #ea7000)':'transparent'};border-radius:6px;background:${active?'rgba(234,112,0,.09)':'transparent'};cursor:pointer;color:inherit">${up?number+tooth+faces:faces+tooth+number}${pend.has(String(n))?'<i style="position:absolute;top:22px;right:0;width:6px;height:6px;border-radius:50%;background:#ea7000"></i>':''}</button>`;
+  };
+  const rows=ARC[k].map(qd=>qd[1]);
+  const odoRow=(a,b,up)=>`<div style="display:flex;justify-content:center;gap:0;min-width:610px"><div style="display:flex;justify-content:flex-end;gap:3px;padding-right:8px;border-right:1px solid var(--line)">${a.map(n=>odoTooth(n,up)).join('')}</div><div style="display:flex;justify-content:flex-start;gap:3px;padding-left:8px">${b.map(n=>odoTooth(n,up)).join('')}</div></div>`;
+  const arch=`<h2>Odontograma</h2><div class="row" style="margin-bottom:10px"><button class="sm${k==='perm'?'':' ghost'}" data-act="dent" data-t="perm">Permanente</button><button class="sm${k==='dec'?'':' ghost'}" data-act="dent" data-t="dec">Decíduos</button></div><p class="sub">Toque em um dente para selecionar. O ponto laranja indica serviço pendente.</p><div style="overflow-x:auto;padding:8px 0"><div style="width:max-content;min-width:100%;margin:auto">${odoRow(rows[0],rows[1],true)}<div style="border-top:1px solid var(--line);margin:10px 20px"></div>${odoRow(rows[2],rows[3],false)}</div></div><div class="lg">${ODO.map(x=>`<span class="${x[1]}">${x[2]?x[2]+' ':''}${x[0]}</span>`).join('')}</div>`;
   const opts='<option value="">Geral (sem dente específico)</option>'+dentesTodos().map(n=>`<option value="${n}"${sel===String(n)?' selected':''}>Dente ${n}</option>`).join('');
   const lan=`<div class="card" style="margin-top:14px"><h2>Lançar evolução do dia</h2>
   <div class="row"><div><label for="evd">Data</label><input id="evd" type="date" value="${tdy()}"></div><div><label for="evn">Dente</label><select id="evn">${opts}</select></div></div>
