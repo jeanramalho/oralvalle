@@ -241,25 +241,27 @@ function trLabResumoHtml(p){
  const rows=valid.map(o=>{const t=trs.find(x=>String(x.id)===String(o.treatment_id));return `<tr><td>${esc(t?.proc||'Procedimento')}</td><td>${esc(o.work_description||'')}</td><td>${esc(o.status||'')}</td><td>${brl(Number(o.laboratory_cost)||0)}</td></tr>`}).join('');
  return `<details class="card" style="margin-bottom:12px"><summary style="cursor:pointer;font-weight:700">Laboratório vinculado aos tratamentos (${valid.length})</summary><div style="margin-top:12px">${stat('Custos laboratoriais vinculados',brl(total))}${stat('Trabalhos vinculados',String(valid.length))}</div>${valid.length?`<div style="overflow-x:auto"><table style="width:100%;margin-top:12px"><thead><tr><th>Tratamento</th><th>Trabalho</th><th>Situação</th><th>Custo</th></tr></thead><tbody>${rows}</tbody></table></div>`:'<p class="note">Nenhum trabalho vinculado a um tratamento deste paciente.</p>'}${orphan?`<p class="note" style="color:#a14c00">${orphan} vínculo(s) apontam para tratamentos não encontrados.</p>`:''}<p class="note">Consulta somente leitura. Os custos laboratoriais são exibidos separadamente dos custos cadastrados no tratamento para evitar dupla contagem. Não gera despesas, baixas ou comissões.</p></details>`;
 }
-/* Odontograma em arcadas: apresentação apenas; reutiliza seleção e estados existentes. */
+/* Odontograma visual em U: mantém os botões e eventos originais de seleção. */
 function trArchOdontogram(p, treatments){
   const dec=(view.dent||'perm')==='dec';
   const quadrants=ARC[dec?'dec':'perm'];
   const status=trStatusMap(treatments);
   const selected=new Set((view.trSel||[]).map(String));
   const arch=(upper)=>{
-    const qs=upper?quadrants.slice(0,2):quadrants.slice(2,4);
-    const nums=qs.flatMap(q=>q[1]);
+    const nums=(upper?quadrants.slice(0,2):quadrants.slice(2,4)).flatMap(q=>q[1]);
     const count=nums.length;
     const items=nums.map((n,i)=>{
       const angle=Math.PI-(i+.5)*Math.PI/count;
-      const x=50+43*Math.cos(angle);
-      const y=upper?84-71*Math.sin(angle):16+71*Math.sin(angle);
-      return `<div class="nexo-arch-tooth" style="left:${x.toFixed(3)}%;top:${y.toFixed(3)}%">${toothBtn(n,dec,status[String(n)],selected.has(String(n)),upper)}</div>`;
+      const x=50+43.5*Math.cos(angle);
+      const y=upper?86-70*Math.sin(angle):14+70*Math.sin(angle);
+      const tilt=(i-(count-1)/2)*(-4.1)*(upper?1:-1);
+      const st=status[String(n)];
+      const fill=st?(st.d&&st.p?'#efb465':st.d?'#72b7db':'#b8bfc9'):'#8bdda0';
+      return `<div class="nexo-arch-tooth" style="left:${x.toFixed(3)}%;top:${y.toFixed(3)}%;--nexo-tooth-fill:${fill};--nexo-tooth-rotation:${tilt.toFixed(1)}deg">${toothBtn(n,dec,st,selected.has(String(n)),upper)}</div>`;
     }).join('');
-    return `<div class="nexo-arch ${upper?'upper':'lower'}" role="group" aria-label="Arcada ${upper?'superior':'inferior'}"><span class="nexo-arch-label">Arcada ${upper?'superior':'inferior'}</span>${items}</div>`;
+    return `<div class="nexo-arch ${upper?'upper':'lower'}" role="group" aria-label="Arcada ${upper?'superior':'inferior'}"><span class="nexo-arch-label">ARCADA ${upper?'SUPERIOR':'INFERIOR'}</span>${items}</div>`;
   };
-  return `<div class="nexo-odontogram" aria-label="Odontograma interativo"><div class="nexo-odo-help">Selecione um ou mais dentes para cadastrar procedimentos. As cores indicam a situação dos tratamentos.</div><div class="nexo-arch-board">${arch(true)}<div class="nexo-arch-divider" aria-hidden="true"></div>${arch(false)}</div></div>`;
+  return `<div class="nexo-odontogram" aria-label="Odontograma interativo"><div class="nexo-odo-toolbar"><div><strong>Mapa odontológico</strong><small>Selecione um ou mais dentes para adicionar tratamentos</small></div><span class="nexo-odo-count">${selected.size} selecionado${selected.size===1?'':'s'}</span></div><div class="nexo-arch-board">${arch(true)}<div class="nexo-arch-divider" aria-hidden="true"></div>${arch(false)}</div><div class="nexo-odo-legend"><span><i style="background:#8bdda0"></i>Sem tratamento</span><span><i style="background:#b8bfc9"></i>Pendente</span><span><i style="background:#72b7db"></i>Concluído</span><span><i style="background:#efb465"></i>Misto</span><span><i class="nexo-odo-selected"></i>Selecionado</span></div></div>`;
 }
 function tratHtml(p){
   const all=p.trat||[],tr=trList(p),dr=view.trDraft||{},dec=(view.dent||'perm')==='dec';
