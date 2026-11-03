@@ -82,3 +82,46 @@ html body .nexo-page-shell.nexo-agenda-page .nexo-agenda-tools > .card.ag-rental
 /* NexoDent 157: seletor específico no último CSS carregado. */
 html body .nexo-page-shell.nexo-agenda-page .nexo-agenda-tools > div.card.ag-new-form,
 html body .nexo-page-shell.nexo-agenda-page .nexo-agenda-tools > div.card.ag-rental-panel {background:#f0f2f4!important;background-color:#f0f2f4!important;background-image:none!important;border-color:#dce2e8!important;}
+
+
+/* NexoDent 158 - UNIFICACAO VISUAL: cinza da Agenda em todos os paineis.
+   Restrito ao modo claro. Inputs, botoes, estados e modo escuro preservados. */
+@media screen {
+html:not([data-ov-mode="dark"]) {
+  --nexo-unified-panel: #f0f2f4;
+  --nexo-unified-border: #dce2e8;
+}
+/* Cartoes comuns e modulos especializados. Nao selecionar botoes ou inputs. */
+html:not([data-ov-mode="dark"]) body :is(
+  .card, .pf-card, .ov-panel, .nexo-stat,
+  .ov-modern-stats > div, .ov-modern-row,
+  .ov-modern-head, .nexo-page-hero,
+  .nexo-agenda-page .ag-new-form,
+  .nexo-agenda-page .ag-rental-panel,
+  .nexo-agenda-page .ag-date-panel,
+  .nexo-agenda-page .ov-agenda-chairs > .card,
+  .nexo-agenda-page .ov-agenda-chairs > .card > .ag,
+  .nexo-agenda-page .ag-flow-row,
+  .ov-modern-page .ov-modern-row,
+  .ov-modern-page .ov-modern-stats > div
+) {
+  background: var(--nexo-unified-panel) !important;
+  background-image: none !important;
+  border-color: var(--nexo-unified-border) !important;
+}
+/* Alguns cartoes sao criados como filhos de grids sem classe .card. */
+html:not([data-ov-mode="dark"]) body :is(
+  .nexo-page-stats > div,
+  .nexo-stats > div,
+  .ov-modern-stats > div:first-child,
+  .nexo-agenda-page .nexo-stat:first-child
+) {
+  background: var(--nexo-unified-panel) !important;
+  background-image: none !important;
+  border-color: var(--nexo-unified-border) !important;
+}
+/* Texto legivel nos paineis, sem interferir em botoes/etiquetas de status. */
+html:not([data-ov-mode="dark"]) body :is(.card,.pf-card,.ov-panel,.ov-modern-row,.nexo-stat) :is(h1,h2,h3,h4,h5,h6) {
+  color: #172033 !important;
+}
+}
