@@ -3,7 +3,7 @@
 .ov-icon-img{width:56px;height:64px;max-width:96px;object-fit:contain;background:transparent!important;border-radius:0;padding:0;box-sizing:border-box;flex:none}
 @media(max-width:760px){.ov-icon-img{width:44px;height:48px;max-width:72px}}
 @media(max-width:760px){.ov-logo-img{height:44px;max-width:72px}}
-.cfg-page{max-width:760px}
+.cfg-page{width:100%;max-width:none;min-width:0;box-sizing:border-box}.cfg-page>.cfg-card,.cfg-page>.ov-page-head,.cfg-page>.tabs{width:100%;max-width:none;box-sizing:border-box}
 .cfg-logo{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
 .cfg-logo-prev{width:150px;height:110px;border:1px dashed #cfd4d8;border-radius:12px;background:transparent;display:flex;align-items:center;justify-content:center;padding:8px;box-sizing:border-box}
 .cfg-logo-prev img{max-width:100%;max-height:100%;object-fit:contain}
