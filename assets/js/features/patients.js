@@ -111,9 +111,27 @@ function evPendHtml(p){
 if (!window.__nexoOdoReferenceListener) {
   window.__nexoOdoReferenceListener = true;
   window.addEventListener('message', function(event) {
-    if (event.origin !== window.location.origin || !event.data || event.data.type !== 'nexodent:odontograma:select') return;
+    if (event.origin !== window.location.origin || !event.data || !String(event.data.type||'').startsWith('nexodent:odontograma:')) return;
     const frame = document.querySelector('iframe[title="Odontograma anatômico"]');
     if (!frame || event.source !== frame.contentWindow) return;
+    const patientId = frame.dataset.patientId;
+    const patient = (db.p || []).find(x => String(x.id) === patientId);
+    if (!patient) return;
+    if (event.data.type === 'nexodent:odontograma:ready') {
+      frame.contentWindow.postMessage({type:'nexodent:odontograma:load', data: (patient.odo || {}).__nexoVisual || {}}, window.location.origin);
+      return;
+    }
+    if (event.data.type === 'nexodent:odontograma:save') {
+      const data = event.data.data;
+      if (!data || typeof data !== 'object' || Array.isArray(data)) return;
+      const serialized = JSON.stringify(data);
+      if (serialized.length > 150000) return;
+      patient.odo = patient.odo || {};
+      patient.odo.__nexoVisual = JSON.parse(serialized);
+      save();
+      return;
+    }
+    if (event.data.type !== 'nexodent:odontograma:select') return;
     const n = String(event.data.tooth || '');
     const select = document.getElementById('evn');
     if (select && [...select.options].some(o => o.value === n)) {
@@ -138,7 +156,7 @@ function tabOdo(p){
   const rows=ARC[k].map(qd=>qd[1]);
   const odoRow=(a,b,up)=>`<div style="display:flex;justify-content:center;gap:0;min-width:610px"><div style="display:flex;justify-content:flex-end;gap:3px;padding-right:8px;border-right:1px solid var(--line)">${a.map(n=>odoTooth(n,up)).join('')}</div><div style="display:flex;justify-content:flex-start;gap:3px;padding-left:8px">${b.map(n=>odoTooth(n,up)).join('')}</div></div>`;
   // HTML original fornecido pelo usuário: interface isolada para evitar conflito de CSS/JS.
-  const arch=`<div style="width:100%;min-width:0"><iframe title="Odontograma anatômico" src="assets/odontograma_dentes_da_referencia.html?v=131" loading="eager" style="display:block;width:100%;height:720px;max-width:100%;border:0;border-radius:10px;background:#fff" sandbox="allow-scripts allow-same-origin"></iframe></div>`;
+  const arch=`<div style="width:100%;min-width:0"><iframe title="Odontograma anatômico" src="assets/odontograma_nexodent_visual.html?v=145" data-patient-id="${esc(String(p.id))}" loading="eager" style="display:block;width:100%;height:1050px;max-width:100%;border:0;border-radius:10px;background:#fff" sandbox="allow-scripts allow-same-origin"></iframe></div>`;
   const opts='<option value="">Geral (sem dente específico)</option>'+dentesTodos().map(n=>`<option value="${n}"${sel===String(n)?' selected':''}>Dente ${n}</option>`).join('');
   const lan=`<div class="card" style="margin-top:14px"><h2>Lançar evolução do dia</h2>
   <div class="row"><div><label for="evd">Data</label><input id="evd" type="date" value="${tdy()}"></div><div><label for="evn">Dente</label><select id="evn">${opts}</select></div></div>
