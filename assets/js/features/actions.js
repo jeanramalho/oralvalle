@@ -251,6 +251,8 @@ const A={
       save();render();toast('Orçamento e proposta excluídos.');
     });
   },
+  orcsave:(b,d,p)=>{if(!p||!getO(p,d.o))return;save();toast('Orçamento registrado. As alterações também são salvas automaticamente.',3200)},
+  orccollapse:(b,d,p)=>{if(!p||!getO(p,d.o))return;save();view.orcOpen=view.orcOpen||{};view.orcOpen[d.o]=false;view.obx=null;view.obxAll=null;render();toast('Orçamento recolhido. Toque no resumo para abrir novamente.',2600)},
   otoggle:(b,d)=>{view.orcOpen=view.orcOpen||{};view.orcOpen[d.o]=!view.orcOpen[d.o];view.obx=null;view.obxAll=null;render()},
   oball:(b,d,p)=>{
     const o=getO(p,d.o),pend=o.itens.filter(it=>!it.vid);
