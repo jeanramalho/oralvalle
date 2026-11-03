@@ -105,7 +105,7 @@ function tabAgd(p){
 function evPendHtml(p){
   const l=(p.trat||[]).filter(x=>!x.vid&&x.status!=='Concluído'&&x.status!=='Cancelado');
   const rows=l.map((x,ix)=>{const m=itMult(x);return `<div class="pr-card pr-compact"><div class="pr-head"><span class="pr-av" aria-hidden="true">${ix+1}</span><div class="pr-nm">${esc(x.proc||'Tratamento')}${x.dente?' · '+dLab(x.dente)+' '+esc(x.dente):' · Geral'}<small>${m.q>1?brl(m.u)+' × '+m.q+' = ':''}${brl(x.valor)} · ${esc(dName(x.dt))}</small></div><button class="sm" data-act="trbaixa" data-id="${x.id}">Dar baixa</button></div>${x.obs?`<small class="note" style="display:block;margin:8px 0 0">${esc(x.obs)}</small>`:''}</div>`}).join('');
-  return `<div class="card"><h2 style="margin:0 0 4px">Procedimentos do tratamento (${l.length})</h2><p class="note" style="margin:0 0 6px">Os procedimentos lançados na aba Tratamentos aparecem aqui. Ao dar baixa, o procedimento é concluído, a venda e a comissão são lançadas e o registro entra na evolução.</p>${rows||'<p class="note" style="margin:6px 0">Nenhum procedimento pendente. Lance novos na aba Tratamentos.</p>'}</div>`;
+  return `<div class="card"><h2 style="margin:0 0 4px">Procedimentos do tratamento (${l.length})</h2><p class="note" style="margin:0 0 6px">Os procedimentos registrados para o paciente aparecem aqui. Ao dar baixa, o procedimento é concluído, a venda e a comissão são lançadas e o registro entra na evolução.</p>${rows||'<p class="note" style="margin:6px 0">Nenhum procedimento pendente. Registre novos procedimentos na Evolução.</p>'}</div>`;
 }
 // Sincroniza a seleção do odontograma incorporado com o campo de dente da evolução.
 if (!window.__nexoOdoReferenceListener) {
@@ -156,7 +156,7 @@ function tabOdo(p){
   const rows=ARC[k].map(qd=>qd[1]);
   const odoRow=(a,b,up)=>`<div style="display:flex;justify-content:center;gap:0;min-width:610px"><div style="display:flex;justify-content:flex-end;gap:3px;padding-right:8px;border-right:1px solid var(--line)">${a.map(n=>odoTooth(n,up)).join('')}</div><div style="display:flex;justify-content:flex-start;gap:3px;padding-left:8px">${b.map(n=>odoTooth(n,up)).join('')}</div></div>`;
   // HTML original fornecido pelo usuário: interface isolada para evitar conflito de CSS/JS.
-  const arch=`<div style="width:100%;min-width:0"><iframe title="Odontograma anatômico" src="assets/odontograma_nexodent_visual.html?v=146" data-patient-id="${esc(String(p.id))}" loading="eager" style="display:block;width:100%;height:1050px;max-width:100%;border:0;border-radius:10px;background:#fff" sandbox="allow-scripts allow-same-origin"></iframe></div>`;
+  const arch=`<div style="width:100%;min-width:0"><iframe title="Odontograma anatômico" src="assets/odontograma_nexodent_visual.html?v=147-sem-tarja" data-patient-id="${esc(String(p.id))}" loading="eager" style="display:block;width:100%;height:1050px;max-width:100%;border:0;border-radius:10px;background:#fff" sandbox="allow-scripts allow-same-origin"></iframe></div>`;
   const opts='<option value="">Geral (sem dente específico)</option>'+dentesTodos().map(n=>`<option value="${n}"${sel===String(n)?' selected':''}>Dente ${n}</option>`).join('');
   const lan=`<div class="card" style="margin-top:14px"><h2>Lançar evolução do dia</h2>
   <div class="row"><div><label for="evd">Data</label><input id="evd" type="date" value="${tdy()}"></div><div><label for="evn">Dente</label><select id="evn">${opts}</select></div></div>
