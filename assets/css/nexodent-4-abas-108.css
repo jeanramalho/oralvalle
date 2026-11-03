@@ -44,84 +44,66 @@
 @media(max-width:850px){.ov-modern-page .ov-modern-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important;}}
 @media(max-width:650px){.ov-modern-page>.ov-modern-head,.nxlab-top{padding:16px!important;border-radius:17px!important;}.ov-modern-page .ov-modern-title h1,.nxlab-top h2{font-size:26px!important;}.ov-modern-page .ov-modern-stats{gap:9px!important;}.ov-modern-page .ov-modern-stats>div{padding:12px!important;min-height:80px!important;}.ov-modern-page .ov-modern-stats strong{font-size:25px!important;}.ov-modern-page .ov-modern-row{padding:0 12px!important;}.ov-modern-page .ov-modern-summary{flex-wrap:wrap!important;gap:8px 12px!important;}.ov-modern-page .ov-modern-name{flex-basis:calc(100% - 45px)!important;}.ov-modern-page .ov-modern-date{flex:1 1 60%!important;}.ov-modern-page .ov-modern-status{max-width:60%!important;}.nxlab-metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important;}.nxlab-card{padding:14px!important;}}
 
-
-/* NexoDent 156 — ajuste pontual: somente cartoes da Agenda.
-   Mantem campos de formulario brancos, botoes, fontes e demais abas intactos. */
-.nexo-agenda-page .nexo-stat:not(:first-child),
-.nexo-agenda-page .ag-date-panel,
-.nexo-agenda-page .ag-new-form,
-.nexo-agenda-page .ag-rental-panel,
-.nexo-agenda-page .ov-agenda-chairs > .card {
-  background: #f0f2f4 !important;
-  border-color: #dce2e8 !important;
-}
-/* Preserva o destaque laranja discreto do primeiro indicador. */
-.nexo-agenda-page .nexo-stat:first-child {
-  background: #fff4eb !important;
-}
-/* Os titulos dos consultorios acompanham o cinza dos cartoes. */
-.nexo-agenda-page .ov-agenda-chairs > .card > .ag {
-  background: #e8edf1 !important;
-  border-color: #dce2e8 !important;
-}
-/* Linhas de horarios com contraste sutil, sem faixas brancas intensas. */
-.nexo-agenda-page .ag-flow-row { background: #f0f2f4 !important; }
-.nexo-agenda-page .ag-flow-row.ag-flow-free:nth-child(even) {
-  background: #e8edf1 !important;
-}
-
-/* NexoDent 156b: somente os dois paineis brancos indicados no print. */
-html body .nexo-page-shell.nexo-agenda-page .nexo-agenda-tools > .card.ag-new-form,
-html body .nexo-page-shell.nexo-agenda-page .nexo-agenda-tools > .card.ag-rental-panel {
-  background-color: #f0f2f4 !important;
-  background-image: none !important;
-  border-color: #dce2e8 !important;
-}
-/* Preserva os inputs brancos para boa leitura e os botoes originais. */
-
-/* NexoDent 157: seletor específico no último CSS carregado. */
-html body .nexo-page-shell.nexo-agenda-page .nexo-agenda-tools > div.card.ag-new-form,
-html body .nexo-page-shell.nexo-agenda-page .nexo-agenda-tools > div.card.ag-rental-panel {background:#f0f2f4!important;background-color:#f0f2f4!important;background-image:none!important;border-color:#dce2e8!important;}
-
-
-/* NexoDent 158 - UNIFICACAO VISUAL: cinza da Agenda em todos os paineis.
-   Restrito ao modo claro. Inputs, botoes, estados e modo escuro preservados. */
-@media screen {
+/* NexoDent 159 — UMA superfície cinza no modo claro.
+   Substitui os patches de cor 156–158; nao altera layout, JS ou eventos.
+   Fundo, paineis, cartoes e campos: exatamente #f0f2f4.
+   Bordas fazem a separacao visual. Botoes de acao e icones mantidos. */
 html:not([data-ov-mode="dark"]) {
-  --nexo-unified-panel: #f0f2f4;
-  --nexo-unified-border: #dce2e8;
+  --nd-surface-unica:#f0f2f4;
+  --nd-borda-unica:#d7dfe7;
+  --bg:#f0f2f4; --bg2:#f0f2f4; --sf:#f0f2f4;
+  --card:#f0f2f4; --ov-bg:#f0f2f4; --ov-card:#f0f2f4;
+  --ink:#111827; --ov-text:#111827; --nd-ink:#111827;
+  --mut:#374151; --ov-muted:#374151;
 }
-/* Cartoes comuns e modulos especializados. Nao selecionar botoes ou inputs. */
+/* Estrutura geral, sidebar e containers. */
+html:not([data-ov-mode="dark"]) body,
+html:not([data-ov-mode="dark"]) body :is(.ov-content,.ov-main,.ov-sidebar,.ov-page,.nexo-page-shell,.ov-patients-page,.ov-modern-page,.nexo-agenda-page) {
+  background-color:#f0f2f4 !important;
+  color:#111827;
+}
+/* Todos os cartoes, cabecalhos, listas e paineis conhecidos.
+   Sem aplicar background a todos os divs: isso apagaria estados e icones. */
 html:not([data-ov-mode="dark"]) body :is(
-  .card, .pf-card, .ov-panel, .nexo-stat,
-  .ov-modern-stats > div, .ov-modern-row,
-  .ov-modern-head, .nexo-page-hero,
-  .nexo-agenda-page .ag-new-form,
-  .nexo-agenda-page .ag-rental-panel,
-  .nexo-agenda-page .ag-date-panel,
-  .nexo-agenda-page .ov-agenda-chairs > .card,
-  .nexo-agenda-page .ov-agenda-chairs > .card > .ag,
-  .nexo-agenda-page .ag-flow-row,
-  .ov-modern-page .ov-modern-row,
-  .ov-modern-page .ov-modern-stats > div
+  .card,.pt,.chk,.ob-pay,.pf-card,.dt-card,.oitem,.ov-panel,
+  .ov-page-head,.ov-panel-head,.ov-patients-panel,.ov-patient-row,
+  .ov-page-hero,.nexo-page-hero,.nexo-stat,.nexo-page-stats > *,
+  .ov-modern-head,.ov-modern-row,.ov-modern-stats > div,
+  .nxlab-top,.nxlab-card,.nxlab-metrics > div,
+  .ag-date-panel,.ag-new-form,.ag-rental-panel,
+  .ov-agenda-chairs > .card,.ov-agenda-chairs > .card > .ag,
+  .ag-flow-row,.ag-flow-free,.ov-patient-search,
+  .nexo-agenda-tools > .card,.ov-patient-list > *,
+  .ov-modern-list > details,.ov-modern-summary,
+  .ov-patients-stats > div,.ov-patient-stats > div
 ) {
-  background: var(--nexo-unified-panel) !important;
-  background-image: none !important;
-  border-color: var(--nexo-unified-border) !important;
+  background:#f0f2f4 !important;
+  background-image:none !important;
+  border-color:#d7dfe7 !important;
 }
-/* Alguns cartoes sao criados como filhos de grids sem classe .card. */
+/* Agenda: impedir faixas alternadas brancas e destaque pessego no indicador. */
+html:not([data-ov-mode="dark"]) body .nexo-agenda-page :is(
+  .nexo-stat:first-child,.ag-flow-row:nth-child(even),
+  .ag-flow-row:nth-child(odd),.ag-flow-free:nth-child(even),
+  .ag-flow-free:nth-child(odd)
+) {background:#f0f2f4!important;background-image:none!important;}
+/* Campos em todos os modulos, inclusive regras de formulario com !important. */
+html:not([data-ov-mode="dark"]) body input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="submit"]):not([type="button"]),
+html:not([data-ov-mode="dark"]) body select,
+html:not([data-ov-mode="dark"]) body textarea {
+  background:#f0f2f4!important;
+  background-color:#f0f2f4!important;
+  color:#111827!important;
+  border-color:#cbd5df!important;
+}
+html:not([data-ov-mode="dark"]) body input::placeholder,
+html:not([data-ov-mode="dark"]) body textarea::placeholder {color:#526072!important;opacity:1;}
+/* Textos de leitura: pretos, preservando botoes, etiquetas e estados. */
 html:not([data-ov-mode="dark"]) body :is(
-  .nexo-page-stats > div,
-  .nexo-stats > div,
-  .ov-modern-stats > div:first-child,
-  .nexo-agenda-page .nexo-stat:first-child
-) {
-  background: var(--nexo-unified-panel) !important;
-  background-image: none !important;
-  border-color: var(--nexo-unified-border) !important;
-}
-/* Texto legivel nos paineis, sem interferir em botoes/etiquetas de status. */
-html:not([data-ov-mode="dark"]) body :is(.card,.pf-card,.ov-panel,.ov-modern-row,.nexo-stat) :is(h1,h2,h3,h4,h5,h6) {
-  color: #172033 !important;
-}
-}
+  .ov-content,.nexo-page-shell,.ov-modern-page,.ov-patients-page
+) :is(h1,h2,h3,h4,h5,h6,strong,label) {color:#111827!important;}
+html:not([data-ov-mode="dark"]) body :is(
+  .ov-content,.nexo-page-shell,.ov-modern-page,.ov-patients-page
+) :is(.sub,.note,small) {color:#374151!important;}
+/* O item ativo do menu segue identificavel pelo texto/icone laranja. */
+html:not([data-ov-mode="dark"]) body .ov-nav-btn.on {background:#f0f2f4!important;}
