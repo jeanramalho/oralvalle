@@ -38,7 +38,7 @@
     <p class="note" id="ns-a1-result" role="status" aria-live="polite">Nenhum certificado verificado. O arquivo e a senha serão enviados somente ao serviço HTTPS da Vercel para inspeção transitória, sem armazenamento intencional.</p>
    </section>
    </details>
-   <details class="ns-panel"><summary><span class="ns-panel-label"><strong>Assinatura digital — teste</strong><small>Assinar PDF de teste com certificado A1</small></span><span class="ns-panel-arrow" aria-hidden="true">⌄</span></summary>
+   <details class="ns-panel"><summary><span class="ns-panel-label"><strong>Assinatura digital</strong></span><span class="ns-panel-arrow" aria-hidden="true">⌄</span></summary>
    <section style="padding:16px;border:1px solid #d9dfe6;border-radius:12px;margin:16px 0;background:#ffffff;color:#222" aria-label="Assinatura PDF A1 em teste">
     <h3 style="margin-top:0">Assinar PDF com A1</h3>
     <p class="note"><strong>Não use para documentos clínicos reais nesta etapa.</strong> O serviço ainda não comprova que o certificado pertence ao profissional autenticado, não valida toda a cadeia ICP-Brasil e não salva o arquivo no prontuário. Use apenas PDF de teste, sem dados de pacientes.</p>
