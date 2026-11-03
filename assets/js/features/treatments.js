@@ -241,40 +241,25 @@ function trLabResumoHtml(p){
  const rows=valid.map(o=>{const t=trs.find(x=>String(x.id)===String(o.treatment_id));return `<tr><td>${esc(t?.proc||'Procedimento')}</td><td>${esc(o.work_description||'')}</td><td>${esc(o.status||'')}</td><td>${brl(Number(o.laboratory_cost)||0)}</td></tr>`}).join('');
  return `<details class="card" style="margin-bottom:12px"><summary style="cursor:pointer;font-weight:700">Laboratório vinculado aos tratamentos (${valid.length})</summary><div style="margin-top:12px">${stat('Custos laboratoriais vinculados',brl(total))}${stat('Trabalhos vinculados',String(valid.length))}</div>${valid.length?`<div style="overflow-x:auto"><table style="width:100%;margin-top:12px"><thead><tr><th>Tratamento</th><th>Trabalho</th><th>Situação</th><th>Custo</th></tr></thead><tbody>${rows}</tbody></table></div>`:'<p class="note">Nenhum trabalho vinculado a um tratamento deste paciente.</p>'}${orphan?`<p class="note" style="color:#a14c00">${orphan} vínculo(s) apontam para tratamentos não encontrados.</p>`:''}<p class="note">Consulta somente leitura. Os custos laboratoriais são exibidos separadamente dos custos cadastrados no tratamento para evitar dupla contagem. Não gera despesas, baixas ou comissões.</p></details>`;
 }
-/* Odontograma linear anatômico: duas vistas por dente, inspirado na referência enviada. */
+/* Odontograma em arcadas: apresentação apenas; reutiliza seleção e estados existentes. */
 function trArchOdontogram(p, treatments){
- const dec=(view.dent||'perm')==='dec';
- const quadrants=ARC[dec?'dec':'perm'];
- const status=trStatusMap(treatments);
- const selected=new Set((view.trSel||[]).map(String));
- const upper=quadrants.slice(0,2).flatMap(q=>q[1]);
- const lower=quadrants.slice(2,4).flatMap(q=>q[1]);
- const draw=(nums,top)=>nums.map((n,i)=>{
-   const x=29+i*46+(i>=8?14:0), y=top?83:266;
-   const st=status[String(n)], active=selected.has(String(n));
-   const color=st?(st.d&&st.p?'#91bd43':st.d?'#39b77b':'#f09a4a'):'#a5a5a5';
-   const type=n%10, molar=type>=6, premolar=type>=4&&type<=5;
-   const roots=molar?3:premolar?2:1;
-   const crownW=molar?27:premolar?23:19;
-   const crownPath=`M ${-crownW/2} 0 Q ${-crownW/2-3} -9 ${-crownW/2+2} -19 Q 0 -25 ${crownW/2-2} -19 Q ${crownW/2+3} -9 ${crownW/2} 0 Q 0 7 ${-crownW/2} 0 Z`;
-   const rootPath=roots===3?`M -11 -15 Q -18 -36 -14 -46 Q -8 -47 -5 -30 L -2 -16 M 0 -17 Q 0 -47 5 -48 Q 10 -42 7 -17 M 9 -16 Q 13 -40 18 -43 Q 21 -33 13 -13`:
-      roots===2?`M -8 -14 Q -13 -42 -9 -47 Q -3 -47 0 -17 M 4 -17 Q 8 -45 13 -46 Q 16 -33 10 -14`:
-      `M -7 -13 Q -6 -38 0 -48 Q 7 -36 8 -13`;
-   const shape=`<g transform="translate(${x} ${y})" fill="none" stroke="${color}" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round">
-     <g transform="${top?'':'rotate(180)'}"><path d="${rootPath}"/><path d="${crownPath}"/></g>
-     <g transform="translate(0 ${top?37:-37})"><rect x="-13" y="-11" width="26" height="22" rx="8"/><path d="M -9 -5 Q 0 -12 9 -5 Q 14 0 9 6 Q 0 12 -9 6 Q -14 0 -9 -5 Z"/><path d="M -6 -8 L 6 8 M 6 -8 L -6 8" opacity=".65"/></g>
-   </g>`;
-   const labelY=top?19:338;
-   return `<g class="nexo-linear-tooth${active?' is-selected':''}"><text x="${x}" y="${labelY}" text-anchor="middle" class="nexo-linear-number">${n}</text>${shape}
-     <foreignObject x="${x-19}" y="${top?31:209}" width="38" height="${top?115:118}" class="nexo-linear-hit"><div xmlns="http://www.w3.org/1999/xhtml" class="nexo-linear-hit-inner">${toothBtn(n,dec,st,active,top)}</div></foreignObject>
-     ${active?`<rect x="${x-18}" y="${top?31:209}" width="36" height="116" rx="6" fill="none" stroke="#ef8b30" stroke-width="2" pointer-events="none"/>`:''}
-   </g>`;
- }).join('');
- const legend=[['#39b77b','Finalizado'],['#91bd43','Finalizado/A realizar'],['#f09a4a','A realizar']].map(([c,t])=>`<span><i style="background:${c}"></i>${t}</span>`).join('');
- return `<div class="nexo-linear-odontogram" aria-label="Odontograma interativo">
-  <div class="nexo-linear-scroll"><svg class="nexo-linear-svg" viewBox="0 0 766 365" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="Dentes superiores e inferiores, vista frontal e oclusal"><path d="M383 12 V350" stroke="#e2e2e2" stroke-width="1"/>${draw(upper,true)}<path d="M12 188 H754" stroke="#eaeaea" stroke-width="1"/>${draw(lower,false)}</svg></div>
-  <div class="nexo-linear-legend">${legend}<span class="nexo-linear-selected-count">${selected.size} selecionado${selected.size===1?'':'s'}</span></div>
- </div>`;
+  const dec=(view.dent||'perm')==='dec';
+  const quadrants=ARC[dec?'dec':'perm'];
+  const status=trStatusMap(treatments);
+  const selected=new Set((view.trSel||[]).map(String));
+  const arch=(upper)=>{
+    const qs=upper?quadrants.slice(0,2):quadrants.slice(2,4);
+    const nums=qs.flatMap(q=>q[1]);
+    const count=nums.length;
+    const items=nums.map((n,i)=>{
+      const angle=Math.PI-(i+.5)*Math.PI/count;
+      const x=50+43*Math.cos(angle);
+      const y=upper?84-71*Math.sin(angle):16+71*Math.sin(angle);
+      return `<div class="nexo-arch-tooth" style="left:${x.toFixed(3)}%;top:${y.toFixed(3)}%">${toothBtn(n,dec,status[String(n)],selected.has(String(n)),upper)}</div>`;
+    }).join('');
+    return `<div class="nexo-arch ${upper?'upper':'lower'}" role="group" aria-label="Arcada ${upper?'superior':'inferior'}"><span class="nexo-arch-label">Arcada ${upper?'superior':'inferior'}</span>${items}</div>`;
+  };
+  return `<div class="nexo-odontogram" aria-label="Odontograma interativo"><div class="nexo-odo-help">Selecione um ou mais dentes para cadastrar procedimentos. As cores indicam a situação dos tratamentos.</div><div class="nexo-arch-board">${arch(true)}<div class="nexo-arch-divider" aria-hidden="true"></div>${arch(false)}</div></div>`;
 }
 function tratHtml(p){
   const all=p.trat||[],tr=trList(p),dr=view.trDraft||{},dec=(view.dent||'perm')==='dec';
