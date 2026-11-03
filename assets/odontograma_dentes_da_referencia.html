@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Odontograma</title>
+<style>
+:root{--bg:#f2f3f5;--card:#fff;--fg:#2b2b2b;--mut:#9a9a9a;--ln:#8d8d8d;--tab:#e2e2e2;--blue:#1e88e5}
+@media (prefers-color-scheme:dark){:root{--bg:#111317;--card:#1e2126;--fg:#e8e8e8;--mut:#8a8a8a;--ln:#a3a3a3;--tab:#343840}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;padding:16px}
+.card{background:var(--card);border-radius:8px;padding:16px;max-width:760px;margin:0 auto;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+h1{font-size:17px;font-weight:500;margin:0}
+.tabs button{border:0;padding:9px 22px;background:var(--tab);color:var(--fg);cursor:pointer;font:inherit}
+.tabs button:first-child{border-radius:4px 0 0 4px}.tabs button:last-child{border-radius:0 4px 4px 0}
+.tabs button.on{background:var(--blue);color:#fff}
+.wrap{overflow-x:auto;padding-bottom:4px}
+.arch{display:flex;justify-content:center;min-width:640px}
+.half{display:flex;gap:3px;padding:0 8px}.half+.half{border-left:1px solid var(--tab)}
+.t{display:flex;flex-direction:column;align-items:center;width:38px}
+.n{color:var(--mut);font-size:13px;margin:5px 0;font-variant-numeric:tabular-nums}
+.tag{font-size:10px;height:12px;color:var(--fg);font-weight:600}
+svg{display:block;overflow:visible}
+.cr{fill:var(--card);stroke:var(--ln);stroke-width:1.2;stroke-linejoin:round;cursor:pointer}
+.rt{fill:none;stroke:var(--ln);stroke-width:1.2;stroke-linejoin:round;pointer-events:none}
+.f{stroke:var(--ln);stroke-width:1;cursor:pointer;fill:var(--card)}
+.f:hover{opacity:.65}
+.sep{border-top:1px solid var(--tab);margin:6px 48px}
+.sec{margin-top:16px}.sec b{display:block;font-weight:500;margin-bottom:6px;color:var(--mut);font-size:12px}
+.bar{display:flex;gap:8px;flex-wrap:wrap}
+button.a{border:1px solid var(--tab);background:var(--card);color:var(--fg);padding:9px 12px;border-radius:4px;cursor:pointer;font:inherit;display:flex;align-items:center;gap:7px;min-height:40px}
+button.a:hover{border-color:var(--blue)}
+.d{width:11px;height:11px;border-radius:50%;display:inline-block;flex:none}
+.leg{display:flex;gap:14px;flex-wrap:wrap;margin-top:16px;font-size:12px;color:var(--mut)}.leg span{display:flex;align-items:center;gap:5px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
+input{font:inherit;padding:8px;border:1px solid var(--tab);border-radius:4px;background:var(--card);color:var(--fg)}
+ul{list-style:none;margin:6px 0 0;padding:0;font-size:12px;color:var(--fg)}li{padding:4px 0;border-bottom:1px solid var(--tab)}li i{color:var(--mut);font-style:normal}
+pre{background:var(--bg);padding:10px;border-radius:6px;font-size:11px;max-height:180px;overflow:auto}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+</style></head><body>
+<div class="card">
+ <div class="head"><h1>Odontograma</h1><div class="tabs"><button id="bp" class="on">Permanente</button><button id="bd">Decíduos</button></div></div>
+ <div class="wrap"><div id="up" class="arch"></div><div class="sep"></div><div id="lo" class="arch"></div></div>
+ <div class="sec"><b>Status das faces selecionadas</b><div class="bar" id="bs"></div></div>
+ <div class="sec"><b>Condição do dente (dentes com face selecionada)</b><div class="bar" id="bc"></div></div>
+ <div class="leg" id="leg"></div>
+ <div class="row"><label>Profissional <input id="who" value="Dr(a). Exemplo"></label><span id="cnt" style="color:var(--mut)"></span></div>
+ <div class="sec"><b>Histórico (somente acrescenta, nunca sobrescreve)</b><ul id="log"></ul></div>
+ <details class="sec"><summary>Dados (JSON)</summary><pre id="json"></pre><button class="a" id="cp">Copiar JSON</button></details>
+</div>
+<script>
+const ST={fin:["Finalizado","#2ebd6b"],par:["Finalizado parcialmente","#9bd45a"],rea:["A realizar","#f5a547"],pro:["Proposta","#3d9be9"]};
+const CO={ausente:["Ausente","A"],implante:["Implante","I"],coroa:["Coroa","C"],canal:["Canal","T"]};
+const SEL="#666",FACES=["V","L","M","D","O"];
+const R=(a,b)=>{const r=[];for(let i=a;i!=b;i+=a<b?1:-1)r.push(i);r.push(b);return r};
+const SETS={perm:{up:[...R(18,11),...R(21,28)],lo:[...R(48,41),...R(31,38)]},dec:{up:[...R(55,51),...R(61,65)],lo:[...R(85,81),...R(71,75)]}};
+const events=[];let mode="perm",sel=new Set();
+const $=id=>document.getElementById(id);
+function derive(){const f={},c={};events.forEach(e=>{const k=e.tooth+"-"+e.face;if(e.kind==="face_status"){e.value?f[k]=e.value:delete f[k]}else{e.value?c[e.tooth]=e.value:delete c[e.tooth]}});return{f,c}}
+const kind=t=>{const d=t%10;return mode==="dec"?(d<=2?"i":d==3?"c":"m"):(d<=2?"i":d==3?"c":d<=5?"p":"m")};
+const mesialRight=t=>[1,4,5,8].includes(Math.floor(t/10));
+const PATH={
+ i:["M10 31Q10 14 15 3Q20 14 20 31","M7 31H23Q25 46 21 56Q15 59 9 56Q5 46 7 31Z"],
+ c:["M10 31Q11 14 15 1Q19 14 20 31","M7 31H23Q25 44 15 58Q5 44 7 31Z"],
+ p:["M9 31Q9 14 12 5Q15 12 15 22Q15 12 18 5Q21 14 21 31","M5 31H25Q27 46 21 55Q15 58 9 55Q3 46 5 31Z"],
+ mu:["M5 31Q3 14 7 3Q11 14 12 29Q15 20 18 29Q19 14 23 3Q27 14 25 31","M3 31H27Q29 46 23 55Q15 59 7 55Q1 46 3 31Z"],
+ ml:["M6 31Q4 12 8 3Q12 14 14 31M16 31Q18 14 22 3Q26 12 24 31","M3 31H27Q29 46 23 55Q15 59 7 55Q1 46 3 31Z"]};
+function outline(t,S){const fs=FACES.map(f=>S.f[t+"-"+f]).filter(Boolean);
+ for(const k of["rea","pro","par","fin"])if(fs.includes(k))return ST[k][1];return null}
+function tooth(t,up,S){
+ const ty=kind(t),[r,c]=PATH[ty==="m"?(up?"mu":"ml"):ty],co=S.c[t],oc=outline(t,S);
+ const stroke=oc?`style="stroke:${oc};stroke-width:2"`:"";
+ let extra="";
+ if(co==="ausente")extra='<path d="M4 8L26 56M26 8L4 56" stroke="#d33" stroke-width="2.2" fill="none"/>';
+ if(co==="implante")extra='<path d="M9 8H21M10 14H20M11 20H19M12 26H18" stroke="#555" stroke-width="2" fill="none"/>';
+ if(co==="canal")extra='<path d="M15 6V40" stroke="#c0392b" stroke-width="2.4" fill="none"/>';
+ const crw=co==="coroa"?'style="stroke-width:2.6;fill:#f3e6b5"':oc?stroke:"";
+ return `<svg width="30" height="60" viewBox="0 0 30 60" style="${co==="ausente"?"opacity:.55":""}"><g ${up?"":'transform="translate(0,60) scale(1,-1)"'}><path class="rt" d="${r}" ${stroke}/><path class="cr" data-t="${t}" d="${c}" ${crw}/>${extra}</g></svg>`}
+function occ(t,up,S){
+ const mr=mesialRight(t),top=up?"V":"L",bot=up?"L":"V",l=mr?"D":"M",r=mr?"M":"D";
+ const P=[[top,"2,2 28,2 21,9 9,9"],[bot,"2,28 28,28 21,21 9,21"],[l,"2,2 9,9 9,21 2,28"],[r,"28,2 21,9 21,21 28,28"],["O","9,9 21,9 21,21 9,21"]];
+ return `<svg width="30" height="30" viewBox="0 0 30 30" role="group" aria-label="Faces do dente ${t}">${P.map(([f,p])=>{
+  const k=t+"-"+f,s=S.f[k],on=sel.has(k),fill=on?SEL:s?ST[s][1]:"";
+  const dash=!on&&(s==="rea"||s==="pro")?'stroke-dasharray="2 1.5" style="stroke-width:1.6"':"";
+  return `<polygon class="f" data-k="${k}" points="${p}" ${fill?`style="fill:${fill}"`:""} ${dash}><title>${t} ${f}${s?": "+ST[s][0]:""}</title></polygon>`}).join("")}</svg>`}
+function col(t,up,S){const n=`<div class="n">${t}</div>`,tg=`<div class="tag">${S.c[t]?CO[S.c[t]][1]:""}</div>`;
+ return `<div class="t">${up?n+tooth(t,1,S)+occ(t,1,S)+tg:tg+occ(t,0,S)+tooth(t,0,S)+n}</div>`}
+function arch(el,list,up,S){const m=list.length/2;el.innerHTML=[list.slice(0,m),list.slice(m)].map(h=>`<div class="half">${h.map(t=>col(t,up,S)).join("")}</div>`).join("")}
+function draw(){const S=derive();arch($("up"),SETS[mode].up,true,S);arch($("lo"),SETS[mode].lo,false,S);
+ $("cnt").textContent=sel.size+" face"+(sel.size===1?"":"s")+" selecionada"+(sel.size===1?"":"s");
+ $("log").innerHTML=events.length?events.slice(-8).reverse().map(e=>`<li><i>${new Date(e.ts).toLocaleString("pt-BR")}</i> · dente ${e.tooth}${e.face?" "+e.face:""} · ${(e.prev?(ST[e.prev]||CO[e.prev])[0]:"vazio")} → ${(e.value?(ST[e.value]||CO[e.value])[0]:"vazio")} · ${e.actor}</li>`).join(""):"<li><i>Nenhuma alteração ainda.</i></li>";
+ $("json").textContent=JSON.stringify(events,null,1)}
+function push(e){events.push({id:events.length+1,ts:new Date().toISOString(),actor:$("who").value||"?",...e})}
+function applyStatus(v){if(!sel.size)return;const S=derive();
+ sel.forEach(k=>{const[t,f]=k.split("-");push({kind:"face_status",tooth:+t,face:f,value:v,prev:S.f[k]||null})});sel.clear();draw()}
+function applyCond(v){if(!sel.size)return;const S=derive();
+ new Set([...sel].map(k=>+k.split("-")[0])).forEach(t=>push({kind:"tooth_condition",tooth:t,face:null,value:v,prev:S.c[t]||null}));sel.clear();draw()}
+document.addEventListener("click",e=>{const k=e.target.dataset.k,t=e.target.dataset.t;
+ if(k)sel.has(k)?sel.delete(k):sel.add(k);
+ else if(t){const ks=FACES.map(f=>t+"-"+f),all=ks.every(x=>sel.has(x));ks.forEach(x=>all?sel.delete(x):sel.add(x))}
+ else return;draw()});
+$("bs").innerHTML=Object.entries(ST).map(([k,v])=>`<button class="a" data-s="${k}"><span class="d" style="background:${v[1]}"></span>${v[0]}</button>`).join("")+'<button class="a" data-s="">Limpar status</button>';
+$("bc").innerHTML=Object.entries(CO).map(([k,v])=>`<button class="a" data-c="${k}">${v[0]}</button>`).join("")+'<button class="a" data-c="">Remover condição</button>';
+$("bs").onclick=e=>{const b=e.target.closest("button");if(b)applyStatus(b.dataset.s||null)};
+$("bc").onclick=e=>{const b=e.target.closest("button");if(b)applyCond(b.dataset.c||null)};
+$("leg").innerHTML=Object.values(ST).map(v=>`<span><i class="d" style="background:${v[1]}"></i>${v[0]}</span>`).join("")+`<span><i class="d" style="background:${SEL}"></i>Selecionado</span><span>Tracejado = ainda não realizado</span>`;
+$("bp").onclick=()=>{mode="perm";$("bp").className="on";$("bd").className="";sel.clear();draw()};
+$("bd").onclick=()=>{mode="dec";$("bd").className="on";$("bp").className="";sel.clear();draw()};
+$("cp").onclick=()=>navigator.clipboard&&navigator.clipboard.writeText($("json").textContent);
+draw();
+</script></body></html>
