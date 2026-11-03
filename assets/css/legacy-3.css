@@ -640,3 +640,17 @@ body,button,input,select,textarea,summary{font-family:Figtree,system-ui,-apple-s
   .ov-top .ov-brand-name { font-size: 33px; line-height: 1.08; font-weight: 800; }
   .ov-top .ov-brand-sub { font-size: 16px; line-height: 1.25; margin-top: 5px; }
 }
+
+
+/* NexoDent 166 — marca real do cabeçalho (ovTop usa nexo-header-*).
+   Restrito ao desktop; não modifica a navegação nem os componentes clínicos. */
+@media screen and (min-width: 761px) {
+  .ov-top .ov-brand { display:flex; align-items:center; gap:14px; }
+  .ov-top .nexo-header-symbol {
+    display:block; width:76px; height:76px; flex:0 0 76px;
+    max-width:none; object-fit:contain;
+  }
+  .ov-top .nexo-header-name { display:flex; flex-direction:column; gap:4px; line-height:1.1; }
+  .ov-top .nexo-header-name strong { font-size:29px; line-height:1.1; font-weight:800; }
+  .ov-top .nexo-header-name small { font-size:12px; line-height:1.25; opacity:1; }
+}
