@@ -654,3 +654,9 @@ body,button,input,select,textarea,summary{font-family:Figtree,system-ui,-apple-s
   .ov-top .nexo-header-name strong { font-size:29px; line-height:1.1; font-weight:800; }
   .ov-top .nexo-header-name small { font-size:12px; line-height:1.25; opacity:1; }
 }
+
+/* Agenda: nomes dos pacientes em peso normal, inclusive cartoes compactos. */
+.ag-block .ag-appointment .ag-patient,
+.ag-block .ag-appointment .ag-patient-link,
+.ag-block .ag-appointment.ag-compact .ag-patient,
+.ag-block .ag-appointment.ag-compact .ag-patient-link { font-weight: 400 !important; }
