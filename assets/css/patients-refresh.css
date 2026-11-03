@@ -137,3 +137,23 @@
 .nexo-odo-help{font-size:10px;color:var(--mut);line-height:1.5;margin:14px 0 0}
 @media(max-width:760px){.nexo-odo-layout{grid-template-columns:1fr}.nexo-odo-aside .nexo-odo-legend{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.nexo-arch{height:220px}.nexo-odontogram{padding:10px}.nexo-arch-tooth{width:30px}.nexo-arch-tooth .tt::before{width:24px;height:32px}}
 @media(max-width:380px){.nexo-arch{height:185px}.nexo-arch-tooth{width:25px}.nexo-arch-tooth .tt::before{width:19px;height:27px}}
+
+/* NexoDent 123: fixed SVG arch geometry, no overlapping absolute CSS positions. */
+.nexo-arch-board{width:100%;max-width:760px;margin:0 auto;padding:12px 8px!important;box-sizing:border-box}
+.nexo-arch-svg{display:block;width:100%;height:auto;overflow:visible}
+.nexo-svg-caption{fill:var(--mut);font:700 12px system-ui,sans-serif;letter-spacing:2px}
+.nexo-svg-quadrant{fill:var(--mut);font:11px system-ui,sans-serif;opacity:.7}
+.nexo-svg-tooth{overflow:visible}
+.nexo-svg-tooth-inner{width:48px;height:72px;display:flex;align-items:center;justify-content:center;transform:rotate(var(--nexo-tooth-rotation));transform-origin:center center}
+.nexo-svg-tooth .tt{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:2px!important;box-sizing:border-box;width:46px!important;height:68px!important;min-height:0!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;cursor:pointer;overflow:visible!important}
+.nexo-svg-tooth .tt .tsvg,.nexo-svg-tooth .tt .osvg{display:none!important}
+.nexo-svg-tooth .tt::before{content:"";display:block;order:2;flex:none;width:36px;height:43px;border:2px solid color-mix(in srgb,var(--nexo-tooth-fill),#347350 35%);border-radius:42% 42% 35% 35%;background:var(--nexo-tooth-fill);box-shadow:inset 0 3px 6px #ffffff55,0 2px 4px #00000022;box-sizing:border-box}
+.nexo-svg-tooth.front .tt::before{width:31px;height:45px}
+.nexo-svg-tooth.canine .tt::before{width:33px;height:44px}
+.nexo-svg-tooth.premolar .tt::before{width:35px;height:41px}
+.nexo-svg-tooth.molar .tt::before{width:39px;height:39px}
+.nexo-svg-tooth .tt .tn{display:block;order:1;flex:none;font:700 12px/17px system-ui,sans-serif;color:var(--tx);text-align:center}
+.nexo-svg-tooth .tt.sel::before{outline:3px solid #ea7010;outline-offset:2px}
+.nexo-svg-tooth .tt:hover::before{filter:brightness(1.08);outline:2px solid #ea7010;outline-offset:2px}
+.nexo-svg-tooth .tt:focus-visible{outline:2px solid #ea7010;outline-offset:1px}
+@media(max-width:760px){.nexo-arch-board{padding:8px 2px!important}.nexo-odo-layout{grid-template-columns:minmax(0,1fr)}.nexo-odo-main{overflow:hidden}}
