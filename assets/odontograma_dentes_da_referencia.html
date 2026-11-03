@@ -107,4 +107,14 @@ $("bp").onclick=()=>{mode="perm";$("bp").className="on";$("bd").className="";sel
 $("bd").onclick=()=>{mode="dec";$("bd").className="on";$("bp").className="";sel.clear();draw()};
 $("cp").onclick=()=>navigator.clipboard&&navigator.clipboard.writeText($("json").textContent);
 draw();
-</script></body></html>
+</script><script>
+// Integração não invasiva: comunica ao NexoDent qual dente foi selecionado.
+document.addEventListener('click', function(event) {
+  const element = event.target.closest('[data-t], [data-k]');
+  if (!element || window.parent === window) return;
+  const number = element.dataset.t || (element.dataset.k || '').split('-')[0];
+  if (!/^\d{2}$/.test(String(number))) return;
+  window.parent.postMessage({type:'nexodent:odontograma:select', tooth:String(number)}, window.location.origin);
+});
+</script>
+</body></html>
