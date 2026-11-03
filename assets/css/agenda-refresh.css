@@ -36,7 +36,7 @@
 .ag-flow-content .slot-free{color:#86949f!important;border-radius:8px!important}
 .ag-flow-content .slot-free:hover{background:#fff4e9!important;color:#c76517!important}
 .ag-flow-booked .ag-appointment{border-radius:10px!important;box-shadow:0 1px 4px rgba(27,42,55,.045)!important}
-.ag-appointment .ag-patient{font-weight:700!important}
+.ag-appointment .ag-patient{font-weight:400!important}
 .ag-appointment .ag-actions button{border-radius:8px!important}
 .ag-sug{border-radius:12px!important;box-shadow:0 12px 32px rgba(27,42,55,.12)!important}
 @media(max-width:760px){
@@ -62,7 +62,7 @@
 .ag-flow-row{min-height:44px!important;border-bottom:1px solid #edf0f4!important}
 .ag-flow-time{color:#59677b!important;font-size:13px!important}
 .ag-flow-booked .ag-appointment{border:1px solid #e8eaf0!important;border-left:4px solid #ff7900!important;border-radius:12px!important;box-shadow:0 3px 10px rgba(31,42,62,.06)!important}
-.ag-appointment .ag-patient{color:#172238!important;font-weight:800!important}
+.ag-appointment .ag-patient{color:#172238!important;font-weight:400!important}
 .ag-new-form,.ag-rental-panel{border:1px solid #e9eaf0!important;box-shadow:0 8px 25px rgba(31,42,62,.055)!important}
 .ag-new-form button,.ag-rental-panel button{border-radius:11px!important}
 @media(max-width:760px){.ag-date-panel strong{font-size:21px!important}.ov-agenda-chairs>.card>.ag{padding:13px!important}.ov-agenda-chairs>.card{border-radius:15px!important}}
