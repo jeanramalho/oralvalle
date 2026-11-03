@@ -71,3 +71,22 @@
 .nexo-patient-data-card>.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%}
 .nexo-patient-data-card>.row>div{min-width:0;width:100%}
 @media(max-width:600px){.nexo-patient-data-card>.row{grid-template-columns:minmax(0,1fr)}}
+
+/* NexoDent 120 — odontograma em arcadas, escopo exclusivo de Tratamentos. */
+.nexo-odontogram{border:1px solid var(--ln);border-radius:18px;padding:16px 12px;background:var(--sf);margin:12px 0}
+.nexo-odo-help{text-align:center;color:var(--mut);font-size:12px;margin:0 auto 14px;max-width:580px;line-height:1.5}
+.nexo-arch-board{max-width:670px;margin:auto}
+.nexo-arch{position:relative;height:245px;max-width:610px;margin:auto}
+.nexo-arch-label{position:absolute;left:50%;transform:translateX(-50%);font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:var(--mut);white-space:nowrap}
+.nexo-arch.upper .nexo-arch-label{bottom:9px}
+.nexo-arch.lower .nexo-arch-label{top:9px}
+.nexo-arch-divider{height:1px;background:var(--ln);max-width:480px;margin:0 auto}
+.nexo-arch-tooth{position:absolute;transform:translate(-50%,-50%);width:39px;z-index:1}
+.nexo-arch-tooth .tt{width:100%;padding:3px 1px;gap:1px;border-radius:10px;transition:background .15s,border-color .15s;cursor:pointer}
+.nexo-arch-tooth .tt:hover{background:rgba(232,116,26,.10);border-color:#e8741a}
+.nexo-arch-tooth .tt:focus-visible{outline:2px solid #e8741a;outline-offset:2px}
+.nexo-arch-tooth .tt.sel{background:rgba(232,116,26,.18);border-color:#e8741a}
+.nexo-arch-tooth .tt .tsvg{max-width:27px;height:43px}
+.nexo-arch-tooth .tt .osvg{max-width:17px;height:17px}
+.nexo-arch-tooth .tt .tn{font-size:10px}
+@media(max-width:600px){.nexo-odontogram{padding:12px 5px}.nexo-arch{height:185px}.nexo-arch-tooth{width:29px}.nexo-arch-tooth .tt .tsvg{max-width:21px;height:31px}.nexo-arch-tooth .tt .osvg{max-width:14px;height:14px}.nexo-arch-tooth .tt .tn{font-size:9px}.nexo-arch-label{font-size:9px}}
