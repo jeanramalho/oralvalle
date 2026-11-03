@@ -157,3 +157,17 @@
 .nexo-svg-tooth .tt:hover::before{filter:brightness(1.08);outline:2px solid #ea7010;outline-offset:2px}
 .nexo-svg-tooth .tt:focus-visible{outline:2px solid #ea7010;outline-offset:1px}
 @media(max-width:760px){.nexo-arch-board{padding:8px 2px!important}.nexo-odo-layout{grid-template-columns:minmax(0,1fr)}.nexo-odo-main{overflow:hidden}}
+
+/* NexoDent odontogram 124: SVG crown visuals with original selection buttons as hit targets. */
+.nexo-arch-svg{overflow:hidden!important;max-width:100%;background:#fff;border-radius:14px}
+.nexo-odo-main{background:#fff!important}
+.nexo-svg-caption{fill:#667085!important;font:700 13px system-ui,sans-serif!important;letter-spacing:.08em!important}
+.nexo-svg-quadrant{fill:#98a2b3!important;font:12px system-ui,sans-serif!important}
+.nexo-crown-label{font:700 15px system-ui,sans-serif;pointer-events:none}
+.nexo-crown-group{cursor:pointer}
+.nexo-crown-hit{overflow:visible}
+.nexo-crown-hit-inner{width:100%;height:100%}
+.nexo-crown-hit .tt{display:block!important;width:100%!important;height:100%!important;min-height:0!important;padding:0!important;margin:0!important;opacity:0!important;border:0!important;cursor:pointer!important}
+.nexo-crown-hit .tt::before,.nexo-crown-hit .tt .tsvg,.nexo-crown-hit .tt .osvg,.nexo-crown-hit .tt .tn{display:none!important}
+.nexo-crown-group:hover rect{filter:brightness(.95)}
+.nexo-crown-group:focus-within rect{stroke:#f97316;stroke-width:4}
