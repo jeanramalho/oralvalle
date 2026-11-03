@@ -138,7 +138,117 @@ function tabOdo(p){
   const rows=ARC[k].map(qd=>qd[1]);
   const odoRow=(a,b,up)=>`<div style="display:flex;justify-content:center;gap:0;min-width:610px"><div style="display:flex;justify-content:flex-end;gap:3px;padding-right:8px;border-right:1px solid var(--line)">${a.map(n=>odoTooth(n,up)).join('')}</div><div style="display:flex;justify-content:flex-start;gap:3px;padding-left:8px">${b.map(n=>odoTooth(n,up)).join('')}</div></div>`;
   // HTML original fornecido pelo usuário: interface isolada para evitar conflito de CSS/JS.
-  const arch=`<div style="width:100%;min-width:0"><iframe title="Odontograma anatômico" src="assets/odontograma_dentes_da_referencia.html?v=131" loading="eager" style="display:block;width:100%;height:720px;max-width:100%;border:0;border-radius:10px;background:#fff" sandbox="allow-scripts allow-same-origin"></iframe></div>`;
+  const arch=`<div style="width:100%;min-width:0"><iframe title="Odontograma anatômico" srcdoc="&lt;!doctype html&gt;
+&lt;html lang=&quot;pt-BR&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
+&lt;title&gt;Odontograma&lt;/title&gt;
+&lt;style&gt;
+:root{--bg:#f2f3f5;--card:#fff;--fg:#2b2b2b;--mut:#9a9a9a;--ln:#8d8d8d;--tab:#e2e2e2;--blue:#1e88e5}
+@media (prefers-color-scheme:dark){:root{--bg:#111317;--card:#1e2126;--fg:#e8e8e8;--mut:#8a8a8a;--ln:#a3a3a3;--tab:#343840}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.4 system-ui,-apple-system,&quot;Segoe UI&quot;,sans-serif;padding:16px}
+.card{background:var(--card);border-radius:8px;padding:16px;max-width:760px;margin:0 auto;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+h1{font-size:17px;font-weight:500;margin:0}
+.tabs button{border:0;padding:9px 22px;background:var(--tab);color:var(--fg);cursor:pointer;font:inherit}
+.tabs button:first-child{border-radius:4px 0 0 4px}.tabs button:last-child{border-radius:0 4px 4px 0}
+.tabs button.on{background:var(--blue);color:#fff}
+.wrap{overflow-x:auto;padding-bottom:4px}
+.arch{display:flex;justify-content:center;min-width:640px}
+.half{display:flex;gap:3px;padding:0 8px}.half+.half{border-left:1px solid var(--tab)}
+.t{display:flex;flex-direction:column;align-items:center;width:38px}
+.n{color:var(--mut);font-size:13px;margin:5px 0;font-variant-numeric:tabular-nums}
+.tag{font-size:10px;height:12px;color:var(--fg);font-weight:600}
+svg{display:block;overflow:visible}
+.cr{fill:var(--card);stroke:var(--ln);stroke-width:1.2;stroke-linejoin:round;cursor:pointer}
+.rt{fill:none;stroke:var(--ln);stroke-width:1.2;stroke-linejoin:round;pointer-events:none}
+.f{stroke:var(--ln);stroke-width:1;cursor:pointer;fill:var(--card)}
+.f:hover{opacity:.65}
+.sep{border-top:1px solid var(--tab);margin:6px 48px}
+.sec{margin-top:16px}.sec b{display:block;font-weight:500;margin-bottom:6px;color:var(--mut);font-size:12px}
+.bar{display:flex;gap:8px;flex-wrap:wrap}
+button.a{border:1px solid var(--tab);background:var(--card);color:var(--fg);padding:9px 12px;border-radius:4px;cursor:pointer;font:inherit;display:flex;align-items:center;gap:7px;min-height:40px}
+button.a:hover{border-color:var(--blue)}
+.d{width:11px;height:11px;border-radius:50%;display:inline-block;flex:none}
+.leg{display:flex;gap:14px;flex-wrap:wrap;margin-top:16px;font-size:12px;color:var(--mut)}.leg span{display:flex;align-items:center;gap:5px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
+input{font:inherit;padding:8px;border:1px solid var(--tab);border-radius:4px;background:var(--card);color:var(--fg)}
+ul{list-style:none;margin:6px 0 0;padding:0;font-size:12px;color:var(--fg)}li{padding:4px 0;border-bottom:1px solid var(--tab)}li i{color:var(--mut);font-style:normal}
+pre{background:var(--bg);padding:10px;border-radius:6px;font-size:11px;max-height:180px;overflow:auto}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;
+&lt;div class=&quot;card&quot;&gt;
+ &lt;div class=&quot;head&quot;&gt;&lt;h1&gt;Odontograma&lt;/h1&gt;&lt;div class=&quot;tabs&quot;&gt;&lt;button id=&quot;bp&quot; class=&quot;on&quot;&gt;Permanente&lt;/button&gt;&lt;button id=&quot;bd&quot;&gt;Decíduos&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;
+ &lt;div class=&quot;wrap&quot;&gt;&lt;div id=&quot;up&quot; class=&quot;arch&quot;&gt;&lt;/div&gt;&lt;div class=&quot;sep&quot;&gt;&lt;/div&gt;&lt;div id=&quot;lo&quot; class=&quot;arch&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+ &lt;div class=&quot;sec&quot;&gt;&lt;b&gt;Status das faces selecionadas&lt;/b&gt;&lt;div class=&quot;bar&quot; id=&quot;bs&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+ &lt;div class=&quot;sec&quot;&gt;&lt;b&gt;Condição do dente (dentes com face selecionada)&lt;/b&gt;&lt;div class=&quot;bar&quot; id=&quot;bc&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+ &lt;div class=&quot;leg&quot; id=&quot;leg&quot;&gt;&lt;/div&gt;
+ &lt;div class=&quot;row&quot;&gt;&lt;label&gt;Profissional &lt;input id=&quot;who&quot; value=&quot;Dr(a). Exemplo&quot;&gt;&lt;/label&gt;&lt;span id=&quot;cnt&quot; style=&quot;color:var(--mut)&quot;&gt;&lt;/span&gt;&lt;/div&gt;
+ &lt;div class=&quot;sec&quot;&gt;&lt;b&gt;Histórico (somente acrescenta, nunca sobrescreve)&lt;/b&gt;&lt;ul id=&quot;log&quot;&gt;&lt;/ul&gt;&lt;/div&gt;
+ &lt;details class=&quot;sec&quot;&gt;&lt;summary&gt;Dados (JSON)&lt;/summary&gt;&lt;pre id=&quot;json&quot;&gt;&lt;/pre&gt;&lt;button class=&quot;a&quot; id=&quot;cp&quot;&gt;Copiar JSON&lt;/button&gt;&lt;/details&gt;
+&lt;/div&gt;
+&lt;script&gt;
+const ST={fin:[&quot;Finalizado&quot;,&quot;#2ebd6b&quot;],par:[&quot;Finalizado parcialmente&quot;,&quot;#9bd45a&quot;],rea:[&quot;A realizar&quot;,&quot;#f5a547&quot;],pro:[&quot;Proposta&quot;,&quot;#3d9be9&quot;]};
+const CO={ausente:[&quot;Ausente&quot;,&quot;A&quot;],implante:[&quot;Implante&quot;,&quot;I&quot;],coroa:[&quot;Coroa&quot;,&quot;C&quot;],canal:[&quot;Canal&quot;,&quot;T&quot;]};
+const SEL=&quot;#666&quot;,FACES=[&quot;V&quot;,&quot;L&quot;,&quot;M&quot;,&quot;D&quot;,&quot;O&quot;];
+const R=(a,b)=&gt;{const r=[];for(let i=a;i!=b;i+=a&lt;b?1:-1)r.push(i);r.push(b);return r};
+const SETS={perm:{up:[...R(18,11),...R(21,28)],lo:[...R(48,41),...R(31,38)]},dec:{up:[...R(55,51),...R(61,65)],lo:[...R(85,81),...R(71,75)]}};
+const events=[];let mode=&quot;perm&quot;,sel=new Set();
+const $=id=&gt;document.getElementById(id);
+function derive(){const f={},c={};events.forEach(e=&gt;{const k=e.tooth+&quot;-&quot;+e.face;if(e.kind===&quot;face_status&quot;){e.value?f[k]=e.value:delete f[k]}else{e.value?c[e.tooth]=e.value:delete c[e.tooth]}});return{f,c}}
+const kind=t=&gt;{const d=t%10;return mode===&quot;dec&quot;?(d&lt;=2?&quot;i&quot;:d==3?&quot;c&quot;:&quot;m&quot;):(d&lt;=2?&quot;i&quot;:d==3?&quot;c&quot;:d&lt;=5?&quot;p&quot;:&quot;m&quot;)};
+const mesialRight=t=&gt;[1,4,5,8].includes(Math.floor(t/10));
+const PATH={
+ i:[&quot;M10 31Q10 14 15 3Q20 14 20 31&quot;,&quot;M7 31H23Q25 46 21 56Q15 59 9 56Q5 46 7 31Z&quot;],
+ c:[&quot;M10 31Q11 14 15 1Q19 14 20 31&quot;,&quot;M7 31H23Q25 44 15 58Q5 44 7 31Z&quot;],
+ p:[&quot;M9 31Q9 14 12 5Q15 12 15 22Q15 12 18 5Q21 14 21 31&quot;,&quot;M5 31H25Q27 46 21 55Q15 58 9 55Q3 46 5 31Z&quot;],
+ mu:[&quot;M5 31Q3 14 7 3Q11 14 12 29Q15 20 18 29Q19 14 23 3Q27 14 25 31&quot;,&quot;M3 31H27Q29 46 23 55Q15 59 7 55Q1 46 3 31Z&quot;],
+ ml:[&quot;M6 31Q4 12 8 3Q12 14 14 31M16 31Q18 14 22 3Q26 12 24 31&quot;,&quot;M3 31H27Q29 46 23 55Q15 59 7 55Q1 46 3 31Z&quot;]};
+function outline(t,S){const fs=FACES.map(f=&gt;S.f[t+&quot;-&quot;+f]).filter(Boolean);
+ for(const k of[&quot;rea&quot;,&quot;pro&quot;,&quot;par&quot;,&quot;fin&quot;])if(fs.includes(k))return ST[k][1];return null}
+function tooth(t,up,S){
+ const ty=kind(t),[r,c]=PATH[ty===&quot;m&quot;?(up?&quot;mu&quot;:&quot;ml&quot;):ty],co=S.c[t],oc=outline(t,S);
+ const stroke=oc?&#96;style=&quot;stroke:&#36;{oc};stroke-width:2&quot;&#96;:&quot;&quot;;
+ let extra=&quot;&quot;;
+ if(co===&quot;ausente&quot;)extra=&#x27;&lt;path d=&quot;M4 8L26 56M26 8L4 56&quot; stroke=&quot;#d33&quot; stroke-width=&quot;2.2&quot; fill=&quot;none&quot;/&gt;&#x27;;
+ if(co===&quot;implante&quot;)extra=&#x27;&lt;path d=&quot;M9 8H21M10 14H20M11 20H19M12 26H18&quot; stroke=&quot;#555&quot; stroke-width=&quot;2&quot; fill=&quot;none&quot;/&gt;&#x27;;
+ if(co===&quot;canal&quot;)extra=&#x27;&lt;path d=&quot;M15 6V40&quot; stroke=&quot;#c0392b&quot; stroke-width=&quot;2.4&quot; fill=&quot;none&quot;/&gt;&#x27;;
+ const crw=co===&quot;coroa&quot;?&#x27;style=&quot;stroke-width:2.6;fill:#f3e6b5&quot;&#x27;:oc?stroke:&quot;&quot;;
+ return &#96;&lt;svg width=&quot;30&quot; height=&quot;60&quot; viewBox=&quot;0 0 30 60&quot; style=&quot;&#36;{co===&quot;ausente&quot;?&quot;opacity:.55&quot;:&quot;&quot;}&quot;&gt;&lt;g &#36;{up?&quot;&quot;:&#x27;transform=&quot;translate(0,60) scale(1,-1)&quot;&#x27;}&gt;&lt;path class=&quot;rt&quot; d=&quot;&#36;{r}&quot; &#36;{stroke}/&gt;&lt;path class=&quot;cr&quot; data-t=&quot;&#36;{t}&quot; d=&quot;&#36;{c}&quot; &#36;{crw}/&gt;&#36;{extra}&lt;/g&gt;&lt;/svg&gt;&#96;}
+function occ(t,up,S){
+ const mr=mesialRight(t),top=up?&quot;V&quot;:&quot;L&quot;,bot=up?&quot;L&quot;:&quot;V&quot;,l=mr?&quot;D&quot;:&quot;M&quot;,r=mr?&quot;M&quot;:&quot;D&quot;;
+ const P=[[top,&quot;2,2 28,2 21,9 9,9&quot;],[bot,&quot;2,28 28,28 21,21 9,21&quot;],[l,&quot;2,2 9,9 9,21 2,28&quot;],[r,&quot;28,2 21,9 21,21 28,28&quot;],[&quot;O&quot;,&quot;9,9 21,9 21,21 9,21&quot;]];
+ return &#96;&lt;svg width=&quot;30&quot; height=&quot;30&quot; viewBox=&quot;0 0 30 30&quot; role=&quot;group&quot; aria-label=&quot;Faces do dente &#36;{t}&quot;&gt;&#36;{P.map(([f,p])=&gt;{
+  const k=t+&quot;-&quot;+f,s=S.f[k],on=sel.has(k),fill=on?SEL:s?ST[s][1]:&quot;&quot;;
+  const dash=!on&amp;&amp;(s===&quot;rea&quot;||s===&quot;pro&quot;)?&#x27;stroke-dasharray=&quot;2 1.5&quot; style=&quot;stroke-width:1.6&quot;&#x27;:&quot;&quot;;
+  return &#96;&lt;polygon class=&quot;f&quot; data-k=&quot;&#36;{k}&quot; points=&quot;&#36;{p}&quot; &#36;{fill?&#96;style=&quot;fill:&#36;{fill}&quot;&#96;:&quot;&quot;} &#36;{dash}&gt;&lt;title&gt;&#36;{t} &#36;{f}&#36;{s?&quot;: &quot;+ST[s][0]:&quot;&quot;}&lt;/title&gt;&lt;/polygon&gt;&#96;}).join(&quot;&quot;)}&lt;/svg&gt;&#96;}
+function col(t,up,S){const n=&#96;&lt;div class=&quot;n&quot;&gt;&#36;{t}&lt;/div&gt;&#96;,tg=&#96;&lt;div class=&quot;tag&quot;&gt;&#36;{S.c[t]?CO[S.c[t]][1]:&quot;&quot;}&lt;/div&gt;&#96;;
+ return &#96;&lt;div class=&quot;t&quot;&gt;&#36;{up?n+tooth(t,1,S)+occ(t,1,S)+tg:tg+occ(t,0,S)+tooth(t,0,S)+n}&lt;/div&gt;&#96;}
+function arch(el,list,up,S){const m=list.length/2;el.innerHTML=[list.slice(0,m),list.slice(m)].map(h=&gt;&#96;&lt;div class=&quot;half&quot;&gt;&#36;{h.map(t=&gt;col(t,up,S)).join(&quot;&quot;)}&lt;/div&gt;&#96;).join(&quot;&quot;)}
+function draw(){const S=derive();arch($(&quot;up&quot;),SETS[mode].up,true,S);arch($(&quot;lo&quot;),SETS[mode].lo,false,S);
+ $(&quot;cnt&quot;).textContent=sel.size+&quot; face&quot;+(sel.size===1?&quot;&quot;:&quot;s&quot;)+&quot; selecionada&quot;+(sel.size===1?&quot;&quot;:&quot;s&quot;);
+ $(&quot;log&quot;).innerHTML=events.length?events.slice(-8).reverse().map(e=&gt;&#96;&lt;li&gt;&lt;i&gt;&#36;{new Date(e.ts).toLocaleString(&quot;pt-BR&quot;)}&lt;/i&gt; · dente &#36;{e.tooth}&#36;{e.face?&quot; &quot;+e.face:&quot;&quot;} · &#36;{(e.prev?(ST[e.prev]||CO[e.prev])[0]:&quot;vazio&quot;)} → &#36;{(e.value?(ST[e.value]||CO[e.value])[0]:&quot;vazio&quot;)} · &#36;{e.actor}&lt;/li&gt;&#96;).join(&quot;&quot;):&quot;&lt;li&gt;&lt;i&gt;Nenhuma alteração ainda.&lt;/i&gt;&lt;/li&gt;&quot;;
+ $(&quot;json&quot;).textContent=JSON.stringify(events,null,1)}
+function push(e){events.push({id:events.length+1,ts:new Date().toISOString(),actor:$(&quot;who&quot;).value||&quot;?&quot;,...e})}
+function applyStatus(v){if(!sel.size)return;const S=derive();
+ sel.forEach(k=&gt;{const[t,f]=k.split(&quot;-&quot;);push({kind:&quot;face_status&quot;,tooth:+t,face:f,value:v,prev:S.f[k]||null})});sel.clear();draw()}
+function applyCond(v){if(!sel.size)return;const S=derive();
+ new Set([...sel].map(k=&gt;+k.split(&quot;-&quot;)[0])).forEach(t=&gt;push({kind:&quot;tooth_condition&quot;,tooth:t,face:null,value:v,prev:S.c[t]||null}));sel.clear();draw()}
+document.addEventListener(&quot;click&quot;,e=&gt;{const k=e.target.dataset.k,t=e.target.dataset.t;
+ if(k)sel.has(k)?sel.delete(k):sel.add(k);
+ else if(t){const ks=FACES.map(f=&gt;t+&quot;-&quot;+f),all=ks.every(x=&gt;sel.has(x));ks.forEach(x=&gt;all?sel.delete(x):sel.add(x))}
+ else return;draw()});
+$(&quot;bs&quot;).innerHTML=Object.entries(ST).map(([k,v])=&gt;&#96;&lt;button class=&quot;a&quot; data-s=&quot;&#36;{k}&quot;&gt;&lt;span class=&quot;d&quot; style=&quot;background:&#36;{v[1]}&quot;&gt;&lt;/span&gt;&#36;{v[0]}&lt;/button&gt;&#96;).join(&quot;&quot;)+&#x27;&lt;button class=&quot;a&quot; data-s=&quot;&quot;&gt;Limpar status&lt;/button&gt;&#x27;;
+$(&quot;bc&quot;).innerHTML=Object.entries(CO).map(([k,v])=&gt;&#96;&lt;button class=&quot;a&quot; data-c=&quot;&#36;{k}&quot;&gt;&#36;{v[0]}&lt;/button&gt;&#96;).join(&quot;&quot;)+&#x27;&lt;button class=&quot;a&quot; data-c=&quot;&quot;&gt;Remover condição&lt;/button&gt;&#x27;;
+$(&quot;bs&quot;).onclick=e=&gt;{const b=e.target.closest(&quot;button&quot;);if(b)applyStatus(b.dataset.s||null)};
+$(&quot;bc&quot;).onclick=e=&gt;{const b=e.target.closest(&quot;button&quot;);if(b)applyCond(b.dataset.c||null)};
+$(&quot;leg&quot;).innerHTML=Object.values(ST).map(v=&gt;&#96;&lt;span&gt;&lt;i class=&quot;d&quot; style=&quot;background:&#36;{v[1]}&quot;&gt;&lt;/i&gt;&#36;{v[0]}&lt;/span&gt;&#96;).join(&quot;&quot;)+&#96;&lt;span&gt;&lt;i class=&quot;d&quot; style=&quot;background:&#36;{SEL}&quot;&gt;&lt;/i&gt;Selecionado&lt;/span&gt;&lt;span&gt;Tracejado = ainda não realizado&lt;/span&gt;&#96;;
+$(&quot;bp&quot;).onclick=()=&gt;{mode=&quot;perm&quot;;$(&quot;bp&quot;).className=&quot;on&quot;;$(&quot;bd&quot;).className=&quot;&quot;;sel.clear();draw()};
+$(&quot;bd&quot;).onclick=()=&gt;{mode=&quot;dec&quot;;$(&quot;bd&quot;).className=&quot;on&quot;;$(&quot;bp&quot;).className=&quot;&quot;;sel.clear();draw()};
+$(&quot;cp&quot;).onclick=()=&gt;navigator.clipboard&amp;&amp;navigator.clipboard.writeText($(&quot;json&quot;).textContent);
+draw();
+&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;
+" loading="eager" style="display:block;width:100%;height:720px;max-width:100%;border:0;border-radius:10px;background:#fff" sandbox="allow-scripts allow-same-origin"></iframe></div>`;
   const opts='<option value="">Geral (sem dente específico)</option>'+dentesTodos().map(n=>`<option value="${n}"${sel===String(n)?' selected':''}>Dente ${n}</option>`).join('');
   const lan=`<div class="card" style="margin-top:14px"><h2>Lançar evolução do dia</h2>
   <div class="row"><div><label for="evd">Data</label><input id="evd" type="date" value="${tdy()}"></div><div><label for="evn">Dente</label><select id="evn">${opts}</select></div></div>
