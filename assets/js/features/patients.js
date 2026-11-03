@@ -239,17 +239,19 @@ function toothBtn(n,dec,st,sel,up){
   const type=dec?(d<=2?'inc':d===3?'can':'mol'):(d<=2?'inc':d===3?'can':d<=5?'pre':'mol');
   const T=TP[type==='mol'&&!up?'mol2':type];
   const col=trColor(st);
-  const cr=`<svg width="30" height="60" viewBox="0 0 30 60" aria-hidden="true" style="display:block;overflow:visible"><g ${up?'':'transform="translate(0,60) scale(1,-1)"'} stroke="${col||'#929292'}" stroke-width="1.2" stroke-linejoin="round"><path d="${T.r}" fill="none"/><path d="${T.c}" fill="${col||'#fff'}"/></g></svg>`;
+  const cr=`<svg width="30" height="60" viewBox="0 0 30 60" aria-hidden="true" style="display:block;width:100%;max-width:48px;height:auto;overflow:visible"><g ${up?'':'transform="translate(0,60) scale(1,-1)"'} stroke="${col||'#929292'}" stroke-width="1.2" stroke-linejoin="round"><path d="${T.r}" fill="none"/><path d="${T.c}" fill="${col||'#fff'}"/></g></svg>`;
   const mr=[1,4,5,8].includes(Math.floor(n/10)),top=up?'V':'L',bot=up?'L':'V',left=mr?'D':'M',right=mr?'M':'D';
   const faces=[[top,'2,2 28,2 21,9 9,9'],[bot,'2,28 28,28 21,21 9,21'],[left,'2,2 9,9 9,21 2,28'],[right,'28,2 21,9 21,21 28,28'],['O','9,9 21,9 21,21 9,21']];
-  const occ=`<svg width="30" height="30" viewBox="0 0 30 30" aria-label="Faces do dente ${n}" style="display:block">${faces.map(([face,points])=>`<polygon points="${points}" fill="${sel?'#666':col||'#fff'}" stroke="#929292" stroke-width="1"><title>${n} ${face}</title></polygon>`).join('')}</svg>`;
+  const occ=`<svg width="30" height="30" viewBox="0 0 30 30" aria-label="Faces do dente ${n}" style="display:block;width:100%;max-width:48px;height:auto">${faces.map(([face,points])=>`<polygon points="${points}" fill="${sel?'#666':col||'#fff'}" stroke="#929292" stroke-width="1"><title>${n} ${face}</title></polygon>`).join('')}</svg>`;
   const num=`<span style="color:#999;font-size:13px;line-height:19px">${n}</span>`;
-  return `<button type="button" data-act="ttsel" data-n="${n}" aria-label="Dente ${n}" aria-pressed="${!!sel}" style="border:0;background:transparent;color:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;width:38px;min-width:38px;padding:0;cursor:pointer;gap:0;outline-offset:2px">${up?num+cr+occ:occ+cr+num}</button>`;
+  return `<button type="button" data-act="ttsel" data-n="${n}" aria-label="Dente ${n}" aria-pressed="${!!sel}" style="border:0;background:transparent;color:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1 1 0;min-width:0;width:auto;padding:0;cursor:pointer;gap:0;outline-offset:2px">${up?num+cr+occ:occ+cr+num}</button>`;
 }
 function odxHtml(p,l){
   const dec=(view.dent||'perm')==='dec',A=ARC[dec?'dec':'perm'],st=trStatusMap(l),sel=new Set((view.trSel||[]).map(String));
-  const half=(qd,up,right)=>`<div style="display:flex;gap:3px;padding:${right?'0 0 0 8px':'0 8px 0 0'};${right?'border-left:1px solid #555':''}">${qd[1].map(n=>toothBtn(n,dec,st[String(n)],sel.has(String(n)),up)).join('')}</div>`;
-  return `<div style="width:100%;overflow-x:auto;padding:8px 0"><div style="min-width:680px;width:max-content;margin:auto"><div style="display:flex;justify-content:center">${half(A[0],true,false)}${half(A[1],true,true)}</div><div style="border-top:1px solid #555;margin:6px 48px"></div><div style="display:flex;justify-content:center">${half(A[2],false,false)}${half(A[3],false,true)}</div></div></div>`;
+  // As duas metades ocupam a largura disponível; cada dente recebe a mesma fração.
+  // Mantém a rolagem horizontal em telas estreitas sem deformar os SVGs.
+  const half=(qd,up,right)=>`<div style="display:flex;flex:1 1 50%;min-width:0;gap:3px;padding:${right?'0 0 0 8px':'0 8px 0 0'};${right?'border-left:1px solid #555':''}">${qd[1].map(n=>toothBtn(n,dec,st[String(n)],sel.has(String(n)),up)).join('')}</div>`;
+  return `<div style="width:100%;overflow-x:auto;padding:8px 0"><div style="width:100%;min-width:680px"><div style="display:flex;width:100%;justify-content:space-between">${half(A[0],true,false)}${half(A[1],true,true)}</div><div style="border-top:1px solid #555;margin:6px 3%"></div><div style="display:flex;width:100%;justify-content:space-between">${half(A[2],false,false)}${half(A[3],false,true)}</div></div></div>`;
 }
 function trChips(){
   const s=(view.trSel||[]).slice().sort((a,b)=>a-b);
