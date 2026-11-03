@@ -43,3 +43,29 @@
 @media(max-width:1100px){.nxlab-metrics{grid-template-columns:repeat(3,minmax(0,1fr))!important;}}
 @media(max-width:850px){.ov-modern-page .ov-modern-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important;}}
 @media(max-width:650px){.ov-modern-page>.ov-modern-head,.nxlab-top{padding:16px!important;border-radius:17px!important;}.ov-modern-page .ov-modern-title h1,.nxlab-top h2{font-size:26px!important;}.ov-modern-page .ov-modern-stats{gap:9px!important;}.ov-modern-page .ov-modern-stats>div{padding:12px!important;min-height:80px!important;}.ov-modern-page .ov-modern-stats strong{font-size:25px!important;}.ov-modern-page .ov-modern-row{padding:0 12px!important;}.ov-modern-page .ov-modern-summary{flex-wrap:wrap!important;gap:8px 12px!important;}.ov-modern-page .ov-modern-name{flex-basis:calc(100% - 45px)!important;}.ov-modern-page .ov-modern-date{flex:1 1 60%!important;}.ov-modern-page .ov-modern-status{max-width:60%!important;}.nxlab-metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important;}.nxlab-card{padding:14px!important;}}
+
+
+/* NexoDent 156 — ajuste pontual: somente cartoes da Agenda.
+   Mantem campos de formulario brancos, botoes, fontes e demais abas intactos. */
+.nexo-agenda-page .nexo-stat:not(:first-child),
+.nexo-agenda-page .ag-date-panel,
+.nexo-agenda-page .ag-new-form,
+.nexo-agenda-page .ag-rental-panel,
+.nexo-agenda-page .ov-agenda-chairs > .card {
+  background: #f0f2f4 !important;
+  border-color: #dce2e8 !important;
+}
+/* Preserva o destaque laranja discreto do primeiro indicador. */
+.nexo-agenda-page .nexo-stat:first-child {
+  background: #fff4eb !important;
+}
+/* Os titulos dos consultorios acompanham o cinza dos cartoes. */
+.nexo-agenda-page .ov-agenda-chairs > .card > .ag {
+  background: #e8edf1 !important;
+  border-color: #dce2e8 !important;
+}
+/* Linhas de horarios com contraste sutil, sem faixas brancas intensas. */
+.nexo-agenda-page .ag-flow-row { background: #f0f2f4 !important; }
+.nexo-agenda-page .ag-flow-row.ag-flow-free:nth-child(even) {
+  background: #e8edf1 !important;
+}
