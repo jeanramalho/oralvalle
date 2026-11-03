@@ -200,18 +200,18 @@ function trList(p){const f=view.trFlt||'';let l=p.trat||[];if(f==='none')l=l.fil
 function trStatusMap(l){const m={};l.forEach(x=>{if(x.status==='Cancelado')return;trTeeth(x).forEach(n=>{const s=m[n]=m[n]||{};if(x.status==='Concluído')s.d=1;else s.p=1})});return m}
 const trColor=s=>!s?'':(s.d&&s.p)?'#FFB56B':s.d?'#E8741A':'#BDBDBD';
 const TP={
-  inc:{r:'M9 29Q10 12 15 3Q20 12 21 29',c:'M6 29H24Q25 42 22 49Q15 52 8 49Q5 42 6 29Z'},
-  can:{r:'M10 29Q11 12 15 2Q19 12 20 29',c:'M7 29H23Q24 41 15 51Q6 41 7 29Z'},
-  pre:{r:'M8 29Q8 14 12 5Q15 11 15 20Q15 11 18 5Q22 14 22 29',c:'M5 29H25Q26 42 21 48Q15 51 9 48Q4 42 5 29Z'},
-  mol:{r:'M4 29Q3 14 7 3Q11 14 12 27Q15 19 18 27Q19 14 23 3Q27 14 26 29',c:'M3 29H27Q28 43 24 49Q15 53 6 49Q2 43 3 29Z'},
-  mol2:{r:'M5 29Q4 14 7 4Q11 15 13 29M17 29Q19 15 23 4Q26 14 25 29',c:'M3 29H27Q28 43 24 49Q15 53 6 49Q2 43 3 29Z'}
+  inc:{r:'M10 31Q10 14 15 3Q20 14 20 31',c:'M7 31H23Q25 46 21 56Q15 59 9 56Q5 46 7 31Z'},
+  can:{r:'M10 31Q11 14 15 1Q19 14 20 31',c:'M7 31H23Q25 44 15 58Q5 44 7 31Z'},
+  pre:{r:'M9 31Q9 14 12 5Q15 12 15 22Q15 12 18 5Q21 14 21 31',c:'M5 31H25Q27 46 21 55Q15 58 9 55Q3 46 5 31Z'},
+  mol:{r:'M5 31Q3 14 7 3Q11 14 12 29Q15 20 18 29Q19 14 23 3Q27 14 25 31',c:'M3 31H27Q29 46 23 55Q15 59 7 55Q1 46 3 31Z'},
+  mol2:{r:'M6 31Q4 12 8 3Q12 14 14 31M16 31Q18 14 22 3Q26 12 24 31',c:'M3 31H27Q29 46 23 55Q15 59 7 55Q1 46 3 31Z'}
 };
 function toothBtn(n,dec,st,sel,up){
   const d=n%10;
   let k=dec?(d<=2?'inc':d===3?'can':'mol'):(d<=2?'inc':d===3?'can':d<=5?'pre':'mol');
   if(k==='mol'&&!up)k='mol2';
   const col=trColor(st),fill=col||'var(--sf)',T=TP[k];
-  const tooth=`<svg class="tsvg" viewBox="0 0 30 54" aria-hidden="true"><g${up?'':' transform="translate(0,54) scale(1,-1)"'} style="stroke:var(--mut);stroke-width:1.2;stroke-linejoin:round"><path d="${T.r}" style="fill:none"/><path d="${T.c}" style="fill:${fill}"/></g></svg>`;
+  const tooth=`<svg class="tsvg" viewBox="0 0 30 60" aria-hidden="true"><g${up?'':' transform="translate(0,60) scale(1,-1)"'} style="stroke:var(--mut);stroke-width:1.2;stroke-linejoin:round"><path d="${T.r}" style="fill:none"/><path d="${T.c}" style="fill:${fill}"/></g></svg>`;
   const occ=`<svg class="osvg" viewBox="0 0 24 24" aria-hidden="true"><g style="stroke:${col?'#fff':'var(--mut)'};stroke-width:1.3"><rect x="1.5" y="1.5" width="21" height="21" rx="7" style="fill:${fill}"/><circle cx="12" cy="12" r="4.5" style="fill:none"/><path d="M4.5 4.5l4 4M19.5 4.5l-4 4M4.5 19.5l4-4M19.5 19.5l-4-4" style="fill:none"/></g></svg>`;
   const lb=`<span class="tn">${n}</span>`;
   return `<button type="button" class="tt${sel?' sel':''}" data-act="ttsel" data-n="${n}" aria-label="Dente ${n}">${up?lb+tooth+occ:occ+tooth+lb}</button>`;
