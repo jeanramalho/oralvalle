@@ -87,3 +87,30 @@ html:not([data-ov-mode="dark"]) body .ov-modern-page :is(input,select,textarea) 
 }
 /* A cor cinza de fundo continua sendo definida pelo tema base.
    A pagina Pacientes e preservada sem overrides. */
+
+/* NexoDent 161 — restauracao visual: branco, laranja, texto preto e bordas visiveis.
+   Somente modo claro; sem alterar layout, dimensoes ou funcionalidades. */
+html:not([data-ov-mode="dark"]) body,
+html:not([data-ov-mode="dark"]) body .ov-content,
+html:not([data-ov-mode="dark"]) body .ov-shell,
+html:not([data-ov-mode="dark"]) body .ov-main,
+html:not([data-ov-mode="dark"]) body .nexo-agenda-page,
+html:not([data-ov-mode="dark"]) body .ov-modern-page,
+html:not([data-ov-mode="dark"]) body .ov-patients-page { background-color:#fff !important; color:#111 !important; }
+html:not([data-ov-mode="dark"]) body :is(.card,.ov-panel,.nexo-page-hero,.nexo-page-stats,.nexo-stat,.nexo-page-head,.ag-date-panel,.ag-new-form,.ag-rental-panel,.ov-modern-head,.ov-modern-stats > div,.ov-modern-row,.ov-modern-list,.ov-modern-summary,.ov-patient-row,.ov-modern-card,.nxlab-card,.nxlab-top,.nxlab-metrics > div) {
+  background-color:#fff !important;
+  background-image:none !important;
+  border-color:#c4ccd5 !important;
+  color:#111 !important;
+}
+html:not([data-ov-mode="dark"]) body :is(input:not([type="checkbox"]):not([type="radio"]),select,textarea) {
+  background-color:#fff !important;
+  color:#111 !important;
+  border-color:#aeb8c4 !important;
+}
+html:not([data-ov-mode="dark"]) body :is(h1,h2,h3,h4,h5,h6,label,.ov-modern-name,.ov-modern-date,.ov-modern-title,.nexo-stat strong,.ov-modern-stats strong) {color:#111 !important;}
+html:not([data-ov-mode="dark"]) body :is(.nexo-agenda-page,.ov-modern-page,.ov-patients-page) :is(.note,small,.muted) {color:#303030 !important;}
+html:not([data-ov-mode="dark"]) body .nexo-agenda-page :is(.ag-flow-row,.ag-flow-free,.ag-time-row,.ag-slot),
+html:not([data-ov-mode="dark"]) body .ov-modern-page .ov-modern-row,
+html:not([data-ov-mode="dark"]) body .ov-patients-page .ov-modern-row {background-color:#fff !important;border-color:#c4ccd5 !important;}
+/* Laranja continua reservado a botoes de acao e elementos de destaque. */
