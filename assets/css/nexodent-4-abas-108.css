@@ -44,63 +44,125 @@
 @media(max-width:850px){.ov-modern-page .ov-modern-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important;}}
 @media(max-width:650px){.ov-modern-page>.ov-modern-head,.nxlab-top{padding:16px!important;border-radius:17px!important;}.ov-modern-page .ov-modern-title h1,.nxlab-top h2{font-size:26px!important;}.ov-modern-page .ov-modern-stats{gap:9px!important;}.ov-modern-page .ov-modern-stats>div{padding:12px!important;min-height:80px!important;}.ov-modern-page .ov-modern-stats strong{font-size:25px!important;}.ov-modern-page .ov-modern-row{padding:0 12px!important;}.ov-modern-page .ov-modern-summary{flex-wrap:wrap!important;gap:8px 12px!important;}.ov-modern-page .ov-modern-name{flex-basis:calc(100% - 45px)!important;}.ov-modern-page .ov-modern-date{flex:1 1 60%!important;}.ov-modern-page .ov-modern-status{max-width:60%!important;}.nxlab-metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important;}.nxlab-card{padding:14px!important;}}
 
-/* NEXODENT 155 | SISTEMA VISUAL UNIFICADO
-   Regra final do CSS ja carregado pelo index existente.
-   Sem modificacoes em componentes funcionais, estados de alerta ou modo escuro. */
-@media screen {
+
+/* NEXODENT 153 — CINZA EQUILIBRADO, SEM ALTERAR INDEX.HTML
+   Escopo modo claro ou modo não definido. Não afeta modo escuro. */
+html:not([data-ov-mode="dark"]){
+  --bg:#e3e6e9!important;--sf:#d4d9dd!important;--ln:#bfc7ce!important;
+  --nd-gray-page:#e3e6e9;--nd-gray-panel:#d4d9dd;--nd-gray-field:#e0e4e7;
+}
+html:not([data-ov-mode="dark"]),
+html:not([data-ov-mode="dark"]) body,
+html:not([data-ov-mode="dark"]) #app,
+html:not([data-ov-mode="dark"]) main,
+html:not([data-ov-mode="dark"]) .ov-main,
+html:not([data-ov-mode="dark"]) .ov-content,
+html:not([data-ov-mode="dark"]) .ov-page,
+html:not([data-ov-mode="dark"]) .ov-modern-page,
+html:not([data-ov-mode="dark"]) .ov-patients-page,
+html:not([data-ov-mode="dark"]) .ov-page-body,
+html:not([data-ov-mode="dark"]) .ov-main-content {
+  background:#e3e6e9!important;
+}
+html:not([data-ov-mode="dark"]) :is(.card,.pt,.chk,.ob-pay,.ov-panel,.pf-card,.dt-card,.ov-page-head,.ov-panel-head,.ov-modern-head,.ov-modern-card,.ov-modern-section,.ov-modern-stats>div,.ov-card,.panel,.modal-content,.modal-body,.dropdown-menu,.tab-content,.patient-card,.patient-panel,.agenda-card,.ag-card,.table-wrap,.table-responsive,.form-card,.form-section,.nxlab-card,.nxlab-metrics>div,.ov-modern-row,.ov-modern-list,.ov-modern-summary,.ov-modern-stats,.nxlab-top,.nxlab-filters,.ov-modern-toolbar,.ov-modern-filters,.ov-modern-table,.ov-modern-item,.ov-modern-body,.ov-modern-content,.ov-modern-box,.ov-modern-panel,.ov-modern-list-card,.ov-modern-header,.ov-modern-stats-card,.ov-modern-stat,.ov-modern-filter,.ov-modern-table-wrap) {
+  background:#d4d9dd!important;background-image:none!important;border-color:#bfc7ce!important;
+}
+html:not([data-ov-mode="dark"]) .ov-modern-page>.ov-modern-head,
+html:not([data-ov-mode="dark"]) .nxlab-top {background:linear-gradient(120deg,#d4d9dd,#e0e4e7)!important;}
+html:not([data-ov-mode="dark"]) :is(.ov-modern-page,.ov-patients-page,.ov-content,.ov-page) :is(.box,.section,.summary-card,.stat-card,.metric-card,.info-card,.detail-card,.content-card,.search-box,.filter-bar,.toolbar,.tabs,.tab-panel,.list-group-item) {background:#d4d9dd!important;border-color:#bfc7ce!important;}
+html:not([data-ov-mode="dark"]) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]),textarea,select) {background:#e0e4e7!important;border-color:#bfc7ce!important;color:#26323b!important;}
+html:not([data-ov-mode="dark"]) :is(th,thead) {background:#cbd1d6!important;}
+html:not([data-ov-mode="dark"]) tbody tr {background:#dce0e3!important;}
+html:not([data-ov-mode="dark"]) tbody tr:nth-child(even) {background:#d3d8dc!important;}
+html:not([data-ov-mode="dark"]) :is(.nxlab-filters input,.nxlab-filters select) {background:#e0e4e7!important;}
+/* Componentes com fundo branco em estilos embutidos: apenas superfícies conhecidas. */
+html:not([data-ov-mode="dark"]) :is(.ov-modern-page,.nxlab-card,.nxlab-top,.ov-panel,.card,.pt,.pf-card,.dt-card) [style*="background: rgb(255, 255, 255)"],
+html:not([data-ov-mode="dark"]) :is(.ov-modern-page,.nxlab-card,.nxlab-top,.ov-panel,.card,.pt,.pf-card,.dt-card) [style*="background-color: rgb(255, 255, 255)"] {background-color:#d4d9dd!important;}
+/* Preserva cores funcionais de alertas, botões, estados e odontograma. */
+
+
+/* NEXODENT 154 — CINZA EQUILIBRADO / SOMENTE MODO CLARO
+   Override final: neutraliza fundos brancos inclusive onde regras antigas usam !important.
+   Não altera layout, eventos, odontograma ou modo escuro. */
 html:not([data-ov-mode="dark"]) {
-  --bg:#e8ebee; --bg2:#e8ebee; --sf:#dce1e5; --card:#dce1e5;
-  --ov-bg:#e8ebee; --ov-card:#dce1e5; --ov-line:#c3cbd2;
-  --ln:#c3cbd2; --nd-surface:#dce1e5; --nd-surface-raised:#e3e7ea;
-  --nd-surface-active:#d1d8de; --nd-field:#e6eaed;
+  --bg:#e9edf1; --bg2:#e2e7ec; --sf:#e1e6eb; --card:#e1e6eb;
+  --ov-bg:#e9edf1; --ov-card:#e1e6eb; --ov-line:#cbd3dc;
+  --acf:#e1e6eb; --ln:#cbd3dc;
 }
-/* Paginas e estrutura: um unico cinza neutro. */
-html:not([data-ov-mode="dark"]) :is(body,#app,main,.ov-shell,.ov-main,.ov-content,.ov-content-inner,.ov-page,.ov-page-body,.ov-main-content,.ov-modern-page,.ov-patients-page,.nexo-agenda-page) {
-  background-color:#e8ebee!important;
+html:not([data-ov-mode="dark"]),
+html:not([data-ov-mode="dark"]) body,
+html:not([data-ov-mode="dark"]) #app,
+html:not([data-ov-mode="dark"]) main,
+html:not([data-ov-mode="dark"]) .ov-shell,
+html:not([data-ov-mode="dark"]) .ov-main,
+html:not([data-ov-mode="dark"]) .ov-content,
+html:not([data-ov-mode="dark"]) .ov-modern-page {background-color:#e9edf1!important;}
+html:not([data-ov-mode="dark"]) :is(.ov-sidebar,.ov-panel,.ov-mobile-nav,.card,.pt,.chk,.ob-pay,.pf-card,.dt-card,.oitem,.ov-wa,.ov-banner,.ov-tile.light,.nxlab-top,.ov-modern-page>.ov-modern-head,.ov-modern-page .ov-modern-stats>div,.ov-modern-page .ov-modern-row) {
+ background:#e1e6eb!important; background-image:none!important; border-color:#cbd3dc!important;
 }
-/* Componentes de superficie: mesma cor em todos os modulos. */
-html:not([data-ov-mode="dark"]) :is(
-  .ov-sidebar,.ov-mobile-nav,.ov-panel,.ov-panel-head,.card,.pt,.chk,.ob-pay,.pf-card,.dt-card,.oitem,
-  .ov-card,.panel,.patient-card,.patient-panel,.agenda-card,.ag-card,.form-card,.form-section,
-  .ov-patients-panel,.ov-patients-head,.ov-patient-row,.ov-patient-list,.ov-patient-filter,
-  .ag-date-panel,.ag-new-form,.ag-rental-panel,.ag-rental-head,.ag-flow-row,.ag-appointment,
-  .ov-modern-head,.ov-modern-card,.ov-modern-section,.ov-modern-stats>div,.ov-modern-row,
-  .ov-modern-list,.ov-modern-summary,.ov-modern-toolbar,.ov-modern-filters,.ov-modern-table,
-  .ov-modern-item,.ov-modern-box,.ov-modern-panel,.ov-modern-header,.ov-modern-stat,
-  .nxlab-top,.nxlab-card,.nxlab-metrics>div,.nxlab-filters,
-  .modal-content,.modal-body,.dropdown-menu,.tab-content,.table-wrap,.table-responsive
-) {
-  background-color:#dce1e5!important;
-  background-image:none!important;
-  border-color:#c3cbd2!important;
-}
-/* Cabeçalhos e cartoes de metricas com a mesma hierarquia, sem destaques creme. */
-html:not([data-ov-mode="dark"]) :is(
-  .ov-patients-head,.ov-modern-page>.ov-modern-head,.ov-modern-page .ov-modern-stats>div,
-  .ov-patients-page .card,.ov-patients-page .ov-card,.nexo-agenda-page .card,
-  .nexo-agenda-page .ag-new-form,.nexo-agenda-page .ag-rental-panel,
-  .ov-modern-page .ov-modern-row[open],.ov-patient-row:hover,.ag-flow-row:hover
-) {
-  background:#dce1e5!important;
-  border-color:#c3cbd2!important;
-}
-/* Acento laranja apenas em botoes e selecao de navegacao, sem cartoes alaranjados. */
-html:not([data-ov-mode="dark"]) :is(
-  .ov-modern-stats>div:first-child,.ov-modern-page .ov-modern-stats>div:first-child,
-  .nexo-agenda-page .card:first-child,.ov-patients-page .card:first-child
-) { background-color:#dce1e5!important; }
-/* Formularios e pesquisa nao ficam brancos. */
-html:not([data-ov-mode="dark"]) :is(
-  input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="button"]):not([type="submit"]),
-  textarea,select,.ov-patient-search,.ov-patient-search input,.search-box,.filter-bar
-) { background-color:#e6eaed!important; border-color:#c3cbd2!important; color:#263442!important; }
-html:not([data-ov-mode="dark"]) :is(input,textarea)::placeholder { color:#758392; }
-/* Tabelas e listas: alternancia discreta e consistente. */
-html:not([data-ov-mode="dark"]) :is(table:not(.odontogram-table) th,table:not(.odontogram-table) td,.ov-mt-table th,.ov-mt-table td) {
-  background-color:#dce1e5!important; border-color:#c3cbd2!important;
-}
-html:not([data-ov-mode="dark"]) :is(table:not(.odontogram-table) tbody tr:nth-child(even) td,.ov-mt-table tbody tr:nth-child(even) td) {
-  background-color:#e3e7ea!important;
-}
-/* Respeita elementos de interacao: botao principal, avisos, status e imagens. */
+html:not([data-ov-mode="dark"]) :is(.ov-modern-page .ov-modern-row[open],.ov-modern-page .ov-modern-stats>div:first-child){background:#dce3e9!important;border-color:#c5ced8!important;}
+html:not([data-ov-mode="dark"]) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),textarea,select){background-color:#e5eaf0!important;border-color:#c5ced8!important;color:#283746!important;}
+html:not([data-ov-mode="dark"]) :is(.ov-mt-table,.ov-mt-table th,.ov-mt-table td,table:not(.odontogram-table) th,table:not(.odontogram-table) td){background-color:#e1e6eb!important;border-color:#cbd3dc!important;}
+html:not([data-ov-mode="dark"]) :is(.ov-mt-table tbody tr:nth-child(even) td,table:not(.odontogram-table) tbody tr:nth-child(even) td){background-color:#dce3e9!important;}
+/* Preserva fundos de botões, etiquetas de status e ilustrações. */
+@media print {html:not([data-ov-mode="dark"]) body{background:#fff!important;}}
+
+/* ========================================================================
+   NexoDent 156 | Tema Cinza Claro Padronizado
+   Base: ZIP 155. Somente cores, bordas e sombras. Sem alterações de layout.
+   O seletor exclui explicitamente o modo escuro e a impressão.
+   ======================================================================== */
+@media screen {
+  html:not([data-ov-mode="dark"]) {
+    --ov-bg:#f1f3f5!important;
+    --ov-card:#e9edf1!important;
+    --ov-text:#111827!important;
+    --ov-muted:#374151!important;
+    --ov-line:#cfd6dd!important;
+    --bg:#f1f3f5!important;
+    --bg2:#e9edf1!important;
+    --sf:#e9edf1!important;
+    --card:#e9edf1!important;
+    --ink:#111827!important;
+    --mut:#374151!important;
+    --ln:#cfd6dd!important;
+  }
+  html:not([data-ov-mode="dark"]) :is(body,#app,.ov-shell,.ov-main,.ov-content,.ov-main-content,.ov-page,.ov-page-body,.ov-patients-page,.ov-modern-page,.tab-content,.tab-panel){
+    background-color:#f1f3f5!important;color:#111827!important;
+  }
+  html:not([data-ov-mode="dark"]) :is(.ov-sidebar,.ov-mobile-nav){
+    background:#ebeff2!important;color:#111827!important;border-color:#cfd6dd!important;
+  }
+  html:not([data-ov-mode="dark"]) :is(.ov-panel,.ov-tile.light,.ov-wa,.ov-banner,.card,.pf-card,.pt,.chk,.ob-pay,.dt-card,.oitem,.ov-card,.ag-card,.agenda-card,.box,.content-card,.detail-card,.form-card,.form-section,.info-card,.metric-card,.stat-card,.summary-card,.patient-card,.patient-panel,.panel,.nxlab-card,.nxlab-head,.nxlab-metrics,.ov-modern-box,.ov-modern-card,.ov-modern-item,.ov-modern-panel,.ov-modern-stat,.ov-modern-stats-card,.ov-modern-list-card,.ov-modern-section,.ov-modern-table-wrap,.ov-modern-filter,.ov-modern-filters,.filter-bar,.search-box,.toolbar,.ov-modern-toolbar,.ov-page-head,.ov-panel-head){
+    background:#e9edf1!important;background-image:none!important;color:#111827!important;
+    border-color:#cfd6dd!important;box-shadow:0 2px 9px rgba(31,41,55,.045)!important;
+  }
+  /* Cabeçalhos, KPIs e linhas de módulos que usam estilos próprios. */
+  html:not([data-ov-mode="dark"]) .ov-modern-page > .ov-modern-head,
+  html:not([data-ov-mode="dark"]) .ov-modern-page .ov-modern-stats > div,
+  html:not([data-ov-mode="dark"]) .ov-modern-page .ov-modern-stats > div:first-child,
+  html:not([data-ov-mode="dark"]) .ov-modern-page .ov-modern-row,
+  html:not([data-ov-mode="dark"]) .ov-modern-page .ov-modern-row[open],
+  html:not([data-ov-mode="dark"]) .ov-patients-page .ov-page-head {
+    background:#e9edf1!important;background-image:none!important;
+    border-color:#cfd6dd!important;color:#111827!important;
+  }
+  html:not([data-ov-mode="dark"]) :is(.ov-modern-summary,.ov-modern-body,.ov-modern-content,.ov-modern-list,.ov-modern-header){color:#111827!important;}
+  /* Campos com contraste suave, sem branco puro. */
+  html:not([data-ov-mode="dark"]) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="submit"]):not([type="button"]),select,textarea,.ov-patient-search,.ov-modern-filter input){
+    background:#f0f2f4!important;color:#111827!important;border-color:#c5ced7!important;
+  }
+  html:not([data-ov-mode="dark"]) :is(input,textarea)::placeholder{color:#536173!important;opacity:1!important;}
+  /* Listagens e horários: nenhuma faixa branca alternada. */
+  html:not([data-ov-mode="dark"]) :is(.ov-mt-table,table:not(.odontogram-table),.list-group-item,.table-responsive,.table-wrap){background:#e9edf1!important;color:#111827!important;border-color:#cfd6dd!important;}
+  html:not([data-ov-mode="dark"]) :is(.ov-mt-table,table:not(.odontogram-table)) :is(thead,tbody,tr,th,td){background:#e9edf1!important;color:#111827!important;border-color:#cfd6dd!important;}
+  html:not([data-ov-mode="dark"]) :is(.ov-mt-table,table:not(.odontogram-table)) tbody tr:nth-child(even) :is(th,td){background:#e4e9ed!important;}
+  /* Modais e menus usam a mesma paleta, sem interferir na interação. */
+  html:not([data-ov-mode="dark"]) :is(.modal-content,.modal-body,.dropdown-menu){background:#e9edf1!important;color:#111827!important;border-color:#cfd6dd!important;}
+  /* Textos: preto no conteúdo; não altera ícones nem o texto dos botões. */
+  html:not([data-ov-mode="dark"]) :is(.ov-main,.ov-content,.ov-modern-page,.ov-patients-page,.ov-page) :is(h1,h2,h3,h4,h5,h6,strong,label){color:#111827!important;}
+  html:not([data-ov-mode="dark"]) .ov-modern-page :is(.ov-modern-name strong,.ov-modern-stats strong,.ov-modern-title h1,.ov-modern-list>h2){color:#111827!important;}
+  html:not([data-ov-mode="dark"]) .ov-modern-page :is(.sub,.ov-modern-name small,.ov-modern-date,.ov-modern-stats span){color:#374151!important;}
+  /* O laranja continua exclusivo dos comandos principais e dos estados ativos. */
+  html:not([data-ov-mode="dark"]) .ov-nav-btn.on{background:#fff0e4!important;color:#c45b00!important;}
 }
