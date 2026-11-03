@@ -629,3 +629,14 @@ body,button,input,select,textarea,summary{font-family:Figtree,system-ui,-apple-s
     flex:0 0 19px!important;margin:0!important;
   }
 }
+
+/* NexoDent 165 — ampliação exclusiva da marca na barra superior (desktop). */
+@media (min-width: 761px) {
+  .ov-top .ov-brand { gap: 15px; min-width: 0; }
+  .ov-top .ov-logo { width: 70px; height: 74px; flex: 0 0 70px; }
+  .ov-top .ov-logo svg { width: 68px; height: 72px; }
+  .ov-top .ov-logo-img { height: 72px; width: auto; max-width: 125px; object-fit: contain; }
+  .ov-top .ov-icon-img { width: 70px; height: 74px; max-width: 125px; object-fit: contain; }
+  .ov-top .ov-brand-name { font-size: 33px; line-height: 1.08; font-weight: 800; }
+  .ov-top .ov-brand-sub { font-size: 16px; line-height: 1.25; margin-top: 5px; }
+}
