@@ -79,3 +79,30 @@ html:not([data-ov-mode="dark"]) :is(.nxlab-filters input,.nxlab-filters select) 
 html:not([data-ov-mode="dark"]) :is(.ov-modern-page,.nxlab-card,.nxlab-top,.ov-panel,.card,.pt,.pf-card,.dt-card) [style*="background: rgb(255, 255, 255)"],
 html:not([data-ov-mode="dark"]) :is(.ov-modern-page,.nxlab-card,.nxlab-top,.ov-panel,.card,.pt,.pf-card,.dt-card) [style*="background-color: rgb(255, 255, 255)"] {background-color:#d4d9dd!important;}
 /* Preserva cores funcionais de alertas, botões, estados e odontograma. */
+
+
+/* NEXODENT 154 — CINZA EQUILIBRADO / SOMENTE MODO CLARO
+   Override final: neutraliza fundos brancos inclusive onde regras antigas usam !important.
+   Não altera layout, eventos, odontograma ou modo escuro. */
+html:not([data-ov-mode="dark"]) {
+  --bg:#e9edf1; --bg2:#e2e7ec; --sf:#e1e6eb; --card:#e1e6eb;
+  --ov-bg:#e9edf1; --ov-card:#e1e6eb; --ov-line:#cbd3dc;
+  --acf:#e1e6eb; --ln:#cbd3dc;
+}
+html:not([data-ov-mode="dark"]),
+html:not([data-ov-mode="dark"]) body,
+html:not([data-ov-mode="dark"]) #app,
+html:not([data-ov-mode="dark"]) main,
+html:not([data-ov-mode="dark"]) .ov-shell,
+html:not([data-ov-mode="dark"]) .ov-main,
+html:not([data-ov-mode="dark"]) .ov-content,
+html:not([data-ov-mode="dark"]) .ov-modern-page {background-color:#e9edf1!important;}
+html:not([data-ov-mode="dark"]) :is(.ov-sidebar,.ov-panel,.ov-mobile-nav,.card,.pt,.chk,.ob-pay,.pf-card,.dt-card,.oitem,.ov-wa,.ov-banner,.ov-tile.light,.nxlab-top,.ov-modern-page>.ov-modern-head,.ov-modern-page .ov-modern-stats>div,.ov-modern-page .ov-modern-row) {
+ background:#e1e6eb!important; background-image:none!important; border-color:#cbd3dc!important;
+}
+html:not([data-ov-mode="dark"]) :is(.ov-modern-page .ov-modern-row[open],.ov-modern-page .ov-modern-stats>div:first-child){background:#dce3e9!important;border-color:#c5ced8!important;}
+html:not([data-ov-mode="dark"]) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),textarea,select){background-color:#e5eaf0!important;border-color:#c5ced8!important;color:#283746!important;}
+html:not([data-ov-mode="dark"]) :is(.ov-mt-table,.ov-mt-table th,.ov-mt-table td,table:not(.odontogram-table) th,table:not(.odontogram-table) td){background-color:#e1e6eb!important;border-color:#cbd3dc!important;}
+html:not([data-ov-mode="dark"]) :is(.ov-mt-table tbody tr:nth-child(even) td,table:not(.odontogram-table) tbody tr:nth-child(even) td){background-color:#dce3e9!important;}
+/* Preserva fundos de botões, etiquetas de status e ilustrações. */
+@media print {html:not([data-ov-mode="dark"]) body{background:#fff!important;}}
