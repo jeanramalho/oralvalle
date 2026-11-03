@@ -44,66 +44,46 @@
 @media(max-width:850px){.ov-modern-page .ov-modern-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important;}}
 @media(max-width:650px){.ov-modern-page>.ov-modern-head,.nxlab-top{padding:16px!important;border-radius:17px!important;}.ov-modern-page .ov-modern-title h1,.nxlab-top h2{font-size:26px!important;}.ov-modern-page .ov-modern-stats{gap:9px!important;}.ov-modern-page .ov-modern-stats>div{padding:12px!important;min-height:80px!important;}.ov-modern-page .ov-modern-stats strong{font-size:25px!important;}.ov-modern-page .ov-modern-row{padding:0 12px!important;}.ov-modern-page .ov-modern-summary{flex-wrap:wrap!important;gap:8px 12px!important;}.ov-modern-page .ov-modern-name{flex-basis:calc(100% - 45px)!important;}.ov-modern-page .ov-modern-date{flex:1 1 60%!important;}.ov-modern-page .ov-modern-status{max-width:60%!important;}.nxlab-metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important;}.nxlab-card{padding:14px!important;}}
 
-/* NexoDent 159 — UMA superfície cinza no modo claro.
-   Substitui os patches de cor 156–158; nao altera layout, JS ou eventos.
-   Fundo, paineis, cartoes e campos: exatamente #f0f2f4.
-   Bordas fazem a separacao visual. Botoes de acao e icones mantidos. */
-html:not([data-ov-mode="dark"]) {
-  --nd-surface-unica:#f0f2f4;
-  --nd-borda-unica:#d7dfe7;
-  --bg:#f0f2f4; --bg2:#f0f2f4; --sf:#f0f2f4;
-  --card:#f0f2f4; --ov-bg:#f0f2f4; --ov-card:#f0f2f4;
-  --ink:#111827; --ov-text:#111827; --nd-ink:#111827;
-  --mut:#374151; --ov-muted:#374151;
+/* NexoDent 160 — padrao visual da aba Pacientes.
+   Retira o override global 159 que deixava tudo cinza.
+   Somente fundos de superficies nas paginas Agenda e Tratamentos.
+   Nao modifica layouts, formularios, botoes, estados ou JS. */
+html:not([data-ov-mode="dark"]) body .nexo-agenda-page,
+html:not([data-ov-mode="dark"]) body .ov-modern-page {
+  color:#152238;
 }
-/* Estrutura geral, sidebar e containers. */
-html:not([data-ov-mode="dark"]) body,
-html:not([data-ov-mode="dark"]) body :is(.ov-content,.ov-main,.ov-sidebar,.ov-page,.nexo-page-shell,.ov-patients-page,.ov-modern-page,.nexo-agenda-page) {
-  background-color:#f0f2f4 !important;
-  color:#111827;
-}
-/* Todos os cartoes, cabecalhos, listas e paineis conhecidos.
-   Sem aplicar background a todos os divs: isso apagaria estados e icones. */
-html:not([data-ov-mode="dark"]) body :is(
-  .card,.pt,.chk,.ob-pay,.pf-card,.dt-card,.oitem,.ov-panel,
-  .ov-page-head,.ov-panel-head,.ov-patients-panel,.ov-patient-row,
-  .ov-page-hero,.nexo-page-hero,.nexo-stat,.nexo-page-stats > *,
-  .ov-modern-head,.ov-modern-row,.ov-modern-stats > div,
-  .nxlab-top,.nxlab-card,.nxlab-metrics > div,
-  .ag-date-panel,.ag-new-form,.ag-rental-panel,
-  .ov-agenda-chairs > .card,.ov-agenda-chairs > .card > .ag,
-  .ag-flow-row,.ag-flow-free,.ov-patient-search,
-  .nexo-agenda-tools > .card,.ov-patient-list > *,
-  .ov-modern-list > details,.ov-modern-summary,
-  .ov-patients-stats > div,.ov-patient-stats > div
-) {
-  background:#f0f2f4 !important;
+/* Cartoes de indicadores, como em Pacientes: branco e primeiro pessego. */
+html:not([data-ov-mode="dark"]) body .nexo-agenda-page .nexo-stat,
+html:not([data-ov-mode="dark"]) body .ov-modern-page .ov-modern-stats > div {
+  background:#fff !important;
   background-image:none !important;
-  border-color:#d7dfe7 !important;
+  border-color:#e5eaf0 !important;
 }
-/* Agenda: impedir faixas alternadas brancas e destaque pessego no indicador. */
-html:not([data-ov-mode="dark"]) body .nexo-agenda-page :is(
-  .nexo-stat:first-child,.ag-flow-row:nth-child(even),
-  .ag-flow-row:nth-child(odd),.ag-flow-free:nth-child(even),
-  .ag-flow-free:nth-child(odd)
-) {background:#f0f2f4!important;background-image:none!important;}
-/* Campos em todos os modulos, inclusive regras de formulario com !important. */
-html:not([data-ov-mode="dark"]) body input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="submit"]):not([type="button"]),
-html:not([data-ov-mode="dark"]) body select,
-html:not([data-ov-mode="dark"]) body textarea {
-  background:#f0f2f4!important;
-  background-color:#f0f2f4!important;
-  color:#111827!important;
-  border-color:#cbd5df!important;
+html:not([data-ov-mode="dark"]) body .nexo-agenda-page .nexo-stat:first-child,
+html:not([data-ov-mode="dark"]) body .ov-modern-page .ov-modern-stats > div:first-child {
+  background:#fff4eb !important;
+  border-color:#ffdfc8 !important;
 }
-html:not([data-ov-mode="dark"]) body input::placeholder,
-html:not([data-ov-mode="dark"]) body textarea::placeholder {color:#526072!important;opacity:1;}
-/* Textos de leitura: pretos, preservando botoes, etiquetas e estados. */
-html:not([data-ov-mode="dark"]) body :is(
-  .ov-content,.nexo-page-shell,.ov-modern-page,.ov-patients-page
-) :is(h1,h2,h3,h4,h5,h6,strong,label) {color:#111827!important;}
-html:not([data-ov-mode="dark"]) body :is(
-  .ov-content,.nexo-page-shell,.ov-modern-page,.ov-patients-page
-) :is(.sub,.note,small) {color:#374151!important;}
-/* O item ativo do menu segue identificavel pelo texto/icone laranja. */
-html:not([data-ov-mode="dark"]) body .ov-nav-btn.on {background:#f0f2f4!important;}
+/* Listas de Ortodontia, Implantodontia e Protese brancas. */
+html:not([data-ov-mode="dark"]) body .ov-modern-page .ov-modern-row,
+html:not([data-ov-mode="dark"]) body .ov-modern-page .ov-modern-row:not([open]) {
+  background:#fff !important;
+  background-image:none !important;
+  border-color:#e5eaf0 !important;
+}
+/* Agenda: cartoes brancos e campos brancos, como na aba Pacientes. */
+html:not([data-ov-mode="dark"]) body .nexo-agenda-page .ag-new-form,
+html:not([data-ov-mode="dark"]) body .nexo-agenda-page .ag-rental-panel,
+html:not([data-ov-mode="dark"]) body .nexo-agenda-page .ag-date-panel,
+html:not([data-ov-mode="dark"]) body .nexo-agenda-page .ov-agenda-chairs > .card {
+  background:#fff !important;
+  background-image:none !important;
+  border-color:#e5eaf0 !important;
+}
+html:not([data-ov-mode="dark"]) body .nexo-agenda-page :is(input,select,textarea),
+html:not([data-ov-mode="dark"]) body .ov-modern-page :is(input,select,textarea) {
+  background:#fff !important;
+  color:#152238 !important;
+}
+/* A cor cinza de fundo continua sendo definida pelo tema base.
+   A pagina Pacientes e preservada sem overrides. */
