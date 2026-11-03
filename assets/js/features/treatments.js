@@ -247,24 +247,33 @@ function trArchOdontogram(p, treatments){
   const quadrants=ARC[dec?'dec':'perm'];
   const status=trStatusMap(treatments);
   const selected=new Set((view.trSel||[]).map(String));
-  // Fixed SVG coordinate system: teeth and labels scale together at every viewport width.
+  // SVG crowns are drawn directly in SVG; transparent original buttons retain existing selection events.
   const arch=(upper)=>{
     const nums=(upper?quadrants.slice(0,2):quadrants.slice(2,4)).flatMap(q=>q[1]);
     return nums.map((n,i)=>{
-      const theta=Math.PI-(i+.5)*Math.PI/nums.length;
-      const x=380+282*Math.cos(theta);
-      const y=upper?270-178*Math.sin(theta):354+178*Math.sin(theta);
-      const rotation=(i-(nums.length-1)/2)*(upper?5.3:-5.3);
+      const angle=Math.PI-(i+.5)*Math.PI/nums.length;
+      const x=380+245*Math.cos(angle);
+      const y=upper?318-185*Math.sin(angle):386+185*Math.sin(angle);
+      const rot=(i-(nums.length-1)/2)*(upper?5.1:-5.1);
       const st=status[String(n)];
-      const fill=st?(st.d&&st.p?'#efb465':st.d?'#72b7db':'#b8bfc9'):'#8bdda0';
-      const kind=n%10<=2?'front':n%10<=3?'canine':n%10<=5?'premolar':'molar';
-      return `<foreignObject x="${(x-24).toFixed(1)}" y="${(y-36).toFixed(1)}" width="48" height="72" class="nexo-svg-tooth ${kind}" style="--nexo-tooth-fill:${fill};--nexo-tooth-rotation:${rotation.toFixed(1)}deg"><div xmlns="http://www.w3.org/1999/xhtml" class="nexo-svg-tooth-inner">${toothBtn(n,dec,st,selected.has(String(n)),upper)}</div></foreignObject>`;
+      const fill=st?(st.d&&st.p?'#f4d35e':st.d?'#75aaf7':'#b9a1e8'):'#a9ef9d';
+      const stroke=st?(st.d?'#3476dd':'#8b65c3'):'#49c93c';
+      const toothType=n%10;
+      const w=toothType<=2?38:toothType===3?39:toothType<=5?43:47;
+      const h=toothType<=2?49:toothType===3?45:toothType<=5?42:43;
+      const active=selected.has(String(n));
+      const labelY=upper?-h/2-13:h/2+22;
+      return `<g class="nexo-crown-group${active?' is-selected':''}" transform="translate(${x.toFixed(2)} ${y.toFixed(2)})">
+        <g transform="rotate(${rot.toFixed(2)})"><rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="${Math.min(16,w*.35)}" fill="${fill}" stroke="${active?'#f97316':stroke}" stroke-width="${active?4:2}"/><ellipse cx="${-w*.12}" cy="${-h*.16}" rx="${w*.29}" ry="${h*.22}" fill="#fff" opacity=".28"/></g>
+        <text x="0" y="${labelY}" text-anchor="middle" class="nexo-crown-label" fill="${st?'#2867b4':'#28782c'}">${n}</text>
+        <foreignObject x="${-w/2-5}" y="${-h/2-5}" width="${w+10}" height="${h+10}" class="nexo-crown-hit"><div xmlns="http://www.w3.org/1999/xhtml" class="nexo-crown-hit-inner">${toothBtn(n,dec,st,active,upper)}</div></foreignObject>
+      </g>`;
     }).join('');
   };
   const legend=[['#8bdda0','Sem tratamento'],['#b8bfc9','A realizar'],['#72b7db','Concluído'],['#efb465','Concluído / pendente']].map(([c,t])=>`<span><i style="background:${c}"></i>${t}</span>`).join('');
   return `<div class="nexo-odontogram" aria-label="Odontograma interativo">
     <div class="nexo-odo-toolbar"><div><strong>Odontograma interativo</strong><small>Selecione um ou mais dentes para registrar procedimentos</small></div><span class="nexo-odo-count">${selected.size} dente${selected.size===1?'':'s'} selecionado${selected.size===1?'':'s'}</span></div>
-    <div class="nexo-odo-layout"><div class="nexo-odo-main"><div class="nexo-arch-board"><svg class="nexo-arch-svg" viewBox="0 0 760 640" role="group" aria-label="Odontograma interativo com arcadas superior e inferior" xmlns="http://www.w3.org/2000/svg"><path d="M380 100 V545 M145 312 H615" fill="none" stroke="var(--ln)" stroke-dasharray="4 6"/><text x="380" y="32" text-anchor="middle" class="nexo-svg-caption">ARCADA SUPERIOR</text><text x="380" y="622" text-anchor="middle" class="nexo-svg-caption">ARCADA INFERIOR</text><text x="275" y="303" class="nexo-svg-quadrant">Q1</text><text x="465" y="303" class="nexo-svg-quadrant">Q2</text><text x="275" y="334" class="nexo-svg-quadrant">Q4</text><text x="465" y="334" class="nexo-svg-quadrant">Q3</text>${arch(true)}${arch(false)}</svg></div></div>
+    <div class="nexo-odo-layout"><div class="nexo-odo-main"><div class="nexo-arch-board"><svg class="nexo-arch-svg" viewBox="0 0 760 700" role="group" aria-label="Odontograma interativo com arcadas superior e inferior" xmlns="http://www.w3.org/2000/svg"><path d="M380 100 V603 M140 352 H620" fill="none" stroke="var(--ln)" stroke-dasharray="4 6"/><text x="380" y="62" text-anchor="middle" class="nexo-svg-caption">ARCADA SUPERIOR</text><text x="380" y="660" text-anchor="middle" class="nexo-svg-caption">ARCADA INFERIOR</text><text x="275" y="343" class="nexo-svg-quadrant">Q1</text><text x="465" y="343" class="nexo-svg-quadrant">Q2</text><text x="275" y="371" class="nexo-svg-quadrant">Q4</text><text x="465" y="371" class="nexo-svg-quadrant">Q3</text>${arch(true)}${arch(false)}</svg></div></div>
     <aside class="nexo-odo-aside" aria-label="Legenda e ações"><h3>Legenda de situação</h3><div class="nexo-odo-legend">${legend}<span><i class="nexo-odo-selected"></i>Selecionado</span></div><div class="nexo-odo-aside-sep"></div><h3>Ações rápidas</h3><a href="#trbasket" class="nexo-odo-action">＋ Adicionar procedimento</a><a href="#trteeth" class="nexo-odo-action">◫ Procedimentos por dente</a><a href="#trshared" class="nexo-odo-action">☷ Dados do tratamento</a><p class="nexo-odo-help">Selecione os dentes no desenho e use as opções de tratamento abaixo.</p></aside></div></div>`;
 }
 function tratHtml(p){
