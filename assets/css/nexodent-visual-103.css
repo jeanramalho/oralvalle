@@ -48,3 +48,7 @@
 }
 /* Evita espaço vazio deixado pelo ícone removido. */
 .ov-modern-page .ov-modern-title { gap: 0 !important; }
+
+/* NexoDent 157: manter somente Nova consulta e Aluguel em cinza. */
+html body .nexo-agenda-page .nexo-agenda-tools .card.ag-new-form,
+html body .nexo-agenda-page .nexo-agenda-tools .card.ag-rental-panel {background:#f0f2f4!important;background-image:none!important;border-color:#dce2e8!important;}

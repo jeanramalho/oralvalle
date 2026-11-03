@@ -78,3 +78,7 @@ html body .nexo-page-shell.nexo-agenda-page .nexo-agenda-tools > .card.ag-rental
   border-color: #dce2e8 !important;
 }
 /* Preserva os inputs brancos para boa leitura e os botoes originais. */
+
+/* NexoDent 157: seletor específico no último CSS carregado. */
+html body .nexo-page-shell.nexo-agenda-page .nexo-agenda-tools > div.card.ag-new-form,
+html body .nexo-page-shell.nexo-agenda-page .nexo-agenda-tools > div.card.ag-rental-panel {background:#f0f2f4!important;background-color:#f0f2f4!important;background-image:none!important;border-color:#dce2e8!important;}
