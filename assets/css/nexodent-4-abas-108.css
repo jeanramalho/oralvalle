@@ -43,3 +43,61 @@
 @media(max-width:1100px){.nxlab-metrics{grid-template-columns:repeat(3,minmax(0,1fr))!important;}}
 @media(max-width:850px){.ov-modern-page .ov-modern-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important;}}
 @media(max-width:650px){.ov-modern-page>.ov-modern-head,.nxlab-top{padding:16px!important;border-radius:17px!important;}.ov-modern-page .ov-modern-title h1,.nxlab-top h2{font-size:26px!important;}.ov-modern-page .ov-modern-stats{gap:9px!important;}.ov-modern-page .ov-modern-stats>div{padding:12px!important;min-height:80px!important;}.ov-modern-page .ov-modern-stats strong{font-size:25px!important;}.ov-modern-page .ov-modern-row{padding:0 12px!important;}.ov-modern-page .ov-modern-summary{flex-wrap:wrap!important;gap:8px 12px!important;}.ov-modern-page .ov-modern-name{flex-basis:calc(100% - 45px)!important;}.ov-modern-page .ov-modern-date{flex:1 1 60%!important;}.ov-modern-page .ov-modern-status{max-width:60%!important;}.nxlab-metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important;}.nxlab-card{padding:14px!important;}}
+
+
+/* NexoDent 153 | Cinza equilibrado integral.
+   Somente modo claro; sem alterações de estrutura, scripts ou dados.
+   Não recolore ícones, SVGs, odontograma ou estados de ações. */
+html[data-ov-mode="light"] {
+  --bg:#e3e6e9;
+  --sf:#d5d9dd;
+  --ink:#26323b;
+  --mut:#5d6973;
+  --ln:#bdc5cb;
+  --nd-card-border:#c2c9ce;
+  --nd-gray-page:#e3e6e9;
+  --nd-gray-panel:#d5d9dd;
+  --nd-gray-field:#e9ecee;
+}
+html[data-ov-mode="light"],
+html[data-ov-mode="light"] body,
+html[data-ov-mode="light"] #app,
+html[data-ov-mode="light"] main,
+html[data-ov-mode="light"] .ov-content,
+html[data-ov-mode="light"] .ov-main,
+html[data-ov-mode="light"] .ov-page,
+html[data-ov-mode="light"] .ov-patients-page,
+html[data-ov-mode="light"] .ov-modern-page {
+  background-color:var(--nd-gray-page)!important;
+}
+/* Cartões, painéis, módulos, cabeçalhos e abas: cinza em vez de branco. */
+html[data-ov-mode="light"] :is(.card,.pt,.chk,.ob-pay,.ov-panel,.pf-card,.dt-card,.ov-page-head,.ov-panel-head,.ov-modern-head,.ov-modern-card,.ov-modern-section,.ov-modern-stats>div,.ov-card,.panel,.modal-content,.modal-body,.dropdown-menu,.tab-content,.patient-card,.patient-panel,.agenda-card,.ag-card,.table-wrap,.table-responsive,.form-card,.form-section) {
+  background-color:var(--nd-gray-panel)!important;
+  border-color:var(--ln)!important;
+}
+html[data-ov-mode="light"] .ov-modern-page > .ov-modern-head {
+  background:linear-gradient(120deg,#d5d9dd,#e0e3e6)!important;
+  border-color:var(--ln)!important;
+}
+html[data-ov-mode="light"] .ov-modern-page .ov-modern-stats > div {
+  background:var(--nd-gray-panel)!important;
+  border-color:var(--ln)!important;
+}
+/* Controles neutros; não substituir botões coloridos ou estados clínicos. */
+html[data-ov-mode="light"] :is(input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]),textarea,select) {
+  background-color:var(--nd-gray-field)!important;
+  border-color:var(--ln)!important;
+  color:var(--ink)!important;
+}
+html[data-ov-mode="light"] :is(input,textarea)::placeholder { color:#67737c!important;opacity:1; }
+html[data-ov-mode="light"] :is(table,thead,tbody,tr,th,td) { border-color:var(--ln)!important; }
+html[data-ov-mode="light"] :is(th,thead) { background-color:#cbd1d6!important; }
+html[data-ov-mode="light"] tbody tr { background-color:#dce0e3; }
+html[data-ov-mode="light"] tbody tr:nth-child(even) { background-color:#d3d8dc; }
+html[data-ov-mode="light"] :is(.ov-modern-page,.ov-patients-page) :is(.sub,.muted,.hint,.small-muted) { color:var(--mut)!important; }
+/* Superfícies genéricas que tinham branco explícito. */
+html[data-ov-mode="light"] :is(.ov-content,.ov-modern-page,.ov-patients-page) :is(.box,.section,.summary-card,.stat-card,.metric-card,.info-card,.detail-card,.content-card,.search-box,.filter-bar,.toolbar,.tabs,.tab-panel,.list-group-item) {
+  background-color:var(--nd-gray-panel)!important;
+  border-color:var(--ln)!important;
+}
+/* Respeitar o tema escuro, o odontograma incorporado e elementos visuais clínicos. */
