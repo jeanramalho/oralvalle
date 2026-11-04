@@ -2,6 +2,7 @@
 const el=()=>document.getElementById('integr-result');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const digits=s=>String(s??'').replace(/\D/g,'');
+const money=v=>{const n=Number(String(v??'').replace(/[^0-9,.-]/g,'').replace(/\./g,'').replace(',','.'));return Number.isFinite(n)?n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}):String(v??'Valor não informado')};
 const norm=s=>String(s??'').trim().toLocaleLowerCase('pt-BR');
 let seq=0;
 function limpar(){seq++;if(el())el().textContent='Selecione um lead para consultar.'}
@@ -31,12 +32,31 @@ async function consultar(lead,clinicId,cloud){
     const title=document.createElement('strong');title.textContent=String(d.nome||p.nome||'Paciente sem nome');item.append(title);
     const sub=document.createElement('small');sub.textContent='Telefone cadastrado: '+String(d.tel||'não informado');item.append(sub);
     const linked=(Array.isArray(appointments)?appointments:[]).filter(a=>String(a.patient_ref||a.dados?.pid||'')===pid);
-    const detail=document.createElement('small');detail.textContent='Agendamentos relacionados: '+linked.length+(linked.length?' • '+linked.slice(0,3).map(a=>[a.dados?.data||a.dados?.dt||'',a.dados?.hora||'',a.dados?.st||a.status||''].filter(Boolean).join(' ')).join(' | '):'');item.append(detail);root.append(item);
+    const detail=document.createElement('small');detail.textContent='Agendamentos relacionados: '+linked.length+(linked.length?' • '+linked.slice(0,3).map(a=>[a.dados?.data||a.dados?.dt||'',a.dados?.hora||'',a.dados?.st||a.status||''].filter(Boolean).join(' ')).join(' | '):'');item.append(detail);
+    // parent_id é texto JSON: [null,"p",["id",ID_DO_PACIENTE]]. A comparação exata evita cruzar pacientes.
+    const parent=JSON.stringify([null,'p',['id',pid]]);
+    const q='/rest/v1/budgets?clinic_id=eq.'+encodeURIComponent(clinicId)+'&parent_id=eq.'+encodeURIComponent(parent)+'&select=id,status,dados&limit=1000';
+    const budgetTitle=document.createElement('strong');budgetTitle.textContent='Orçamentos';budgetTitle.style.display='block';budgetTitle.style.marginTop='9px';item.append(budgetTitle);
+    try{
+      const budgets=await cloud.request(q);
+      if(request!==seq)return;
+      const list=Array.isArray(budgets)?budgets:[];
+      const summary=document.createElement('small');summary.textContent=list.length+' orçamento(s) relacionado(s)'+(list.length===1000?' (limite de consulta atingido)':'');item.append(summary);
+      const pending=list.filter(b=>String(b.status||b.dados?.status||'').toLocaleLowerCase('pt-BR').includes('pendente'));
+      if(pending.length){const tag=document.createElement('small');tag.className='warning';tag.textContent=pending.length+' orçamento(s) pendente(s) para acompanhamento';item.append(tag)}
+      for(const b of list.slice(0,15)){
+        const bd=b.dados||{};const row=document.createElement('small');
+        row.textContent=[String(b.status||bd.status||'Sem status'),bd.data||'',bd.desc||'',bd.val!=null?'Valor registrado: '+String(bd.val):''].filter(Boolean).join(' • ');
+        item.append(row);
+      }
+      if(list.length>15){const more=document.createElement('small');more.textContent='Exibindo 15 de '+list.length+' orçamentos.';item.append(more)}
+    }catch(e){const warn=document.createElement('small');warn.className='warning';warn.textContent='Orçamentos indisponíveis: '+e.message;item.append(warn)}
+    root.append(item);
    }
    if(matches.length>15){const extra=document.createElement('small');extra.textContent='Exibindo os primeiros 15 resultados.';root.append(extra)}
    if(agendaError){const warn=document.createElement('small');warn.textContent='Agenda indisponível: '+agendaError;root.append(warn)}
   }
-  const foot=document.createElement('small');foot.textContent='Orçamentos: vínculo com o paciente ainda não confirmado na estrutura atual. Nenhum orçamento foi associado automaticamente.';root.append(foot);
+  const foot=document.createElement('small');foot.textContent='Consulta somente leitura. Correspondências por nome/telefone exigem conferência; nenhum vínculo automático foi criado.';root.append(foot);
   target.replaceChildren(root);
  }catch(e){if(request===seq)target.textContent='Não foi possível consultar os dados: '+e.message}
 }
