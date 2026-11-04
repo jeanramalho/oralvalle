@@ -22,18 +22,46 @@ const money=v=>{
  return Number.isFinite(n)?n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}):null;
 };
 // Exibe somente campos financeiros explícitos; nunca interpreta datas como valores.
-const budgetDetails=b=>{
+// Mesmo modelo do NexoDent: budget_items guarda os procedimentos; dados.desc e desconto.
+const amount=v=>{
+ if(typeof v==='number')return Number.isFinite(v)?v:null;
+ if(typeof v!=='string')return null;
+ const raw=v.trim().replace(/^R\$\s*/i,'').replace(/\s/g,'');
+ if(!raw||!/^\d[\d.,]*$/.test(raw))return null;
+ let n=raw;
+ if(n.includes(',')&&n.includes('.'))n=n.lastIndexOf(',')>n.lastIndexOf('.')?n.replace(/\./g,'').replace(',','.'):n.replace(/,/g,'');
+ else if(n.includes(','))n=n.replace(',','.');
+ else if(/^\d{1,3}(?:\.\d{3})+$/.test(n))n=n.replace(/\./g,'');
+ const parsed=Number(n);return Number.isFinite(parsed)?parsed:null;
+};
+const budgetDetails=(b,byBudget)=>{
  const d=b.dados&&typeof b.dados==='object'?b.dados:{};
- const desc=[];
- const add=v=>{if(typeof v==='string'&&v.trim()&&!desc.includes(v.trim()))desc.push(v.trim())};
- add(d.descricao);add(d.procedimento);add(d.tratamento);add(d.titulo);
- const items=Array.isArray(d.itens)?d.itens:Array.isArray(d.items)?d.items:[];
- for(const item of items.slice(0,5))if(item&&typeof item==='object')add(item.procedimento||item.descricao||item.nome||item.tratamento);
- // O campo 'desc' pode ser desconto numérico, portanto não é descrição.
- const fields=['valor_total','total','valor','total_geral'];
- let value=null;
- for(const field of fields){if(d[field]!==undefined&&d[field]!==null){value=money(d[field]);if(value!==null)break}}
- return {description:desc.slice(0,3).join(' · ')||'Procedimentos não identificados',value:value||'Valor não identificado'};
+ const items=byBudget.get(String(b.id))||[];
+ const names=items.map(x=>x.dados).filter(x=>x&&typeof x==='object')
+  .map(x=>String(x.proc||x.procedimento||x.nome||'').trim()).filter(Boolean);
+ const values=items.filter(x=>x.kind==='object'&&x.dados&&typeof x.dados==='object')
+  .map(x=>amount(x.dados.valor));
+ const complete=values.length===items.filter(x=>x.kind==='object').length&&values.every(v=>v!==null);
+ const discount=amount(d.desc??0);
+ const total=complete&&discount!==null&&values.length?Math.max(0,values.reduce((sum,v)=>sum+v,0)-discount):null;
+ return {description:names.slice(0,3).join(' · ')||(items.length?'Procedimentos sem nome':'Sem procedimentos cadastrados'),
+  value:total===null?'Valor não identificado':money(total)};
+};
+const loadItems=async(clinicId,cloud,budgets)=>{
+ const ids=[...new Set(budgets.map(b=>String(b.id||'')).filter(Boolean))];
+ const result=new Map();
+ // Consulta apenas itens dos orçamentos encontrados, sempre restrita à clínica.
+ for(let i=0;i<ids.length;i+=35){
+  const part=ids.slice(i,i+35);
+  const query='/rest/v1/budget_items?clinic_id=eq.'+encodeURIComponent(clinicId)+
+   '&parent_id=in.('+part.map(id=>'"'+id.replace(/\\/g,'\\\\').replace(/"/g,'\\"')+'"').join(',')+')'+
+   '&select=parent_id,position,kind,dados&order=position.asc&limit=1000';
+  const rows=await cloud.request(query);
+  if(!Array.isArray(rows))throw new Error('Resposta inválida ao consultar itens dos orçamentos.');
+  if(rows.length===1000)throw new Error('Limite de itens atingido. Consulta incompleta; valores não calculados.');
+  for(const row of rows){if(row.position<0)continue;const key=String(row.parent_id||'');if(!result.has(key))result.set(key,[]);result.get(key).push(row)}
+ }
+ return result;
 };
 const budgetStatus=b=>{
  const candidates=[b.status,b.dados?.status];
@@ -78,12 +106,13 @@ async function consultar(lead,clinicId,cloud){
       const budgets=await cloud.request(q);
       if(request!==seq)return;
       const list=Array.isArray(budgets)?budgets:[];
+      const itemsByBudget=await loadItems(clinicId,cloud,list);
       const summary=document.createElement('small');summary.textContent=list.length+' orçamento(s) relacionado(s)'+(list.length===1000?' (limite de consulta atingido)':'');item.append(summary);
       const pending=list.filter(b=>norm(budgetStatus(b)).includes('pendente'));
       if(pending.length){const tag=document.createElement('small');tag.className='warning';tag.textContent=pending.length+' orçamento(s) pendente(s) para acompanhamento';item.append(tag)}
       for(const b of list.slice(0,15)){
         const bd=b.dados||{};const row=document.createElement('small');
-        const details=budgetDetails(b);
+        const details=budgetDetails(b,itemsByBudget);
         row.textContent=[budgetStatus(b),details.description,details.value].filter(Boolean).join(' • ');
         item.append(row);
       }
@@ -114,6 +143,8 @@ async function listarPendentes(clinicId,cloud){
   const byParent=new Map();
   for(const p of ps){const id=String(p.dados?.id||p.id||'');if(id)byParent.set(JSON.stringify([null,'p',['id',id]]),p)}
   const pending=all.filter(b=>norm(budgetStatus(b)).includes('pendente'));
+  const itemsByBudget=await loadItems(clinicId,cloud,pending);
+  if(current!==pendingSeq)return;
   const root=document.createElement('div');
   const summary=document.createElement('p');summary.textContent=pending.length+' orçamento(s) com status pendente encontrados nesta consulta.';root.append(summary);
   if(all.length===1000||ps.length===1000){const w=document.createElement('small');w.className='warning';w.textContent='Limite de 1.000 registros atingido: resultados podem estar incompletos.';root.append(w)}
@@ -124,9 +155,9 @@ async function listarPendentes(clinicId,cloud){
    const p=byParent.get(String(b.parent_id||''));
    const title=document.createElement('strong');title.textContent=p?String(p.dados?.nome||p.nome||'Paciente sem nome'):'Paciente não identificado (verificar vínculo)';row.append(title);
    const info=document.createElement('small');const d=b.dados||{};
-   const details=budgetDetails(b);
+   const details=budgetDetails(b,itemsByBudget);
    info.textContent=[budgetStatus(b),details.description,details.value].filter(Boolean).join(' • ');row.append(info);
-   const ref=document.createElement('small');ref.textContent='Orçamento: '+String(b.id||'sem identificador');row.append(ref);
+   const ref=document.createElement('small');ref.textContent='Registro de orçamento identificado no NexoDent';row.append(ref);
    root.append(row);
   }
   if(pending.length>60){const more=document.createElement('small');more.textContent='Exibindo 60 de '+pending.length+' registros pendentes.';root.append(more)}
