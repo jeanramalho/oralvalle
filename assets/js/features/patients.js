@@ -9,12 +9,28 @@ function tabDados(p){
   <button class="ghost" data-act="arq" style="width:100%">${p.arq?'Reativar paciente':'Arquivar paciente'}</button>
   ${p.arq?`<p class="note" style="margin-top:16px">O prontuário normalmente precisa ser guardado por muitos anos (confira o prazo exigido pelo seu conselho). Prefira manter arquivado. A exclusão não é permitida se houver vendas ou consultas ligadas ao paciente.</p><button class="danger" data-act="del" style="width:100%">${aviso}</button>`:''}`;
 }
+// Dados do responsável legal vinculados à anamnese; utiliza o salvamento data-a já existente.
+function nexoLegalHtml(p,a){
+  const birth=String(p.nasc||'');
+  let minor=false, known=false;
+  if(/^\d{4}-\d{2}-\d{2}$/.test(birth)){
+    const born=new Date(birth+'T12:00:00'),now=new Date();
+    if(!Number.isNaN(born.getTime())&&born<=now){
+      let age=now.getFullYear()-born.getFullYear();
+      if(now.getMonth()<born.getMonth()||(now.getMonth()===born.getMonth()&&now.getDate()<born.getDate()))age--;
+      minor=age<18;known=true;
+    }
+  }
+  const fields=[['legalNome','Nome completo','text'],['legalCpf','CPF','text'],['legalRg','RG / documento','text'],['legalNascimento','Data de nascimento','date'],['legalParentesco','Vínculo com o paciente','select'],['legalTelefone','Telefone / WhatsApp','tel'],['legalEmail','E-mail','email'],['legalEndereco','Endereço','text']];
+  const form=fields.map(([key,label,type])=>`<div style="min-width:0"><label for="nexo-${key}">${label}</label>${type==='select'?`<select id="nexo-${key}" data-a="${key}">${['','Mãe','Pai','Tutor(a)','Guardião(ã)','Outro'].map(v=>`<option value="${esc(v)}"${String(a[key]||'')===v?' selected':''}>${esc(v||'Selecione')}</option>`).join('')}</select>`:`<input id="nexo-${key}" data-a="${key}" type="${type}" value="${esc(a[key]||'')}"${key==='legalCpf'?' inputmode="numeric"':''}>`}</div>`).join('');
+  return `<details class="card" ${minor?'open':''} style="margin:16px 0;border-left:4px solid #f97316"><summary style="cursor:pointer;font-weight:700;color:#c45b0b">Responsável legal ${minor?'— paciente menor de 18 anos':''}</summary><p class="note" style="margin:10px 0">${minor?'Paciente menor de idade: identifique o responsável legal antes de colher consentimentos.':known?'Paciente maior de idade: preencha somente quando houver representação legal.':'Data de nascimento não informada: confira a idade do paciente.'} A identificação não substitui a conferência de documentos de guarda ou tutela.</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:10px 14px">${form}</div><label for="nexo-legalObs">Observações sobre a representação legal</label><textarea id="nexo-legalObs" data-a="legalObs" rows="3">${esc(a.legalObs||'')}</textarea><p class="note">Os campos são salvos com a anamnese. A assinatura do responsável e a comprovação de representação precisam ser verificadas separadamente antes do atendimento.</p></details>`;
+}
 function tabAnam(p){
   const a=p.anam||(p.anam={c:{},med:'',queixa:'',ultima:''});a.c=a.c||{};
   const extras=Object.keys(a.c).filter(c=>!CHECKS.includes(c)&&a.c[c]);
   const checks=CHECKS.map(c=>{const on=a.c[c];return `<label class="chk${on?' on':''}"><input type="checkbox" data-c="${esc(c)}"${on?' checked':''}>${esc(c)}</label>`}).join('');
   const custom=extras.map(c=>`<span class="ov-anam-extra"><span>${esc(c)}</span><button type="button" class="ov-anam-extra-remove" data-act="rmcomorb" data-name="${esc(c)}" aria-label="Remover ${esc(c)}" title="Remover condição">×</button></span>`).join('');
-  return '<h2>Histórico de saúde</h2>'+checks+
+  return nexoLegalHtml(p,a)+'<h2>Histórico de saúde</h2>'+checks+
   `<div class="ov-anam-custom"><label style="display:block">Outras comorbidades e condições de saúde</label><div class="ov-anam-extra-list">${custom||'<span class="note">Nenhuma condição adicional cadastrada.</span>'}</div><div class="ov-anam-extra-add"><input id="ov-new-comorb" maxlength="120" autocomplete="off" placeholder="Ex.: Asma, epilepsia, hipotireoidismo" aria-label="Nova comorbidade"><button type="button" data-act="addcomorb">+ Adicionar</button></div><p class="note" style="margin:6px 0">Cada condição adicionada aparece como um balão junto ao histórico de saúde e fica salva na anamnese.</p></div>`+
   `<label>Medicamentos em uso</label><textarea data-a="med">${esc(a.med)}</textarea><label>Queixa principal</label><textarea data-a="queixa">${esc(a.queixa)}</textarea><label>Última consulta ao dentista</label><input data-a="ultima" value="${esc(a.ultima)}">`+sigHtml(p);
 }
