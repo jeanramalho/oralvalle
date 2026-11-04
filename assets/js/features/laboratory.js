@@ -22,6 +22,33 @@ function publishOrders(){
 }
 // Consulta sob demanda por outros módulos: carrega apenas os dados da clínica ativa.
 // Não cria despesas, pagamentos ou comissões.
+
+// NexoDent 179 — fila automática de orçamento aprovado.
+// Não cria lançamentos financeiros, não altera tratamentos e não substitui trabalhos manuais.
+const AUTO_LAB_PATTERN=/(\bcoroa\b|\bplaca\s+(?:de\s+)?bruxismo\b|\bplaca\s+miorrelaxante\b|\bplaca\s+miorelaxante\b|\bcer[oô]mero\b|\bprotocolo\b|\bpr[oó]tese\b|\bprotese\b|\bppr\b|\bpt\b|\bfaceta\b|\blente\s+de\s+contato\b|\binlay\b|\bonlay\b)/i;
+window.NexoLabSyncApprovedBudget=async function(patient,budget){
+ if(!patient||!budget||budget.status!=='Aprovado')return {created:0};
+ if(!cloud()||!clinic())throw Error('É necessário estar conectado à clínica no Supabase para sincronizar o Laboratório.');
+ if(!canEdit())throw Error('Sem permissão para criar trabalhos laboratoriais.');
+ const entries=(Array.isArray(budget.itens)?budget.itens:[]).filter(it=>AUTO_LAB_PATTERN.test(String(it.proc||'')));
+ let created=0;
+ for(const it of entries){
+  if(!it.id||!budget.id)continue;
+  const sourceKey=['orcamento',String(budget.id),String(it.id)].join(':');
+  const body={id:crypto.randomUUID(),created_at:stamp(),updated_at:stamp(),clinic_id:clinic(),patient_id:String(patient.id),laboratory:'A definir',
+   work_description:String(it.proc||'Trabalho laboratorial').slice(0,240),shade:'',teeth:String(it.dente||''),
+   stage:'Planejamento',status:'Pendente',observation_reason:'',instructions:'Gerado automaticamente após aprovação da proposta.',
+   history:[{at:stamp(),text:'Trabalho criado automaticamente a partir de orçamento aprovado.'}],comments:[],
+   treatment_id:it.tid?String(it.tid):null,laboratory_cost:0,auto_source_key:sourceKey};
+  // Índice único garante idempotência inclusive entre dispositivos.
+  // ignore-duplicates evita sobrescrever etapas já preenchidas pela equipe.
+  try{await OralCloud.request('/rest/v1/nexodent_lab_orders',{method:'POST',body});created++;}
+  catch(err){if(!/23505|duplicate key|unique constraint/i.test(String(err?.message||err)))throw err;}
+ }
+ if(created)await fetchOrders(true);
+ return {created};
+};
+
 window.NexoLabLoad = async function(force=false){
  if(!allowed())throw new Error('Sem permissão para consultar laboratório.');
  await fetchOrders(!!force);

@@ -106,7 +106,16 @@ if(t.dataset&&t.dataset.cl!==undefined){db.cl=db.cl||{};db.cl[t.dataset.cl]=t.va
   else if(t.dataset.tr){const x=(p.trat||[]).find(y=>y.id===t.dataset.tr);if(x&&!x.vid){const f=t.dataset.f;x[f]=(f==='valor'||f==='custo')?t.value.replace(',','.'):t.value;trGrp(x,f);syncTratToItem(p,x);const c=document.querySelector(`[data-trc="${x.id}"]`);if(c)c.textContent=trCom(x);save()}}
   else if(t.dataset.o){
     const o=getO(p,t.dataset.o),f=t.dataset.f;
-    if(f==='status'){o.status=t.value;save();render();return}
+    if(f==='status'){
+      o.status=t.value;save();render();
+      if(o.status==='Aprovado'&&typeof window.NexoLabSyncApprovedBudget==='function'){
+        window.NexoLabSyncApprovedBudget(p,o).catch(err=>{
+          console.error('Falha ao criar trabalhos laboratoriais:',err);
+          alert('Orçamento aprovado, mas os trabalhos não foram sincronizados com o Laboratório. Verifique a conexão e tente novamente ao selecionar Aprovado. Detalhe: '+(err?.message||err));
+        });
+      }
+      return;
+    }
     if(t.dataset.i!==undefined){
       const it=o.itens[+t.dataset.i];it[f]=f==='valor'?t.value.replace(',','.'):t.value;const hadQ=qOf(it)>1;trGrp(it,f);if(hadQ&&f==='dente'){const vf=t.parentNode.querySelector('[data-f="valor"]');if(vf){vf.value=it.valor;fmtMoney(t.parentNode)}}if(it.tid)syncItemToTrat(p,it);
       if(f==='proc'){const m=procBy(t.value);if(m&&m.preco&&!it.valor){it.valor=m.preco;const vf=t.parentNode.querySelector('[data-f="valor"]');if(vf)vf.value=m.preco}}
