@@ -21,6 +21,20 @@ const money=v=>{
  const n=Number(normalized);
  return Number.isFinite(n)?n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}):null;
 };
+// Exibe somente campos financeiros explícitos; nunca interpreta datas como valores.
+const budgetDetails=b=>{
+ const d=b.dados&&typeof b.dados==='object'?b.dados:{};
+ const desc=[];
+ const add=v=>{if(typeof v==='string'&&v.trim()&&!desc.includes(v.trim()))desc.push(v.trim())};
+ add(d.descricao);add(d.procedimento);add(d.tratamento);add(d.titulo);
+ const items=Array.isArray(d.itens)?d.itens:Array.isArray(d.items)?d.items:[];
+ for(const item of items.slice(0,5))if(item&&typeof item==='object')add(item.procedimento||item.descricao||item.nome||item.tratamento);
+ // O campo 'desc' pode ser desconto numérico, portanto não é descrição.
+ const fields=['valor_total','total','valor','total_geral'];
+ let value=null;
+ for(const field of fields){if(d[field]!==undefined&&d[field]!==null){value=money(d[field]);if(value!==null)break}}
+ return {description:desc.slice(0,3).join(' · ')||'Procedimentos não identificados',value:value||'Valor não identificado'};
+};
 const budgetStatus=b=>{
  const candidates=[b.status,b.dados?.status];
  const values=candidates.map(v=>String(v??'').trim()).filter(v=>v&&!/^sem status$/i.test(v));
@@ -69,8 +83,8 @@ async function consultar(lead,clinicId,cloud){
       if(pending.length){const tag=document.createElement('small');tag.className='warning';tag.textContent=pending.length+' orçamento(s) pendente(s) para acompanhamento';item.append(tag)}
       for(const b of list.slice(0,15)){
         const bd=b.dados||{};const row=document.createElement('small');
-        const valor=money(bd.val);
-        row.textContent=[budgetStatus(b),bd.data||'',bd.desc||'',valor?'Valor: '+valor:'Valor financeiro não identificado'].filter(Boolean).join(' • ');
+        const details=budgetDetails(b);
+        row.textContent=[budgetStatus(b),details.description,details.value].filter(Boolean).join(' • ');
         item.append(row);
       }
       if(list.length>15){const more=document.createElement('small');more.textContent='Exibindo 15 de '+list.length+' orçamentos.';item.append(more)}
@@ -110,7 +124,8 @@ async function listarPendentes(clinicId,cloud){
    const p=byParent.get(String(b.parent_id||''));
    const title=document.createElement('strong');title.textContent=p?String(p.dados?.nome||p.nome||'Paciente sem nome'):'Paciente não identificado (verificar vínculo)';row.append(title);
    const info=document.createElement('small');const d=b.dados||{};
-   info.textContent=[budgetStatus(b),d.desc||'',money(d.valor)||money(d.valor_total)||'Valor não identificado'].filter(Boolean).join(' • ');row.append(info);
+   const details=budgetDetails(b);
+   info.textContent=[budgetStatus(b),details.description,details.value].filter(Boolean).join(' • ');row.append(info);
    const ref=document.createElement('small');ref.textContent='Orçamento: '+String(b.id||'sem identificador');row.append(ref);
    root.append(row);
   }
