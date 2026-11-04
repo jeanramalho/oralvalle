@@ -84,5 +84,41 @@ async function consultar(lead,clinicId,cloud){
   target.replaceChildren(root);
  }catch(e){if(request===seq)target.textContent='Não foi possível consultar os dados: '+e.message}
 }
-window.NexoCRMIntegracao={consultar,limpar};
+
+let pendingSeq=0;
+async function listarPendentes(clinicId,cloud){
+ const target=document.getElementById('pending-budgets');if(!target)return;
+ const current=++pendingSeq;target.textContent='Consultando orçamentos pendentes…';
+ try{
+  const scope='clinic_id=eq.'+encodeURIComponent(clinicId);
+  const [budgets,patients]=await Promise.all([
+   cloud.request('/rest/v1/budgets?'+scope+'&select=id,parent_id,status,dados&limit=1000'),
+   cloud.request('/rest/v1/patients?'+scope+'&select=id,nome,dados&limit=1000')
+  ]);
+  if(current!==pendingSeq)return;
+  const all=Array.isArray(budgets)?budgets:[],ps=Array.isArray(patients)?patients:[];
+  const byParent=new Map();
+  for(const p of ps){const id=String(p.dados?.id||p.id||'');if(id)byParent.set(JSON.stringify([null,'p',['id',id]]),p)}
+  const pending=all.filter(b=>norm(budgetStatus(b)).includes('pendente'));
+  const root=document.createElement('div');
+  const summary=document.createElement('p');summary.textContent=pending.length+' orçamento(s) com status pendente encontrados nesta consulta.';root.append(summary);
+  if(all.length===1000||ps.length===1000){const w=document.createElement('small');w.className='warning';w.textContent='Limite de 1.000 registros atingido: resultados podem estar incompletos.';root.append(w)}
+  const seen=new Set();
+  for(const b of pending.slice(0,60)){
+   if(seen.has(String(b.id)))continue;seen.add(String(b.id));
+   const row=document.createElement('div');row.className='item';
+   const p=byParent.get(String(b.parent_id||''));
+   const title=document.createElement('strong');title.textContent=p?String(p.dados?.nome||p.nome||'Paciente sem nome'):'Paciente não identificado (verificar vínculo)';row.append(title);
+   const info=document.createElement('small');const d=b.dados||{};
+   info.textContent=[budgetStatus(b),d.desc||'',money(d.valor)||money(d.valor_total)||'Valor não identificado'].filter(Boolean).join(' • ');row.append(info);
+   const ref=document.createElement('small');ref.textContent='Orçamento: '+String(b.id||'sem identificador');row.append(ref);
+   root.append(row);
+  }
+  if(pending.length>60){const more=document.createElement('small');more.textContent='Exibindo 60 de '+pending.length+' registros pendentes.';root.append(more)}
+  const note=document.createElement('small');note.textContent='Somente leitura. Os valores exibidos não são somados ao funil e não criam leads.';root.append(note);
+  target.replaceChildren(root);
+ }catch(e){if(current===pendingSeq)target.textContent='Não foi possível consultar orçamentos: '+e.message}
+}
+function cancelarPendentes(){pendingSeq++;const target=document.getElementById('pending-budgets');if(target)target.textContent='Aguardando consulta…'}
+window.NexoCRMIntegracao={consultar,limpar,listarPendentes,cancelarPendentes};
 })();
