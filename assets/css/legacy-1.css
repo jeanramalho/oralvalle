@@ -773,3 +773,43 @@ html[data-ov-mode="dark"] .ov-mt-table th{color:#f1f2f3 !important;border-color:
 .proc-modern .proc-edit{margin-top:13px!important;border-top:1px solid #edf0f4!important;padding-top:12px!important}.proc-modern .proc-edit summary{font-size:12px!important;color:#ed760b!important;font-weight:600!important}.proc-modern .proc-edit summary:before{content:none!important}
 @media(max-width:850px){.proc-modern .proc-cards{grid-template-columns:1fr!important}}
 @media(max-width:560px){.proc-modern{margin-top:12px!important}.proc-modern-heading h2{font-size:21px}.proc-modern-count{display:none}.proc-modern-kpis{gap:7px}.proc-kpi{padding:11px 9px}.proc-kpi strong{font-size:16px}.proc-kpi span,.proc-kpi small{font-size:10px}.proc-modern .proc-add{min-width:110px!important;padding:0 10px!important}.proc-modern .pcx{padding:13px!important}.proc-modern .pcx-price b{font-size:13px!important}}
+
+/* NexoDent: ajuste exclusivo dos cards de evolucao em telas pequenas. */
+@media screen and (max-width: 767px) {
+  .evi.ag {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .evi.ag > span:first-child {
+    flex: 0 0 100% !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow-wrap: break-word !important;
+    word-break: normal !important;
+    white-space: normal !important;
+  }
+  .evi.ag > span:first-child > span {
+    display: block !important;
+    max-width: 100% !important;
+    white-space: pre-wrap !important;
+    overflow-wrap: break-word !important;
+    word-break: normal !important;
+  }
+  .evi.ag > button {
+    flex: 0 1 auto !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    white-space: normal !important;
+    overflow-wrap: normal !important;
+    margin: 0 !important;
+  }
+}
