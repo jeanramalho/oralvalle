@@ -2,7 +2,30 @@
 const el=()=>document.getElementById('integr-result');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const digits=s=>String(s??'').replace(/\D/g,'');
-const money=v=>{const n=Number(String(v??'').replace(/[^0-9,.-]/g,'').replace(/\./g,'').replace(',','.'));return Number.isFinite(n)?n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}):String(v??'Valor não informado')};
+// Somente valores numericos inequivocos sao exibidos como moeda.
+// O campo legado dados.val pode conter datas ou textos, que nao sao valores financeiros.
+const money=v=>{
+ if(typeof v==='number')return Number.isFinite(v)?v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}):null;
+ const raw=String(v??'').trim();
+ if(!raw||/^\d{4}-\d{2}-\d{2}(?:[T\s]|$)/.test(raw))return null;
+ const cleaned=raw.replace(/^R\$\s*/i,'').replace(/\s/g,'');
+ if(!/^-?[\d.,]+$/.test(cleaned))return null;
+ let normalized=cleaned;
+ if(cleaned.includes(',')&&cleaned.includes('.')){
+  normalized=cleaned.lastIndexOf(',')>cleaned.lastIndexOf('.')?cleaned.replace(/\./g,'').replace(',','.'):cleaned.replace(/,/g,'');
+ }else if(cleaned.includes(',')){
+  normalized=cleaned.replace(',','.');
+ }else if(/^\d{1,3}(?:\.\d{3})+$/.test(cleaned)){
+  normalized=cleaned.replace(/\./g,'');
+ }
+ const n=Number(normalized);
+ return Number.isFinite(n)?n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}):null;
+};
+const budgetStatus=b=>{
+ const candidates=[b.status,b.dados?.status];
+ const values=candidates.map(v=>String(v??'').trim()).filter(v=>v&&!/^sem status$/i.test(v));
+ return values[0]||'Não informado';
+};
 const norm=s=>String(s??'').trim().toLocaleLowerCase('pt-BR');
 let seq=0;
 function limpar(){seq++;if(el())el().textContent='Selecione um lead para consultar.'}
@@ -42,11 +65,12 @@ async function consultar(lead,clinicId,cloud){
       if(request!==seq)return;
       const list=Array.isArray(budgets)?budgets:[];
       const summary=document.createElement('small');summary.textContent=list.length+' orçamento(s) relacionado(s)'+(list.length===1000?' (limite de consulta atingido)':'');item.append(summary);
-      const pending=list.filter(b=>String(b.status||b.dados?.status||'').toLocaleLowerCase('pt-BR').includes('pendente'));
+      const pending=list.filter(b=>norm(budgetStatus(b)).includes('pendente'));
       if(pending.length){const tag=document.createElement('small');tag.className='warning';tag.textContent=pending.length+' orçamento(s) pendente(s) para acompanhamento';item.append(tag)}
       for(const b of list.slice(0,15)){
         const bd=b.dados||{};const row=document.createElement('small');
-        row.textContent=[String(b.status||bd.status||'Sem status'),bd.data||'',bd.desc||'',bd.val!=null?'Valor registrado: '+String(bd.val):''].filter(Boolean).join(' • ');
+        const valor=money(bd.val);
+        row.textContent=[budgetStatus(b),bd.data||'',bd.desc||'',valor?'Valor: '+valor:'Valor financeiro não identificado'].filter(Boolean).join(' • ');
         item.append(row);
       }
       if(list.length>15){const more=document.createElement('small');more.textContent='Exibindo 15 de '+list.length+' orçamentos.';item.append(more)}
