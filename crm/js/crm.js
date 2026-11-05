@@ -1,11 +1,59 @@
-(() => {'use strict';const $=id=>document.getElementById(id), stages=['Novo lead','Contatado','Agendado','Avaliado','Orçamento','Fechado','Perdida'];let clinicId=null,leads=[],editing=null;const cloud=window.OralCloud;const money=n=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});const status=(msg,error=false)=>{$('status').textContent=msg;$('status').style.color=error?'#b42318':'#9a5200'};const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));async function api(path,options){return cloud.request('/rest/v1/'+path,options)}async function load(){if(!clinicId)return;status('Carregando oportunidades…');try{leads=await api('nexodent_crm_leads?clinic_id=eq.'+encodeURIComponent(clinicId)+'&select=*&order=created_at.desc');render();renderGoals();window.dispatchEvent(new CustomEvent('nexocrm:leads-loaded',{detail:{clinicId,leads}}));if(window.NexoCRMIntegracao)window.NexoCRMIntegracao.listarPendentes(clinicId,cloud);status('Dados atualizados.')}catch(e){status('Não foi possível carregar o CRM: '+e.message,true)}}function localDay(v){if(!v)return '';const d=new Date(v);if(Number.isNaN(d.getTime()))return String(v).slice(0,10);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
+(() => {'use strict';const $=id=>document.getElementById(id), stages=['Novo lead','Contatado','Agendado','Avaliado','Orçamento','Fechado','Perdida'];let clinicId=null,leads=[],editing=null;const cloud=window.OralCloud;const money=n=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});const status=(msg,error=false)=>{$('status').textContent=msg;$('status').style.color=error?'#b42318':'#9a5200'};const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));async function api(path,options){return cloud.request('/rest/v1/'+path,options)}async function load(){if(!clinicId)return;status('Carregando oportunidades…');try{leads=await api('nexodent_crm_leads?clinic_id=eq.'+encodeURIComponent(clinicId)+'&select=*&order=created_at.desc');render();renderGoals();await fetchGoal();window.dispatchEvent(new CustomEvent('nexocrm:leads-loaded',{detail:{clinicId,leads}}));if(window.NexoCRMIntegracao)window.NexoCRMIntegracao.listarPendentes(clinicId,cloud);status('Dados atualizados.')}catch(e){status('Não foi possível carregar o CRM: '+e.message,true)}}function localDay(v){if(!v)return '';const d=new Date(v);if(Number.isNaN(d.getTime()))return String(v).slice(0,10);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
 function today(){const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
-// Metas comerciais por clínica e mês, locais a este navegador (não sincronizadas).
+// Metas comerciais sincronizadas por clínica e mês no Supabase.
 const goalMonthEl=$('goal-month');
-const goalKey=()=>clinicId&&goalMonthEl?.value?'nexodent-crm-goal-v1:'+clinicId+':'+goalMonthEl.value:null;
-function goalStored(){const key=goalKey();if(!key)return null;try{const raw=localStorage.getItem(key);if(raw===null)return null;const val=Number(raw);return Number.isFinite(val)&&val>0?val:null}catch(_){return null}}
-function renderGoals(){if(!goalMonthEl)return;const month=goalMonthEl.value,goal=goalStored();const closed=leads.filter(x=>x.stage==='Fechado'&&resultData(x)?.type==='FECHADO'&&resultData(x).day.startsWith(month));const won=closed.reduce((sum,x)=>sum+(Number(x.estimated_value)||0),0);const percent=goal?won/goal*100:null;const remain=goal?Math.max(0,goal-won):null;$('goal-target').textContent=goal?money(goal):'Não definida';$('goal-won').textContent=money(won);$('goal-percent').textContent=percent===null?'—':percent.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%';$('goal-remaining').textContent=remain===null?'—':money(remain);$('goal-progress-fill').style.width=(percent===null?0:Math.min(100,percent))+'%';$('goal-progress').setAttribute('aria-valuenow',String(percent===null?0:Math.min(100,Math.round(percent))));$('goal-input').value=goal===null?'':String(goal);}
-if(goalMonthEl){goalMonthEl.value=today().slice(0,7);goalMonthEl.addEventListener('change',()=>{renderGoals();$('goal-feedback').textContent=''});$('goal-save').addEventListener('click',()=>{const key=goalKey(),value=Number($('goal-input').value);if(!key||!Number.isFinite(value)||value<=0){$('goal-feedback').textContent='Informe uma meta maior que zero.';return}try{localStorage.setItem(key,String(value));$('goal-feedback').textContent='Meta salva neste navegador.';renderGoals()}catch(_){$('goal-feedback').textContent='Não foi possível salvar neste navegador.'}})}
+let goalValue=null,goalCanEdit=false,goalRequest=0;
+async function fetchGoal(){
+ if(!clinicId||!goalMonthEl?.value)return;
+ const token=++goalRequest,selectedClinic=clinicId,selectedMonth=goalMonthEl.value;
+ const feedback=$('goal-feedback');feedback.textContent='Carregando meta…';
+ try{
+  const [rows,access]=await Promise.all([
+   api('nexodent_crm_goals?clinic_id=eq.'+encodeURIComponent(selectedClinic)+'&month=eq.'+encodeURIComponent(selectedMonth)+'&select=target_amount&limit=1'),
+   api('rpc/nexodent_crm_goal_can_edit',{method:'POST',body:{p_clinic_id:selectedClinic}})
+  ]);
+  if(token!==goalRequest||clinicId!==selectedClinic||goalMonthEl.value!==selectedMonth)return;
+  goalValue=Array.isArray(rows)&&rows.length?Number(rows[0].target_amount):null;
+  goalCanEdit=access===true;
+  $('goal-input').disabled=!goalCanEdit;$('goal-save').disabled=!goalCanEdit;
+  feedback.textContent=goalCanEdit?'Meta compartilhada com a equipe.':'Somente o administrador pode alterar a meta.';
+  renderGoals();
+ }catch(e){
+  if(token!==goalRequest)return;
+  goalValue=null;goalCanEdit=false;$('goal-input').disabled=true;$('goal-save').disabled=true;
+  feedback.textContent='Não foi possível consultar as metas. Execute a migração SQL 27 no Supabase. '+e.message;
+  renderGoals();
+ }
+}
+function renderGoals(){
+ if(!goalMonthEl)return;
+ const month=goalMonthEl.value,goal=goalValue;
+ const closed=leads.filter(x=>x.stage==='Fechado'&&resultData(x)?.type==='FECHADO'&&resultData(x).day.startsWith(month));
+ const won=closed.reduce((sum,x)=>sum+(Number(x.estimated_value)||0),0);
+ const percent=goal?won/goal*100:null,remain=goal?Math.max(0,goal-won):null;
+ $('goal-target').textContent=goal?money(goal):'Não definida';$('goal-won').textContent=money(won);
+ $('goal-percent').textContent=percent===null?'—':percent.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%';
+ $('goal-remaining').textContent=remain===null?'—':money(remain);
+ $('goal-progress-fill').style.width=(percent===null?0:Math.min(100,percent))+'%';
+ $('goal-progress').setAttribute('aria-valuenow',String(percent===null?0:Math.min(100,Math.round(percent))));
+ if(document.activeElement!==$('goal-input'))$('goal-input').value=goal===null?'':String(goal);
+}
+if(goalMonthEl){
+ goalMonthEl.value=today().slice(0,7);
+ $('goal-input').disabled=true;$('goal-save').disabled=true;
+ goalMonthEl.addEventListener('change',fetchGoal);
+ $('goal-save').addEventListener('click',async()=>{
+  const month=goalMonthEl.value,value=Number($('goal-input').value),selectedClinic=clinicId;
+  if(!goalCanEdit||!selectedClinic)return;
+  if(!Number.isFinite(value)||value<=0){$('goal-feedback').textContent='Informe uma meta maior que zero.';return}
+  const btn=$('goal-save');btn.disabled=true;
+  try{
+   await api('rpc/nexodent_crm_goal_save',{method:'POST',body:{p_clinic_id:selectedClinic,p_month:month,p_target:value}});
+   if(clinicId===selectedClinic&&goalMonthEl.value===month)await fetchGoal();
+   $('goal-feedback').textContent='Meta salva no Supabase para a clínica.';
+  }catch(e){$('goal-feedback').textContent='Erro ao salvar meta: '+e.message;btn.disabled=false}
+ });
+}
 let followupFilter='late';
 let showAllPriorities=false;
 function followupDate(day){if(!/^\d{4}-\d{2}-\d{2}$/.test(day||''))return day||'';const [y,m,d]=day.split('-');return d+'/'+m+'/'+y}
