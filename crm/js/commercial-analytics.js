@@ -1,0 +1,25 @@
+(()=>{'use strict';
+const root=document.querySelector('.crm-analytics');if(!root)return;
+const by=id=>document.getElementById(id),summary=by('crm-analytics-summary'),compare=by('crm-analytics-compare'),sources=by('crm-analytics-sources'),period=by('crm-management-period'),exportBtn=by('crm-analytics-export');
+let leads=[],clinic=null;const BRL=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
+const date=v=>{if(!v)return null;const d=new Date(v);return Number.isNaN(d.getTime())?null:d};
+const monthKey=d=>d?`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`:'';
+const thisMonth=()=>monthKey(new Date());
+const previousMonth=()=>{const d=new Date();return monthKey(new Date(d.getFullYear(),d.getMonth()-1,1))};
+const active=x=>x.stage!=='Fechado'&&x.stage!=='Perdida';
+const val=x=>Math.max(0,Number(x.estimated_value)||0);
+const subset=(key)=>leads.filter(x=>key==='all'||monthKey(date(x.created_at))===key);
+function stats(rows){const won=rows.filter(x=>x.stage==='Fechado');return {total:rows.length,won:won.length,lost:rows.filter(x=>x.stage==='Perdida').length,value:won.reduce((n,x)=>n+val(x),0),open:rows.filter(active).length,rate:rows.length?won.length/rows.length*100:0}}
+function item(host,label,value){const row=document.createElement('div'),a=document.createElement('span'),b=document.createElement('strong');row.className='crm-analytics-row';a.textContent=label;b.textContent=String(value);row.append(a,b);host.append(row)}
+function card(label,value,detail){const el=document.createElement('div'),a=document.createElement('span'),b=document.createElement('strong'),c=document.createElement('small');el.className='crm-analytics-stat';a.textContent=label;b.textContent=String(value);c.textContent=detail;el.append(a,b,c);return el}
+function draw(){const choice=period?.value||'all',key=choice==='month'?thisMonth():choice==='previous'?previousMonth():'all',rows=subset(key),s=stats(rows),now=new Date(),today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+const open=rows.filter(active),overdue=open.filter(x=>{const d=date(x.next_contact_at);return d&&d<today}),unassigned=open.filter(x=>!x.commercial_owner_id),stale=open.filter(x=>{const d=date(x.updated_at||x.created_at);return d&&now-d>=7*86400000});
+summary.replaceChildren(card('Retornos vencidos',overdue.length,'Oportunidades abertas'),card('Sem responsável',unassigned.length,'Precisam de atribuição'),card('Sem atualização há 7 dias',stale.length,'Última alteração registrada'),card('Valor em aberto',BRL.format(open.reduce((n,x)=>n+val(x),0)),'Estimativa comercial'),card('Perdidas',s.lost,'Etapa atual'),card('Taxa da carteira',s.rate.toFixed(1).replace('.',',')+'%','Fechadas ÷ criadas'));
+const current=stats(subset(thisMonth())),previous=stats(subset(previousMonth()));compare.replaceChildren();item(compare,'Oportunidades criadas',`${current.total} / ${previous.total}`);item(compare,'Atualmente fechadas',`${current.won} / ${previous.won}`);item(compare,'Conversão da carteira',`${current.rate.toFixed(1)}% / ${previous.rate.toFixed(1)}%`);item(compare,'Valor estimado fechado',`${BRL.format(current.value)} / ${BRL.format(previous.value)}`);const help=document.createElement('small');help.textContent='Primeiro valor: mês atual; segundo: mês anterior.';compare.append(help);
+const groups=new Map();for(const x of rows){const name=String(x.source||'Não informada').trim()||'Não informada';const g=groups.get(name)||{total:0,won:0,value:0};g.total++;if(x.stage==='Fechado'){g.won++;g.value+=val(x)}groups.set(name,g)}sources.replaceChildren();if(!groups.size){item(sources,'Sem oportunidades no período','—')}else for(const [name,g] of [...groups].sort((a,b)=>b[1].total-a[1].total)){item(sources,name,`${g.total} oportunidades · ${g.won} fechadas`)}
+exportBtn.disabled=!rows.length;exportBtn.dataset.period=key;
+}
+function csvCell(v){const s=String(v??'');return '"'+s.replace(/"/g,'""')+'"'}
+exportBtn.addEventListener('click',()=>{const key=exportBtn.dataset.period||'all';const rows=subset(key);if(!rows.length)return;const fields=[['id','ID'],['name','Nome'],['phone','Telefone'],['source','Origem'],['stage','Etapa'],['estimated_value','Valor estimado'],['created_at','Criado em'],['updated_at','Atualizado em'],['next_contact_at','Próximo contato'],['commercial_owner_id','ID responsável']];const data=[fields.map(x=>x[1]),...rows.map(x=>fields.map(([k])=>x[k]??''))].map(r=>r.map(csvCell).join(';')).join('\r\n');const blob=new Blob(['\ufeff'+data],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`nexodent-crm-${key}-${new Date().toISOString().slice(0,10)}.csv`;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000)});
+period?.addEventListener('change',draw);window.addEventListener('nexocrm:leads-loaded',e=>{clinic=e.detail?.clinicId||null;leads=clinic&&Array.isArray(e.detail?.leads)?e.detail.leads:[];draw()});draw();
+})();
