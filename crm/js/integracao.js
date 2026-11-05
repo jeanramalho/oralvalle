@@ -50,21 +50,29 @@ const budgetDetails=(b,byBudget)=>{
   value:total===null?'Valor não identificado':money(total)};
 };
 const loadItems=async(clinicId,cloud,budgets)=>{
- const ids=[...new Set(budgets.map(b=>String(b.id||'')).filter(Boolean))];
+ const ids=new Set(budgets.map(b=>String(b.id||'')).filter(Boolean));
  const result=new Map();
- // Consulta apenas itens dos orçamentos encontrados, sempre restrita à clínica.
- for(let i=0;i<ids.length;i+=35){
-  const part=ids.slice(i,i+35);
+ if(!ids.size)return result;
+ // Identificadores legados sao JSON com barras e aspas. Filtrar com
+ // parent_id=in.(...) no PostgREST pode produzir correspondencias incompletas.
+ // Consultamos os itens da clinica em paginas e vinculamos por igualdade exata.
+ const pageSize=500,maxPages=20;
+ for(let page=0;page<maxPages;page++){
+  const offset=page*pageSize;
   const query='/rest/v1/budget_items?clinic_id=eq.'+encodeURIComponent(clinicId)+
-   '&parent_id=in.('+part.map(id=>'"'+id.replace(/\\/g,'\\\\').replace(/"/g,'\\"')+'"').join(',')+')'+
    '&kind=eq.object&slot=eq.itens&position=gte.0'+
-   '&select=parent_id,position,kind,slot,amount,dados&order=position.asc&limit=1000';
+   '&select=parent_id,position,kind,slot,amount,dados&order=id.asc&limit='+pageSize+'&offset='+offset;
   const rows=await cloud.request(query);
   if(!Array.isArray(rows))throw new Error('Resposta inválida ao consultar itens dos orçamentos.');
-  if(rows.length===1000)throw new Error('Limite de itens atingido. Consulta incompleta; valores não calculados.');
-  for(const row of rows){if(row.position<0)continue;const key=String(row.parent_id||'');if(!result.has(key))result.set(key,[]);result.get(key).push(row)}
+  for(const row of rows){
+   const key=String(row.parent_id||'');
+   if(!ids.has(key))continue;
+   if(!result.has(key))result.set(key,[]);
+   result.get(key).push(row);
+  }
+  if(rows.length<pageSize)return result;
  }
- return result;
+ throw new Error('Limite de consulta de itens atingido. Valores não calculados para evitar dados incompletos.');
 };
 const budgetStatus=b=>{
  const candidates=[b.status,b.dados?.status];
