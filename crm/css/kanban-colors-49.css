@@ -1,0 +1,20 @@
+/* NexoDent CRM 49 — cores semânticas por etapa, sem alterar dados ou fluxos. */
+#board.board{align-items:stretch;gap:13px}
+#board .column{--stage:#ea720f;--stage-bg:#fff3e9;--stage-text:#9c4500;background:#f3f4f6;border:1px solid #e7e9ed;border-top:4px solid var(--stage);border-radius:13px;padding:12px;min-width:0}
+#board .column[data-stage="Contatado"]{--stage:#0e9caa;--stage-bg:#e9f8fa;--stage-text:#08636c}
+#board .column[data-stage="Agendado"]{--stage:#3479d6;--stage-bg:#eaf2ff;--stage-text:#2059a3}
+#board .column[data-stage="Avaliado"]{--stage:#8655c7;--stage-bg:#f3edfc;--stage-text:#61359b}
+#board .column[data-stage="Orçamento"]{--stage:#c18b13;--stage-bg:#fff7db;--stage-text:#79540a}
+#board .column[data-stage="Fechado"]{--stage:#209765;--stage-bg:#e7f8ef;--stage-text:#126b45}
+#board .column[data-stage="Perdida"]{--stage:#d14949;--stage-bg:#fff0f0;--stage-text:#9a2929}
+#board .column h3{display:flex;align-items:center;gap:8px;margin:3px 2px 14px;font-size:13px;line-height:1.4;color:#202632;font-weight:700}
+#board .column h3::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--stage);flex:0 0 9px;box-shadow:0 0 0 3px var(--stage-bg)}
+#board .stage-count{margin-left:auto;border-radius:999px;background:white;color:#3d4654;border:1px solid #e1e4e8;padding:2px 8px;font-size:12px;font-weight:650}
+#board .card{display:block;width:100%;background:#fff!important;color:#242a34!important;border:1px solid #e1e4e8!important;border-left:3px solid var(--stage)!important;border-radius:10px!important;padding:13px!important;margin-bottom:9px;text-align:left;box-shadow:0 2px 7px #1018280a;transition:box-shadow .15s,border-color .15s}
+#board .card:hover{border-color:var(--stage)!important;box-shadow:0 4px 14px #10182816}
+#board .card:focus-visible{outline:3px solid var(--stage);outline-offset:2px}
+#board .card b{font-size:13px;line-height:1.45;overflow-wrap:anywhere}
+#board .card small{font-size:12px;line-height:1.45;color:#677184;margin-top:6px}
+#board .card .stage-value{font-size:12px;font-weight:700;color:#28303b}
+#board .stage-label{display:inline-block;background:var(--stage-bg);color:var(--stage-text);border-radius:5px;padding:4px 7px;margin-top:9px;font-size:11px;font-weight:650}
+@media(max-width:900px){#board.board{grid-template-columns:repeat(7,minmax(215px,1fr));overflow-x:auto;scroll-snap-type:x proximity}#board .column{scroll-snap-align:start}}
