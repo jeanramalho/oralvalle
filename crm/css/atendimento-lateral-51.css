@@ -1,0 +1,24 @@
+/* Atualização 51: editor lateral, sem modificar regras de salvamento. */
+@media(min-width:900px){
+  #editor[open]{position:fixed!important;inset:0 0 0 auto!important;margin:0!important;max-width:none!important;width:min(570px,46vw)!important;height:100dvh!important;max-height:100dvh!important;border-radius:18px 0 0 18px!important;padding:0!important;overflow:auto!important;box-shadow:-16px 0 54px #16203935!important;border:1px solid #dce2ea!important;}
+  #editor::backdrop{background:rgba(17,24,39,.34)!important;backdrop-filter:blur(1px)}
+}
+#editor{background:#fff;color:#172033;box-sizing:border-box}
+#editor #form{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:13px 16px!important;padding:22px!important;align-items:start!important;max-width:none!important;box-sizing:border-box}
+#editor #form>*{min-width:0;box-sizing:border-box}
+#editor .crm-editor-heading,#editor #form>label:has(textarea),#editor #form>.contact-history,#editor #form>.crm-contact-workflow,#editor #form>.crm-optout-help,#editor #form>.crm-optout,#editor #form>.result-help,#editor #form>.buttons{grid-column:1/-1!important}
+#editor .crm-editor-heading{border-bottom:1px solid #e6e9ee;padding:0 0 15px;margin-bottom:2px}
+#editor .crm-editor-eyebrow{display:block;color:#d6650b;font-size:11px;font-weight:750;letter-spacing:.09em;margin-bottom:7px}
+#editor .crm-editor-heading h2{margin:0!important;font-size:22px;line-height:1.2;color:#162033}
+#editor .crm-editor-heading p{margin:7px 0 0;color:#667085;font-size:13px;line-height:1.5}
+#editor #form>label{font-size:12px;font-weight:650;color:#344054;line-height:1.45}
+#editor #form input:not([type=checkbox]),#editor #form select,#editor #form textarea{width:100%;min-width:0;box-sizing:border-box;background:#fff;color:#182230;border:1px solid #cfd6df;border-radius:9px;padding:10px 11px;margin-top:5px;font-size:14px;min-height:39px}
+#editor #form input:focus-visible,#editor #form select:focus-visible,#editor #form textarea:focus-visible{outline:2px solid #f3a45d;outline-offset:1px}
+#editor #form fieldset{border:1px solid #e4e7ec;border-radius:12px;padding:13px;background:#fffaf6}
+#editor #form .buttons{position:sticky;bottom:-22px;z-index:3;background:#fff;border-top:1px solid #e5e7eb;padding:14px 0 4px;margin-top:4px;display:flex;justify-content:flex-end;gap:10px}
+#editor #save{background:#e87500;color:white;border-radius:9px;border:0;padding:11px 24px;font-weight:700}
+#editor #cancel{background:white;color:#344054;border:1px solid #cfd6df;border-radius:9px;padding:10px 20px}
+#editor #history-view{white-space:pre-wrap;overflow-wrap:anywhere;max-height:190px;overflow:auto}
+@media(max-width:899px){#editor[open]{max-width:min(96vw,580px)!important;width:96vw!important;max-height:94dvh!important;overflow:auto!important;padding:0!important}#editor #form{padding:16px!important;gap:10px!important}}
+@media(max-width:520px){#editor #form{grid-template-columns:minmax(0,1fr)!important}#editor #form>*{grid-column:1/-1!important}#editor .crm-editor-heading h2{font-size:19px}}
+@media(prefers-reduced-motion:no-preference){#editor[open]{animation:crm51-enter .18s ease-out}@keyframes crm51-enter{from{opacity:.85;transform:translateX(12px)}to{opacity:1;transform:translateX(0)}}}
