@@ -19,7 +19,7 @@ try{
  if(!Array.isArray(members))throw Error('Lista de membros inválida');
  for(const member of members){
   const id=String(member.user_id||member.id||'');
-  const name=String(member.nome||'').trim();
+  const name=String(member.nome||member.name||member.full_name||'').trim();
   if(id&&name)names.set(id,name);
  }
 }catch(_){namesUnavailable=true;}
@@ -28,7 +28,7 @@ if(!Array.isArray(rows))throw Error('Resposta inválida');
 const grouped=new Map();for(const x of rows){let v=grouped.get(x.actor_id);if(!v){v={contact:0,task:0,closed:0,amount:0};grouped.set(x.actor_id,v)}if(x.event_type==='contact')v.contact++;if(x.event_type==='task')v.task++;if(x.event_type==='closed'){v.closed++;v.amount+=Number(x.amount)||0}}
 body.replaceChildren();if(!rows.length){body.textContent='Nenhuma atividade atribuída neste mês (ou sem acesso administrativo).';return}
 const table=document.createElement('table');table.className='employee-table';table.innerHTML='<thead><tr><th>Funcionário</th><th>Contatos</th><th>Tarefas</th><th>Fechamentos</th><th>Valor fechado</th></tr></thead>';
-const tb=document.createElement('tbody');for(const [id,v] of [...grouped].sort((a,b)=>b[1].closed-a[1].closed||b[1].contact-a[1].contact)){const tr=document.createElement('tr');tr.innerHTML='<td title="'+esc(id)+'">'+esc(id.slice(0,8))+'…</td><td>'+v.contact+'</td><td>'+v.task+'</td><td>'+v.closed+'</td><td>'+money(v.amount)+'</td>';tb.append(tr)}table.append(tb);body.append(table);
+const tb=document.createElement('tbody');for(const [id,v] of [...grouped].sort((a,b)=>b[1].closed-a[1].closed||b[1].amount-a[1].amount||b[1].contact-a[1].contact)){const tr=document.createElement('tr');tr.innerHTML='<td title="'+esc(id)+'">'+esc(id.slice(0,8))+'…</td><td>'+v.contact+'</td><td>'+v.task+'</td><td>'+v.closed+'</td><td>'+money(v.amount)+'</td>';tb.append(tr)}table.append(tb);body.append(table);
 if(namesUnavailable)note.textContent='Não foi possível consultar os nomes dos funcionários; exibindo identificadores abreviados. ';
 if(rows.length===1000)note.textContent='Limite de 1.000 eventos atingido: resultados parciais. Amplie a consulta antes de usar para avaliação de desempenho.';
 }catch(e){if(run!==serial)return;body.textContent='Não foi possível consultar o desempenho.';note.textContent='Somente administradores podem visualizar. Verifique se o SQL foi executado. Detalhe: '+e.message}
