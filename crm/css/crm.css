@@ -106,3 +106,15 @@ body:has(#editor[open]) { overflow: hidden; }
 .crm-contact-hint{font-size:12px;color:#555;margin:9px 0}
 .crm-contact-shortcuts span{font-size:12px;color:#444}
 @media(max-width:560px){.crm-contact-results button{flex:1 1 44%}.crm-contact-workflow{padding:9px}}
+
+/* Painel de gestão comercial — atualização 43 */
+.crm-management-header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.crm-management-header p,.crm-management-footnote{color:#666;font-size:13px;line-height:1.5}
+.crm-management-header select{border:1px solid #ddd;border-radius:8px;padding:8px;background:#fff;color:#222}
+.crm-management-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:14px 0 18px}
+.crm-management-card,.crm-management-panel{background:#fff;border:1px solid #dedede;border-radius:12px;padding:16px;min-width:0}
+.crm-management-card span{display:block;font-size:12px;color:#666}.crm-management-card strong{display:block;margin:7px 0;font-size:23px;color:#222;overflow-wrap:anywhere}.crm-management-card small{color:#666;font-size:11px}
+.crm-management-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.crm-management-panel h3{margin:0 0 14px;font-size:16px}.crm-management-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0 4px;font-size:13px}
+.crm-management-track{height:7px;border-radius:6px;background:#f1f1f1;overflow:hidden}.crm-management-fill{height:100%;background:#e87500;border-radius:6px}
+.crm-management-footnote{margin-top:14px}@media(max-width:700px){.crm-management-grid{grid-template-columns:1fr}.crm-management-card strong{font-size:20px}}
