@@ -1,6 +1,7 @@
 (() => {'use strict';const $=id=>document.getElementById(id), stages=['Novo lead','Contatado','Agendado','Avaliado','Orçamento','Fechado'];let clinicId=null,leads=[],editing=null;const cloud=window.OralCloud;const money=n=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});const status=(msg,error=false)=>{$('status').textContent=msg;$('status').style.color=error?'#b42318':'#9a5200'};const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));async function api(path,options){return cloud.request('/rest/v1/'+path,options)}async function load(){if(!clinicId)return;status('Carregando oportunidades…');try{leads=await api('nexodent_crm_leads?clinic_id=eq.'+encodeURIComponent(clinicId)+'&select=*&order=created_at.desc');render();window.dispatchEvent(new CustomEvent('nexocrm:leads-loaded',{detail:{clinicId,leads}}));if(window.NexoCRMIntegracao)window.NexoCRMIntegracao.listarPendentes(clinicId,cloud);status('Dados atualizados.')}catch(e){status('Não foi possível carregar o CRM: '+e.message,true)}}function localDay(v){if(!v)return '';const d=new Date(v);if(Number.isNaN(d.getTime()))return String(v).slice(0,10);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
 function today(){const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
 let followupFilter='late';
+let showAllPriorities=false;
 function followupDate(day){if(!/^\d{4}-\d{2}-\d{2}$/.test(day||''))return day||'';const [y,m,d]=day.split('-');return d+'/'+m+'/'+y}
 function followup(){
  const box=$('followup-list');if(!box)return;
@@ -44,10 +45,10 @@ function renderPriorities(groups,lastContact,now){
   else if(value>0){rank=3;reason='Oportunidade em negociação';tone='value'}
   return {x,rank,reason,tone,value};
  }).sort((a,b)=>a.rank-b.rank||(a.rank<2?String(a.x.next_contact_at||'').localeCompare(String(b.x.next_contact_at||'')):0)||b.value-a.value||String(a.x.name).localeCompare(String(b.x.name),'pt-BR'));
- $('priority-total').textContent=ranked.length+' oportunidade(s) aberta(s)';
+ const totalEl=$('priority-total');if(totalEl)totalEl.textContent=ranked.length+' oportunidade(s) aberta(s)';
  list.replaceChildren();
  if(!ranked.length){list.textContent='Nenhuma oportunidade aberta no momento.';return}
- for(const item of ranked.slice(0,12)){
+ for(const item of ranked.slice(0,showAllPriorities?ranked.length:5)){
   const btn=document.createElement('button');btn.type='button';btn.className='priority-item priority-'+item.tone;
   const info=document.createElement('span');info.className='priority-info';
   const name=document.createElement('strong');name.textContent=item.x.name;
@@ -55,6 +56,12 @@ function renderPriorities(groups,lastContact,now){
   info.append(name,detail);
   const val=document.createElement('span');val.className='priority-value';val.textContent=money(item.value);
   btn.append(info,val);btn.addEventListener('click',()=>edit(item.x));list.append(btn);
+ }
+ if(ranked.length>5){
+  const toggle=document.createElement('button');toggle.type='button';toggle.className='priority-toggle';
+  toggle.textContent=showAllPriorities?'Mostrar somente 5 prioridades':'Ver todas as '+ranked.length+' oportunidades';
+  toggle.addEventListener('click',()=>{showAllPriorities=!showAllPriorities;renderPriorities(groups,lastContact,now)});
+  list.append(toggle);
  }
 }
 for(const button of document.querySelectorAll('[data-followup]'))button.addEventListener('click',()=>{followupFilter=button.dataset.followup;followup()});
