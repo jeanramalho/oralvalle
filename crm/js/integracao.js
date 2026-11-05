@@ -37,11 +37,13 @@ const amount=v=>{
 const budgetDetails=(b,byBudget)=>{
  const d=b.dados&&typeof b.dados==='object'?b.dados:{};
  const items=byBudget.get(String(b.id))||[];
- const names=items.map(x=>x.dados).filter(x=>x&&typeof x==='object')
+ const names=items.filter(x=>x.kind==='object'&&x.slot==='itens').map(x=>x.dados).filter(x=>x&&typeof x==='object')
   .map(x=>String(x.proc||x.procedimento||x.nome||'').trim()).filter(Boolean);
- const values=items.filter(x=>x.kind==='object'&&x.dados&&typeof x.dados==='object')
-  .map(x=>amount(x.dados.valor));
- const complete=values.length===items.filter(x=>x.kind==='object').length&&values.every(v=>v!==null);
+ const financialItems=items.filter(x=>x.kind==='object'&&x.slot==='itens'&&Number(x.position)>=0);
+ // Os registros kind=array, position=-1 sao marcadores da lista, nao procedimentos.
+ // amount e o campo financeiro explicito; dados.valor e usado apenas como alternativa.
+ const values=financialItems.map(x=>amount(x.amount)??amount(x.dados?.valor));
+ const complete=financialItems.length>0&&values.every(v=>v!==null);
  const discount=amount(d.desc??0);
  const total=complete&&discount!==null&&values.length?Math.max(0,values.reduce((sum,v)=>sum+v,0)-discount):null;
  return {description:names.slice(0,3).join(' · ')||(items.length?'Procedimentos sem nome':'Sem procedimentos cadastrados'),
@@ -55,7 +57,8 @@ const loadItems=async(clinicId,cloud,budgets)=>{
   const part=ids.slice(i,i+35);
   const query='/rest/v1/budget_items?clinic_id=eq.'+encodeURIComponent(clinicId)+
    '&parent_id=in.('+part.map(id=>'"'+id.replace(/\\/g,'\\\\').replace(/"/g,'\\"')+'"').join(',')+')'+
-   '&select=parent_id,position,kind,dados&order=position.asc&limit=1000';
+   '&kind=eq.object&slot=eq.itens&position=gte.0'+
+   '&select=parent_id,position,kind,slot,amount,dados&order=position.asc&limit=1000';
   const rows=await cloud.request(query);
   if(!Array.isArray(rows))throw new Error('Resposta inválida ao consultar itens dos orçamentos.');
   if(rows.length===1000)throw new Error('Limite de itens atingido. Consulta incompleta; valores não calculados.');
