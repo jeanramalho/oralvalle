@@ -1,0 +1,15 @@
+/* CRM 52 — fila e detalhes lado a lado, sem interferir no formulário original */
+.crm-daily .crm-workspace-52{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(270px,1fr);gap:16px;align-items:start}
+.crm-workspace-52 .daily-list{min-width:0}
+.crm-patient-panel-52{position:sticky;top:16px;border:1px solid #dce3ed;border-radius:14px;padding:20px;background:#fff;box-shadow:0 3px 14px #12233d0a;color:#192638}
+.crm-patient-panel-52 h3{margin:0 0 8px;font-size:18px}
+.crm-patient-panel-52 p{line-height:1.5;color:#586678}
+.crm-patient-panel-52 dl{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+.crm-patient-panel-52 dt{font-size:12px;color:#637184}.crm-patient-panel-52 dd{margin:2px 0 0;font-weight:600;overflow-wrap:anywhere}
+.crm-patient-panel-52 button{width:100%;border:0;border-radius:9px;background:#ea7100;color:#fff;padding:12px;cursor:pointer;font-weight:700}
+.crm-patient-panel-52 button:disabled{opacity:.5;cursor:not-allowed}
+.crm-patient-panel-52 .crm-patient-note-52{font-size:12px}
+.crm-workspace-52 .daily-row{border-left:3px solid #e9a23b;cursor:pointer}
+.crm-workspace-52 .daily-row:focus-visible{outline:3px solid #ea7100;outline-offset:2px}
+.crm-workspace-52 .daily-row[data-crm-selected="true"]{background:#fff7ee;border-left-color:#ea7100}
+@media(max-width:1000px){.crm-daily .crm-workspace-52{grid-template-columns:1fr}.crm-patient-panel-52{position:static}}
