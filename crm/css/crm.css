@@ -23,3 +23,18 @@ body:has(#editor[open]) { overflow: hidden; }
 @media (max-width: 520px) {
   #editor { width: calc(100vw - 20px); max-height: calc(100vh - 20px); padding: 16px; }
 }
+
+/* CRM 16: indicadores claros e prioridades comerciais */
+.followup-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:18px 0 12px}
+.followup-summary button{display:flex;flex-direction:column;align-items:flex-start;gap:9px;min-height:96px;padding:17px 18px;background:#fff!important;color:#252a32!important;border:1px solid #e4e5e8!important;border-radius:12px!important;text-align:left;box-shadow:0 2px 8px #00000005;cursor:pointer;min-width:0}
+.followup-summary button small{font-size:13px!important;font-weight:500;color:#666f7b!important;line-height:1.35}
+.followup-summary button strong{font-size:27px!important;line-height:1.1;color:#e66d0a!important;font-weight:750}
+.followup-summary button[aria-pressed="true"]{border-color:#ed8b40!important;box-shadow:0 0 0 2px #ffeadb!important}
+.followup-summary button:hover{border-color:#ef9b5b!important}
+.priority-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.priority-head p{margin:8px 0 14px}.priority-head>span{font-size:12px;color:#777e88}
+.priority-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.priority-item{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-width:0;padding:14px 16px;border:1px solid #e5e7eb;border-left:3px solid #e8a26a;border-radius:10px;background:#fff!important;color:#24272d!important;text-align:left;cursor:pointer}
+.priority-item:hover{border-color:#e66d0a}.priority-info{min-width:0;display:flex;flex-direction:column;gap:5px}.priority-info strong{font-size:14px;overflow-wrap:anywhere}.priority-info small{color:#68717e;font-size:12px;line-height:1.35}.priority-value{font-weight:700;white-space:nowrap;font-size:13px}.priority-urgent{border-left-color:#d22e28}.priority-high{border-left-color:#ec760d}.priority-attention{border-left-color:#e6b12b}.priority-value{border-left-color:#3982b7}
+@media(max-width:800px){.followup-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.priority-list{grid-template-columns:1fr}}
+@media(max-width:420px){.followup-summary button{padding:12px;min-height:88px}.priority-item{align-items:flex-start;flex-direction:column}.priority-value{white-space:normal}}
