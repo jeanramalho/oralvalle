@@ -135,6 +135,15 @@ function recoverySuggestion(x,days){
  if(days>=3)return {reason:'Acompanhamento após 3 dias',message:`Olá, ${first}! Tudo bem? Conseguiu analisar o orçamento do tratamento? Se tiver alguma dúvida, estamos à disposição.`};
  return {reason:'Primeiro acompanhamento',message:`Olá, ${first}! Tudo bem? Agradecemos sua visita! Ficou alguma dúvida sobre o tratamento proposto? Estamos à disposição.`};
 }
+// Pontuação heurística: priorização operacional, não previsão estatística de conversão.
+let recoveryPriorityFilter='all';
+function recoveryPriority(item){
+ const value=Math.max(0,Number(item.x.estimated_value)||0);
+ const score=(item.late?45:0)+(item.days>=15?30:item.days>=7?20:item.days>=3?10:0)+(value>=5000?20:value>=2000?12:value>0?5:0);
+ const level=score>=55?'Alta':score>=25?'Média':'Baixa';
+ const next=item.late?'Retomar o contato atrasado':item.days>=7?'Confirmar interesse e combinar próximo retorno':item.days>=3?'Esclarecer dúvidas sobre o orçamento':'Acompanhar na data combinada';
+ return {score,level,next};
+}
 let recoveryPhone='';
 function recoveryLastContact(x){
  const entries=[...String(x.notes||'').matchAll(/\[(\d{2})\/(\d{2})\/(\d{4}),?[^\]]*\]\s*(?:WhatsApp|Ligação|Presencial|Proposta|Outro|Contato):/g)];
@@ -152,13 +161,15 @@ function renderRecovery(){
  box.replaceChildren();
  if(!open.length){box.textContent='Nenhum orçamento importado em negociação no momento.';return}
  const now=today();const dayDiff=day=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(day))return 0;return Math.max(0,Math.floor((new Date(now+'T12:00:00')-new Date(day+'T12:00:00'))/86400000))};
- const sorted=open.map(x=>({x,days:dayDiff(recoveryLastContact(x)),late:!!x.next_contact_at&&localDay(x.next_contact_at)<now})).sort((a,b)=>Number(b.late)-Number(a.late)||b.days-a.days||(Number(b.x.estimated_value)||0)-(Number(a.x.estimated_value)||0));
+ const sorted=open.map(x=>({x,days:dayDiff(recoveryLastContact(x)),late:!!x.next_contact_at&&localDay(x.next_contact_at)<now})).map(item=>({...item,priority:recoveryPriority(item)})).filter(item=>recoveryPriorityFilter==='all'||item.priority.level===recoveryPriorityFilter).sort((a,b)=>b.priority.score-a.priority.score||b.days-a.days||(Number(b.x.estimated_value)||0)-(Number(a.x.estimated_value)||0));
+ const shown=$('recovery-filter-count');if(shown)shown.textContent=sorted.length+' de '+open.length+' oportunidades';
  for(const item of sorted){const x=item.x;const card=document.createElement('article');card.className='recovery-item';
- const info=document.createElement('div');const name=document.createElement('strong');name.textContent=x.name;const detail=document.createElement('small');detail.textContent=x.stage+' · '+money(x.estimated_value)+' · '+(item.late?'Retorno atrasado':item.days>=7?'Sem contato há '+item.days+' dias':'Último contato há '+item.days+' dia(s)');info.append(name,detail);if(isOptedOut(x)){const badge=document.createElement('small');badge.className='crm-no-contact';badge.textContent='Não deseja contatos comerciais';info.append(badge)}else{const suggestion=recoverySuggestion(x,item.days);const hint=document.createElement('small');hint.textContent='Sugestão: '+suggestion.reason;info.append(hint)}
+ const info=document.createElement('div');const name=document.createElement('strong');name.textContent=x.name;const detail=document.createElement('small');detail.textContent=x.stage+' · '+money(x.estimated_value)+' · '+(item.late?'Retorno atrasado':item.days>=7?'Sem contato há '+item.days+' dias':'Último contato há '+item.days+' dia(s)');info.append(name,detail);const priority=document.createElement('small');priority.className='crm-recovery-priority';priority.textContent='Prioridade '+item.priority.level+' ('+item.priority.score+'/95) · Próxima ação: '+(isOptedOut(x)?'Não contatar — preferência registrada':item.priority.next);info.append(priority);if(isOptedOut(x)){const badge=document.createElement('small');badge.className='crm-no-contact';badge.textContent='Não deseja contatos comerciais';info.append(badge)}else{const suggestion=recoverySuggestion(x,item.days);const hint=document.createElement('small');hint.textContent='Sugestão: '+suggestion.reason;info.append(hint)}
  const actions=document.createElement('div');actions.className='recovery-actions';const openBtn=document.createElement('button');openBtn.type='button';openBtn.textContent='Abrir ficha';openBtn.onclick=()=>edit(x);actions.append(openBtn);
  const phone=String(x.phone||'').replace(/\D/g,'');if(!isOptedOut(x)&&phone.length>=10&&phone.length<=13){const whats=document.createElement('button');whats.type='button';whats.textContent='Preparar WhatsApp';whats.onclick=()=>{recoveryPhone=phone.length<=11?'55'+phone:phone;const suggestion=recoverySuggestion(x,item.days);$('recovery-guidance').textContent='Sugestão: '+suggestion.reason+'. Revise antes de abrir o WhatsApp.';$('recovery-text').value=suggestion.message;$('recovery-message').showModal()};actions.append(whats)}
  card.append(info,actions);box.append(card)}
 }
+document.querySelectorAll('[data-recovery-priority]').forEach(btn=>btn.addEventListener('click',()=>{recoveryPriorityFilter=btn.dataset.recoveryPriority;document.querySelectorAll('[data-recovery-priority]').forEach(b=>b.setAttribute('aria-pressed',String(b===btn)));renderRecovery()}));
 $('recovery-send').addEventListener('click',()=>{const message=$('recovery-text').value.trim();if(!message||!recoveryPhone)return;const url='https://wa.me/'+recoveryPhone+'?text='+encodeURIComponent(message);window.open(url,'_blank','noopener,noreferrer');$('recovery-message').close()});
 function renderSales(){
  const period=$('sales-period')?.value||'all';const results=leads.filter(x=>{const r=resultData(x);return r&&(period==='all'||r.day.startsWith(period))});
