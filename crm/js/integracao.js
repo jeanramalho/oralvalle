@@ -49,7 +49,7 @@ const budgetDetails=(b,byBudget)=>{
   const discount=rawDiscount==null||String(rawDiscount).trim()===''?0:amount(rawDiscount);
  const total=complete&&discount!==null&&values.length?Math.max(0,values.reduce((sum,v)=>sum+v,0)-discount):null;
  return {description:names.slice(0,3).join(' · ')||(items.length?'Procedimentos sem nome':'Sem procedimentos cadastrados'),
-  value:total===null?'Valor não identificado':money(total)};
+  value:total===null?'Valor não identificado':money(total), total};
 };
 const loadItems=async(clinicId,cloud,budgets)=>{
  const ids=[...new Set(budgets.map(b=>String(b.id||'')).filter(Boolean))];
@@ -163,10 +163,24 @@ async function listarPendentes(clinicId,cloud){
    const details=budgetDetails(b,itemsByBudget);
    info.textContent=[budgetStatus(b),details.description,details.value].filter(Boolean).join(' • ');row.append(info);
    const ref=document.createElement('small');ref.textContent='Registro de orçamento identificado no NexoDent';row.append(ref);
+   // Importacao opcional; a consulta por si so nunca cria oportunidades.
+   if(p && details.total!==null){
+    const action=document.createElement('button');action.type='button';action.className='crm-import-budget';
+    action.textContent='Adicionar ao funil';action.style.marginTop='8px';
+    action.onclick=()=>{
+     action.disabled=true;action.textContent='Verificando…';
+     window.dispatchEvent(new CustomEvent('nexocrm:import-budget',{detail:{
+      clinicId,budgetId:String(b.id),patientName:String(p.dados?.nome||p.nome||''),
+      phone:String(p.dados?.tel||''),total:details.total,description:details.description,
+      onResult:(ok,message)=>{action.disabled=ok;action.textContent=ok?'Já está no funil':'Adicionar ao funil';if(message){const msg=document.createElement('small');msg.textContent=message;row.append(msg)}}
+     }}));
+    };
+    row.append(action);
+   }
    root.append(row);
   }
   if(pending.length>60){const more=document.createElement('small');more.textContent='Exibindo 60 de '+pending.length+' registros pendentes.';root.append(more)}
-  const note=document.createElement('small');note.textContent='Somente leitura. Os valores exibidos não são somados ao funil e não criam leads.';root.append(note);
+  const note=document.createElement('small');note.textContent='Consulta somente leitura. A inclusão no funil exige clicar em Adicionar ao funil; o orçamento original não é alterado.';root.append(note);
   target.replaceChildren(root);
  }catch(e){if(current===pendingSeq)target.textContent='Não foi possível consultar orçamentos: '+e.message}
 }
