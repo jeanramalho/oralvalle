@@ -1,0 +1,16 @@
+/* NexoDent CRM 50: melhorias de navegação e ergonomia, sem alterar dados */
+.crm-commandbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px 14px;margin:12px 0;background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 2px 10px rgba(17,24,39,.035)}
+.crm-commandbar-label{font-weight:750;font-size:12px;color:#374151;margin-right:6px}
+.crm-commandbar button{border:1px solid #e2e6ec;background:#f8fafc;color:#283142;border-radius:9px;padding:9px 12px;cursor:pointer;font:inherit;font-size:13px;font-weight:650;min-height:38px;transition:background .15s,border-color .15s}
+.crm-commandbar button:hover,.crm-commandbar button:focus-visible{border-color:#e87500;background:#fff6ec;outline-offset:2px}
+.crm-commandbar button[aria-current="page"]{background:#fff0df;color:#994400;border-color:#e87500}
+.crm-commandbar-hint{margin-left:auto;color:#64748b;font-size:11px}
+.crm-main .intro{gap:12px;align-items:center}
+.crm-main .bar{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:12px;gap:12px}
+.crm-main input:focus-visible,.crm-main select:focus-visible,.crm-main button:focus-visible{outline:2px solid #e87500;outline-offset:2px}
+.crm-view-tabs{position:relative;z-index:1}
+.crm-main .integration{border-radius:14px}
+.crm-main .board{scrollbar-color:#d0d5dd transparent;scrollbar-width:thin}
+.crm-main .board :is(button,a){touch-action:manipulation}
+@media(max-width:780px){.crm-commandbar{gap:6px;padding:9px}.crm-commandbar-label,.crm-commandbar-hint{display:none}.crm-commandbar button{flex:1 1 120px;padding:9px 7px}.crm-main .bar{display:flex;flex-wrap:wrap}.crm-main .bar label{flex:1 1 180px;min-width:0}.crm-main .bar input,.crm-main .bar select{max-width:100%;width:100%}}
+@media(prefers-reduced-motion:reduce){.crm-commandbar button{transition:none}}
