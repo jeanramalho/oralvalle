@@ -3,7 +3,7 @@
 const views={
  overview:['.metrics','.crm-priorities'],
  opportunities:['.board-heading','#board','#pending-budgets'],
- followup:['.followups','.crm-tasks','.recovery'],
+ followup:['.followups','.crm-tasks','.recovery','.crm-daily'],
  reports:['.crm-productivity','.employee-performance','.sales-report']
 };
 const app=document.getElementById('app'),panel=document.getElementById('crm-view-panel');
@@ -14,7 +14,7 @@ const children=Array.from(panel.children);
 const sections={
  overview:children.filter(n=>n.matches('.metrics,.crm-priorities,.crm-goals')),
  opportunities:children.filter(n=>n.matches('.board-heading,#board')||n.matches('section')&&!!n.querySelector('#pending-budgets,#integr-result')),
- followup:children.filter(n=>n.matches('.followups,.crm-tasks,.recovery')),
+ followup:children.filter(n=>n.matches('.followups,.crm-tasks,.recovery,.crm-daily')),
  reports:children.filter(n=>n.matches('.crm-productivity,.employee-performance,.sales-report'))
 };
 function activate(name,focus=false){
