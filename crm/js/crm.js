@@ -25,9 +25,37 @@ function followup(){
  const selected=groups[followupFilter]||[];
  $('followup-count').textContent=selected.length+' oportunidade(s) nesta categoria';
  box.replaceChildren();
- if(!selected.length){box.textContent='Nenhuma oportunidade nesta categoria.';return}
+ if(!selected.length){box.textContent='Nenhuma oportunidade nesta categoria.';renderPriorities(groups,lastContact,now);return}
  selected.sort((a,b)=>String(a.day||a.created_at||'').localeCompare(String(b.day||b.created_at||'')));
  for(const x of selected){const btn=document.createElement('button');btn.type='button';btn.className='followup-item';const label=document.createElement('strong');label.textContent=x.name;const date=document.createElement('span');date.textContent=followupFilter==='stale'?'Último contato: '+followupDate(lastContact(x)):followupFilter==='late'?'Atrasado desde '+followupDate(x.day):followupFilter==='today'?'Hoje · '+followupDate(x.day):'Previsto para '+followupDate(x.day);btn.append(label,date);btn.onclick=()=>edit(x);box.append(btn)}
+ renderPriorities(groups,lastContact,now);
+}
+
+function renderPriorities(groups,lastContact,now){
+ const list=$('priority-list');if(!list)return;
+ const active=leads.filter(x=>x.stage!=='Fechado');
+ const late=new Set(groups.late.map(x=>String(x.id))),due=new Set(groups.today.map(x=>String(x.id))),stale=new Set(groups.stale.map(x=>String(x.id)));
+ const ranked=active.map(x=>{
+  const id=String(x.id),value=Number(x.estimated_value)||0;
+  let rank=4,reason='Acompanhar negociação',tone='normal';
+  if(late.has(id)){rank=0;reason='Retorno atrasado desde '+followupDate(localDay(x.next_contact_at));tone='urgent'}
+  else if(due.has(id)){rank=1;reason='Retorno agendado para hoje';tone='high'}
+  else if(stale.has(id)){rank=2;reason='Sem contato há 7 dias';tone='attention'}
+  else if(value>0){rank=3;reason='Oportunidade em negociação';tone='value'}
+  return {x,rank,reason,tone,value};
+ }).sort((a,b)=>a.rank-b.rank||(a.rank<2?String(a.x.next_contact_at||'').localeCompare(String(b.x.next_contact_at||'')):0)||b.value-a.value||String(a.x.name).localeCompare(String(b.x.name),'pt-BR'));
+ $('priority-total').textContent=ranked.length+' oportunidade(s) aberta(s)';
+ list.replaceChildren();
+ if(!ranked.length){list.textContent='Nenhuma oportunidade aberta no momento.';return}
+ for(const item of ranked.slice(0,12)){
+  const btn=document.createElement('button');btn.type='button';btn.className='priority-item priority-'+item.tone;
+  const info=document.createElement('span');info.className='priority-info';
+  const name=document.createElement('strong');name.textContent=item.x.name;
+  const detail=document.createElement('small');detail.textContent=item.reason+' · '+item.x.stage;
+  info.append(name,detail);
+  const val=document.createElement('span');val.className='priority-value';val.textContent=money(item.value);
+  btn.append(info,val);btn.addEventListener('click',()=>edit(item.x));list.append(btn);
+ }
 }
 for(const button of document.querySelectorAll('[data-followup]'))button.addEventListener('click',()=>{followupFilter=button.dataset.followup;followup()});
 function render(){const term=$('search').value.trim().toLocaleLowerCase('pt-BR'),filtered=leads.filter(x=>(x.name+' '+(x.phone||'')).toLocaleLowerCase('pt-BR').includes(term));$('total').textContent=leads.length;$('open').textContent=leads.filter(x=>x.stage!=='Fechado').length;$('won').textContent=leads.filter(x=>x.stage==='Fechado').length;$('value').textContent=money(leads.filter(x=>x.stage!=='Fechado').reduce((s,x)=>s+Number(x.estimated_value||0),0));$('board').replaceChildren();for(const stage of stages){const col=document.createElement('section');col.className='column';const items=filtered.filter(x=>x.stage===stage);const title=document.createElement('h3');title.textContent=stage+' ('+items.length+')';col.append(title);for(const x of items){const btn=document.createElement('button');btn.className='card';btn.innerHTML='<b>'+escape(x.name)+'</b><small>'+escape(x.phone||'Sem telefone')+'</small><small>'+money(x.estimated_value)+'</small>';btn.onclick=()=>edit(x);col.append(btn)}$('board').append(col)}followup()}function edit(x){if(x&&window.NexoCRMIntegracao)window.NexoCRMIntegracao.consultar(x,clinicId,cloud);editing=x?.id||null;$('formtitle').textContent=x?'Editar lead':'Novo lead';$('form').reset();for(const key of ['name','phone','source','stage','estimated_value','notes','next_contact_at'])if(x&&x[key]!=null)$('form').elements[key].value=key==='next_contact_at'?String(x[key]).slice(0,10):key==='notes'?cleanNotes(x[key]):x[key];$('contact_log').value='';$('contact_type').value='WhatsApp';$('history-view').textContent=(cleanNotes(x?.notes).split('\n').filter(line=>/^\[\d{2}\/\d{2}\/\d{4}.*\] /.test(line)).join('\n'))||'Nenhum contato registrado.';$('editor').showModal()}async function init(){if(!cloud?.enabled){status('Supabase não configurado.',true);return}try{const auth=await cloud.restoreSession();if(!auth){status('Entre no NexoDent antes de acessar o CRM.',true);return}const result=await cloud.request('/rest/v1/rpc/clinic_list',{method:'POST',body:{}});const clinics=Array.isArray(result)?result:[];if(!clinics.length){status('Nenhuma clínica autorizada para este usuário.',true);return}for(const c of clinics){const opt=document.createElement('option');opt.value=c.clinic_id;opt.textContent=c.nome;$('clinic').append(opt)}clinicId=clinics[0].clinic_id;$('app').hidden=false;$('new').disabled=false;await load()}catch(e){status('Não foi possível validar o acesso: '+e.message,true)}}// A importacao e manual e usa uma referencia estavel para detectar repeticoes.
