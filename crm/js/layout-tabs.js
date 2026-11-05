@@ -14,7 +14,7 @@ const children=Array.from(panel.children);
 const sections={
  overview:children.filter(n=>n.matches('.metrics,.crm-priorities,.crm-goals,.crm-management')),
  opportunities:children.filter(n=>n.matches('.board-heading,#board')||n.matches('section')&&!!n.querySelector('#pending-budgets,#integr-result')),
- followup:children.filter(n=>n.matches('.followups,.crm-tasks,.recovery,.crm-daily')),
+ followup:children.filter(n=>n.matches('.followups,.crm-tasks,.recovery,.crm-daily,.crm-operations')),
  reports:children.filter(n=>n.matches('.crm-productivity,.employee-performance,.sales-report'))
 };
 function activate(name,focus=false){
