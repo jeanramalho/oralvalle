@@ -1,7 +1,7 @@
 (()=>{'use strict';
 // Somente alterna a visibilidade das seções existentes; não move nem recria nós.
 const views={
- overview:['.metrics','.crm-priorities'],
+ overview:['.metrics','.crm-priorities','.crm-management'],
  opportunities:['.board-heading','#board','#pending-budgets'],
  followup:['.followups','.crm-tasks','.recovery','.crm-daily'],
  reports:['.crm-productivity','.employee-performance','.sales-report']
@@ -12,7 +12,7 @@ if(!app||!panel||tabs.length!==4)return;
 // Orçamentos pendentes e consulta integrada ficam na área Oportunidades.
 const children=Array.from(panel.children);
 const sections={
- overview:children.filter(n=>n.matches('.metrics,.crm-priorities,.crm-goals')),
+ overview:children.filter(n=>n.matches('.metrics,.crm-priorities,.crm-goals,.crm-management')),
  opportunities:children.filter(n=>n.matches('.board-heading,#board')||n.matches('section')&&!!n.querySelector('#pending-budgets,#integr-result')),
  followup:children.filter(n=>n.matches('.followups,.crm-tasks,.recovery,.crm-daily')),
  reports:children.filter(n=>n.matches('.crm-productivity,.employee-performance,.sales-report'))
