@@ -1,0 +1,91 @@
+(() => {'use strict';const $=id=>document.getElementById(id), stages=['Novo lead','Contatado','Agendado','Avaliado','Orçamento','Fechado'];let clinicId=null,leads=[],editing=null;const cloud=window.OralCloud;const money=n=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});const status=(msg,error=false)=>{$('status').textContent=msg;$('status').style.color=error?'#b42318':'#9a5200'};const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));async function api(path,options){return cloud.request('/rest/v1/'+path,options)}async function load(){if(!clinicId)return;status('Carregando oportunidades…');try{leads=await api('nexodent_crm_leads?clinic_id=eq.'+encodeURIComponent(clinicId)+'&select=*&order=created_at.desc');render();window.dispatchEvent(new CustomEvent('nexocrm:leads-loaded',{detail:{clinicId,leads}}));if(window.NexoCRMIntegracao)window.NexoCRMIntegracao.listarPendentes(clinicId,cloud);status('Dados atualizados.')}catch(e){status('Não foi possível carregar o CRM: '+e.message,true)}}function localDay(v){if(!v)return '';const d=new Date(v);if(Number.isNaN(d.getTime()))return String(v).slice(0,10);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
+function today(){const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
+let followupFilter='late';
+const DAY_MS=86400000;
+function contactDay(x){
+ const notes=cleanNotes(x.notes);let last='';
+ for(const line of notes.split('\n')){
+  const match=line.match(/^\[(\d{2})\/(\d{2})\/(\d{4})(?:,?\s+\d{1,2}:\d{2}(?::\d{2})?)?\]\s/);
+  if(match){const day=match[3]+'-'+match[2]+'-'+match[1];if(!Number.isNaN(Date.parse(day))&&day>last)last=day}
+ }
+ return last||localDay(x.created_at);
+}
+function followup(){
+ const box=$('followup-list');if(!box)return;
+ const now=today(),todayMs=new Date(now+'T12:00:00').getTime();
+ const daysUntil=day=>Math.round((new Date(day+'T12:00:00').getTime()-todayMs)/DAY_MS);
+ const active=leads.filter(x=>x.stage!=='Fechado');
+ const groups={late:[],today:[],upcoming:[],stale:[]};
+ for(const x of active){
+  const day=localDay(x.next_contact_at),offset=day?daysUntil(day):NaN;
+  if(Number.isFinite(offset)){
+   if(offset<0)groups.late.push(x);
+   else if(offset===0)groups.today.push(x);
+   else if(offset<=7)groups.upcoming.push(x);
+  }
+  const last=contactDay(x),age=last?daysUntil(last):NaN;
+  if(Number.isFinite(age)&&age<=-7)groups.stale.push(x);
+ }
+ for(const key of Object.keys(groups)){
+  $('followup-'+key).textContent=groups[key].length;
+ }
+ const labels={late:'Retornos atrasados',today:'Retornos de hoje',upcoming:'Próximos 7 dias',stale:'Sem contato há 7 dias'};
+ document.querySelectorAll('[data-followup]').forEach(btn=>btn.setAttribute('aria-pressed',String(btn.dataset.followup===followupFilter)));
+ const selected=groups[followupFilter].slice().sort((a,b)=>{
+  const date=x=>followupFilter==='stale'?contactDay(x):localDay(x.next_contact_at);
+  return date(a).localeCompare(date(b));
+ });
+ $('followup-count').textContent=labels[followupFilter]+' · '+selected.length+' oportunidade(s)';
+ box.replaceChildren();
+ if(!selected.length){const empty=document.createElement('p');empty.className='followup-empty';empty.textContent='Nenhuma oportunidade nesta categoria.';box.append(empty);return}
+ for(const x of selected){
+  const btn=document.createElement('button');btn.type='button';btn.className='followup-item';
+  const name=document.createElement('strong');name.textContent=x.name;
+  const detail=document.createElement('span');
+  const day=followupFilter==='stale'?contactDay(x):localDay(x.next_contact_at);
+  detail.textContent=(followupFilter==='stale'?'Último registro: ':'Retorno: ')+(day?day.split('-').reverse().join('/'):'Data não identificada')+' · '+x.stage;
+  btn.append(name,detail);btn.onclick=()=>edit(x);box.append(btn);
+ }
+}
+function render(){const term=$('search').value.trim().toLocaleLowerCase('pt-BR'),filtered=leads.filter(x=>(x.name+' '+(x.phone||'')).toLocaleLowerCase('pt-BR').includes(term));$('total').textContent=leads.length;$('open').textContent=leads.filter(x=>x.stage!=='Fechado').length;$('won').textContent=leads.filter(x=>x.stage==='Fechado').length;$('value').textContent=money(leads.filter(x=>x.stage!=='Fechado').reduce((s,x)=>s+Number(x.estimated_value||0),0));$('board').replaceChildren();for(const stage of stages){const col=document.createElement('section');col.className='column';const items=filtered.filter(x=>x.stage===stage);const title=document.createElement('h3');title.textContent=stage+' ('+items.length+')';col.append(title);for(const x of items){const btn=document.createElement('button');btn.className='card';btn.innerHTML='<b>'+escape(x.name)+'</b><small>'+escape(x.phone||'Sem telefone')+'</small><small>'+money(x.estimated_value)+'</small>';btn.onclick=()=>edit(x);col.append(btn)}$('board').append(col)}followup()}function edit(x){if(x&&window.NexoCRMIntegracao)window.NexoCRMIntegracao.consultar(x,clinicId,cloud);editing=x?.id||null;$('formtitle').textContent=x?'Editar lead':'Novo lead';$('form').reset();for(const key of ['name','phone','source','stage','estimated_value','notes','next_contact_at'])if(x&&x[key]!=null)$('form').elements[key].value=key==='next_contact_at'?String(x[key]).slice(0,10):key==='notes'?cleanNotes(x[key]):x[key];$('contact_log').value='';$('contact_type').value='WhatsApp';$('history-view').textContent=(cleanNotes(x?.notes).split('\n').filter(line=>/^\[\d{2}\/\d{2}\/\d{4}.*\] /.test(line)).join('\n'))||'Nenhum contato registrado.';$('editor').showModal()}async function init(){if(!cloud?.enabled){status('Supabase não configurado.',true);return}try{const auth=await cloud.restoreSession();if(!auth){status('Entre no NexoDent antes de acessar o CRM.',true);return}const result=await cloud.request('/rest/v1/rpc/clinic_list',{method:'POST',body:{}});const clinics=Array.isArray(result)?result:[];if(!clinics.length){status('Nenhuma clínica autorizada para este usuário.',true);return}for(const c of clinics){const opt=document.createElement('option');opt.value=c.clinic_id;opt.textContent=c.nome;$('clinic').append(opt)}clinicId=clinics[0].clinic_id;$('app').hidden=false;$('new').disabled=false;await load()}catch(e){status('Não foi possível validar o acesso: '+e.message,true)}}// A importacao e manual e usa uma referencia estavel para detectar repeticoes.
+const budgetMarker=id=>'[NEXODENT_BUDGET:'+encodeURIComponent(id)+']';
+const markerPattern=/\[NEXODENT_BUDGET:[^\]\r\n]*\]/g;
+const getMarker=notes=>(String(notes||'').match(markerPattern)||[])[0]||'';
+const cleanNotes=notes=>String(notes||'').replace(markerPattern,'').replace(/\n{3,}/g,'\n\n').trim();
+
+let importingBudget=false;
+window.addEventListener('nexocrm:import-budget',async event=>{
+ const d=event.detail||{};const finish=(ok,msg)=>{if(typeof d.onResult==='function')d.onResult(ok,msg)};
+ if(importingBudget){finish(false,'Aguarde a importação anterior.');return}
+ if(!clinicId||d.clinicId!==clinicId||!d.budgetId){finish(false,'Clínica ou orçamento inválido.');return}
+ if(!d.patientName||!Number.isFinite(d.total)||d.total<0){finish(false,'Dados insuficientes para importar.');return}
+ if(!window.confirm('Adicionar o orçamento de '+d.patientName+' ao funil comercial?')){finish(false,'Importação cancelada.');return}
+ importingBudget=true;
+ try{
+  // Reconsulta antes da gravação para reduzir risco de duplicação entre abas/sessões.
+  const current=await api('nexodent_crm_leads?clinic_id=eq.'+encodeURIComponent(clinicId)+'&select=id,notes&limit=1000');
+  if(!Array.isArray(current)||current.length===1000)throw new Error('Não foi possível verificar todas as oportunidades.');
+  const marker=budgetMarker(d.budgetId);
+  if(current.some(x=>String(x.notes||'').includes(marker))){finish(true,'Este orçamento já foi adicionado ao funil.');return}
+  await api('nexodent_crm_leads',{method:'POST',body:{clinic_id:clinicId,name:d.patientName,
+   phone:d.phone||'',source:'Outros',stage:'Orçamento',estimated_value:d.total,
+   notes:'Origem: orçamento NexoDent. Procedimentos: '+String(d.description||'').slice(0,700)+'\n'+marker}});
+  finish(true,'Orçamento adicionado ao funil.');await load();
+ }catch(e){finish(false,'Não foi possível importar: '+e.message)}finally{importingBudget=false}
+});
+document.querySelectorAll('[data-followup]').forEach(btn=>btn.addEventListener('click',()=>{followupFilter=btn.dataset.followup;followup()}));$('stage').replaceChildren();for(const s of stages){const opt=document.createElement('option');opt.value=s;opt.textContent=s;$('stage').append(opt)}$('new').onclick=()=>edit(null);$('cancel').onclick=()=>$('editor').close();$('refresh').onclick=load;$('search').oninput=render;$('clinic').onchange=()=>{clinicId=$('clinic').value;if(window.NexoCRMIntegracao){window.NexoCRMIntegracao.limpar();window.NexoCRMIntegracao.cancelarPendentes()}load()};$('form').onsubmit=async e=>{e.preventDefault();const fd=new FormData(e.target),payload={name:String(fd.get('name')).trim(),phone:String(fd.get('phone')).trim(),source:String(fd.get('source')),stage:String(fd.get('stage')),estimated_value:Number(fd.get('estimated_value')||0),notes:String(fd.get('notes')).trim(),next_contact_at:fd.get('next_contact_at')||null};if(!payload.name)return;
+ const original=editing?leads.find(x=>String(x.id)===String(editing)):null;
+ const preservedMarker=getMarker(original?.notes);
+ const log=String(fd.get('contact_log')||'').trim();
+ if(log){const type=String(fd.get('contact_type')||'Contato');const stamp=new Date().toLocaleString('pt-BR');const entry='['+stamp+'] '+type+': '+log.replace(/[\r\n]+/g,' ');payload.notes=(payload.notes?payload.notes+'\n':'')+entry;if(payload.notes.length>3000){status('Histórico atingiu o limite de 3.000 caracteres. Salve uma cópia antes de continuar.',true);return}}
+ if(preservedMarker)payload.notes=(payload.notes?payload.notes+'\n':'')+preservedMarker;
+ if(payload.notes.length>3000){status('Observações e histórico excedem 3.000 caracteres.',true);return}
+ const btn=$('save');btn.disabled=true;try{
+ if(editing){
+  await api('nexodent_crm_leads?id=eq.'+encodeURIComponent(editing)+'&clinic_id=eq.'+encodeURIComponent(clinicId),{method:'PATCH',body:payload});
+  const check=await api('nexodent_crm_leads?id=eq.'+encodeURIComponent(editing)+'&clinic_id=eq.'+encodeURIComponent(clinicId)+'&select=id,notes,next_contact_at&limit=1');
+  if(!Array.isArray(check)||check.length!==1||String(check[0].notes||'')!==payload.notes||String(check[0].next_contact_at||'').slice(0,10)!==String(payload.next_contact_at||'').slice(0,10))
+   throw new Error('O Supabase não confirmou a gravação. Verifique a permissão de edição do CRM.');
+ }else await api('nexodent_crm_leads',{method:'POST',body:{...payload,clinic_id:clinicId}});
+ $('editor').close();await load()
+ }catch(err){status('Falha ao salvar: '+err.message,true);alert('Não foi possível confirmar o salvamento: '+err.message)}finally{btn.disabled=false}};init()})();
