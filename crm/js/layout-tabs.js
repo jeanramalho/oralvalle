@@ -12,7 +12,7 @@ if(!app||!panel||tabs.length!==4)return;
 // Orçamentos pendentes e consulta integrada ficam na área Oportunidades.
 const children=Array.from(panel.children);
 const sections={
- overview:children.filter(n=>n.matches('.metrics,.crm-priorities')),
+ overview:children.filter(n=>n.matches('.metrics,.crm-priorities,.crm-goals')),
  opportunities:children.filter(n=>n.matches('.board-heading,#board')||n.matches('section')&&!!n.querySelector('#pending-budgets,#integr-result')),
  followup:children.filter(n=>n.matches('.followups,.crm-tasks,.recovery')),
  reports:children.filter(n=>n.matches('.crm-productivity,.sales-report'))
