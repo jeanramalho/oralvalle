@@ -223,6 +223,10 @@ function renderDailyQueue(){
  $('daily-total').textContent=rows.length+' para acompanhar';
  document.querySelectorAll('[data-daily]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.daily===dailyFilter)));
  const selected=rows.filter(row=>(dailyFilter==='all'||row.category===dailyFilter)&&(dailyOwnerFilter==='all'||(dailyOwnerFilter==='mine'&&currentAuthUserId&&String(row.x.commercial_owner_id||'')===currentAuthUserId)||(dailyOwnerFilter==='unassigned'&&!row.x.commercial_owner_id)||String(row.x.commercial_owner_id||'')===dailyOwnerFilter)&&(!dailySearch||(row.x.name+' '+(row.x.phone||'')).toLocaleLowerCase('pt-BR').includes(dailySearch))).sort((a,b)=>({late:0,today:1,stale:2}[a.category]-{late:0,today:1,stale:2}[b.category])||(a.day||a.last).localeCompare(b.day||b.last)||Number(b.x.estimated_value||0)-Number(a.x.estimated_value||0));
+ if(dailySort==='value')selected.sort((a,b)=>Number(b.x.estimated_value||0)-Number(a.x.estimated_value||0));
+ else if(dailySort==='attempts')selected.sort((a,b)=>a.attempts-b.attempts);
+ else if(dailySort==='name')selected.sort((a,b)=>String(a.x.name).localeCompare(String(b.x.name),'pt-BR'));
+ dailyVisibleRows=selected;
  $('daily-visible').textContent=String(selected.length);$('daily-value').textContent=money(selected.reduce((sum,row)=>sum+(Number(row.x.estimated_value)||0),0));$('daily-attempts').textContent=String(selected.reduce((sum,row)=>sum+row.attempts,0));
  box.replaceChildren();if(!selected.length){box.textContent='Nenhuma oportunidade pendente neste filtro.';return}
  for(const row of selected){const item=document.createElement('div');item.className='daily-row';const info=document.createElement('div');const name=document.createElement('strong');name.textContent=row.x.name;const detail=document.createElement('small');detail.textContent=(row.category==='late'?'Retorno atrasado desde '+followupDate(row.day):row.category==='today'?'Retorno marcado para hoje':'Sem contato desde '+followupDate(row.last))+' · '+row.attempts+' contato(s) registrado(s)';const suggestion=document.createElement('small');suggestion.textContent='Próxima ação: '+(row.category==='late'?'reagendar ou registrar retorno':row.category==='today'?'realizar o contato combinado':'verificar interesse e agendar retorno');info.append(name,detail,suggestion);const actions=document.createElement('div');actions.className='daily-row-actions';const button=document.createElement('button');button.type='button';button.textContent='Abrir ficha';button.onclick=()=>edit(row.x);actions.append(button);const attempt=document.createElement('button');attempt.type='button';attempt.textContent='Registrar contato';attempt.onclick=()=>{edit(row.x);$('contact_type').value='Ligação';$('contact_log').focus()};actions.append(attempt);const returnBtn=document.createElement('button');returnBtn.type='button';returnBtn.textContent='Agendar retorno';returnBtn.onclick=()=>{edit(row.x);$('form').elements.next_contact_at.focus()};actions.append(returnBtn);const owner=commercialMembers.find(m=>m.id===row.x.commercial_owner_id);const ownerLabel=document.createElement('small');ownerLabel.textContent='Responsável: '+(owner?.name||'Não atribuído')+' · '+money(row.x.estimated_value);info.append(ownerLabel);item.append(info,actions);box.append(item)}
@@ -232,6 +236,19 @@ $('daily-owner')?.addEventListener('change',e=>{dailyOwnerFilter=e.target.value;
 $('daily-search')?.addEventListener('input',e=>{dailySearch=e.target.value.trim().toLocaleLowerCase('pt-BR');renderDailyQueue()});
 
 // Tarefas derivadas do próximo contato; nenhuma tabela adicional ou envio automático.
+// Ferramentas da fila: ordenação e exportação local, sem alterar dados no Supabase.
+let dailySort='urgency';
+let dailyVisibleRows=[];
+function csvSafe(value){const v=String(value??'').replace(/[\r\n]+/g,' ').trim();return '"'+(/^[=+@\-\t]/.test(v)?"'"+v:v).replace(/"/g,'""')+'"'}
+$('daily-sort')?.addEventListener('change',event=>{dailySort=event.target.value;renderDailyQueue()});
+$('daily-export')?.addEventListener('click',()=>{
+ const feedback=$('daily-export-feedback');
+ if(!dailyVisibleRows.length){feedback.textContent='Nenhum paciente no filtro selecionado.';return}
+ const cols=['Paciente','Telefone','Etapa','Prioridade','Próximo contato','Último contato','Tentativas','Responsável','Valor estimado'];
+ const lines=[cols.map(csvSafe).join(';')];
+ for(const row of dailyVisibleRows){const x=row.x,owner=commercialMembers.find(m=>m.id===x.commercial_owner_id);lines.push([x.name,x.phone||'',x.stage,row.category==='late'?'Atrasado':row.category==='today'?'Hoje':'Sem contato',row.day||'',row.last||'',row.attempts,owner?.name||'Não atribuído',Number(x.estimated_value)||0].map(csvSafe).join(';'))}
+ const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='nexodent-fila-comercial-'+today()+'.csv';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);feedback.textContent=dailyVisibleRows.length+' registro(s) exportado(s). Proteja os dados dos pacientes.';
+});
 let completingTask=false;
 function renderTasks(){
  const list=$('tasks-list');if(!list)return;
