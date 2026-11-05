@@ -133,6 +133,27 @@ async function consultar(lead,clinicId,cloud){
  }catch(e){if(request===seq)target.textContent='Não foi possível consultar os dados: '+e.message}
 }
 
+// Marcadores persistidos no campo notes das oportunidades. Apenas exibicao; nenhuma escrita.
+const markerFor=id=>'[NEXODENT_BUDGET:'+encodeURIComponent(String(id))+']';
+let importedClinic='',importedIds=new Set();
+function syncImported(detail){
+ if(!detail||!detail.clinicId)return;
+ importedClinic=String(detail.clinicId);
+ importedIds=new Set();
+ for(const lead of (Array.isArray(detail.leads)?detail.leads:[])){
+  const notes=String(lead.notes||'');
+  for(const match of notes.matchAll(/\[NEXODENT_BUDGET:([^\]]+)\]/g)){
+   try{importedIds.add(decodeURIComponent(match[1]))}catch(_){/* marcador invalido ignorado */}
+  }
+ }
+ document.querySelectorAll('[data-crm-budget-id]').forEach(button=>{
+  if(button.dataset.crmClinicId!==importedClinic)return;
+  const already=importedIds.has(button.dataset.crmBudgetId);
+  button.disabled=already;
+  button.textContent=already?'Já está no funil':'Adicionar ao funil';
+ });
+}
+window.addEventListener('nexocrm:leads-loaded',event=>syncImported(event.detail));
 let pendingSeq=0;
 async function listarPendentes(clinicId,cloud){
  const target=document.getElementById('pending-budgets');if(!target)return;
@@ -166,13 +187,15 @@ async function listarPendentes(clinicId,cloud){
    // Importacao opcional; a consulta por si so nunca cria oportunidades.
    if(p && details.total!==null){
     const action=document.createElement('button');action.type='button';action.className='crm-import-budget';
-    action.textContent='Adicionar ao funil';action.style.marginTop='8px';
+    action.dataset.crmBudgetId=String(b.id);action.dataset.crmClinicId=String(clinicId);
+    const already=importedClinic===String(clinicId)&&importedIds.has(String(b.id));
+    action.textContent=already?'Já está no funil':'Adicionar ao funil';action.disabled=already;action.style.marginTop='8px';
     action.onclick=()=>{
      action.disabled=true;action.textContent='Verificando…';
      window.dispatchEvent(new CustomEvent('nexocrm:import-budget',{detail:{
       clinicId,budgetId:String(b.id),patientName:String(p.dados?.nome||p.nome||''),
       phone:String(p.dados?.tel||''),total:details.total,description:details.description,
-      onResult:(ok,message)=>{action.disabled=ok;action.textContent=ok?'Já está no funil':'Adicionar ao funil';if(message){const msg=document.createElement('small');msg.textContent=message;row.append(msg)}}
+      onResult:(ok,message)=>{if(ok&&importedClinic===String(clinicId))importedIds.add(String(b.id));action.disabled=ok;action.textContent=ok?'Já está no funil':'Adicionar ao funil';if(message){let msg=row.querySelector('.crm-import-message');if(!msg){msg=document.createElement('small');msg.className='crm-import-message';row.append(msg)}msg.textContent=message}}
      }}));
     };
     row.append(action);
