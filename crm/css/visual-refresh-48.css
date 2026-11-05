@@ -1,0 +1,36 @@
+/* NexoDent CRM 48 — reformulação visual, sem modificar lógica ou dados */
+:root{--nx-orange:#e97018;--nx-ink:#18243a;--nx-muted:#657186;--nx-line:#e5eaf1;--nx-bg:#f5f7fb}
+body{background:var(--nx-bg)!important;color:var(--nx-ink);font-family:Inter,system-ui,-apple-system,'Segoe UI',sans-serif}
+.crm-sidebar{background:#17243d!important;border:0!important;width:248px!important;padding:28px 16px!important;box-shadow:5px 0 25px #16233b0c}
+.sidebar-brand{color:#fff!important;font-size:25px!important;letter-spacing:-.8px;padding:0 9px}.sidebar-brand span{display:block;color:#ffab6b!important;font-size:12px!important;letter-spacing:2px;margin-top:3px}
+.crm-sidebar nav{gap:7px!important}.crm-sidebar nav a{color:#d4deec!important;font-weight:550;border:1px solid transparent;padding:14px 15px!important;transition:background .15s}
+.crm-sidebar nav a:hover{background:#ffffff13!important;color:#fff!important}.crm-sidebar nav a.selected{background:#ffffff1d!important;color:#fff!important;border-color:#ffffff23!important;box-shadow:inset 3px 0 var(--nx-orange)}
+.crm-sidebar .back-link{color:#cbd5e1!important;border-top:1px solid #ffffff24}
+.crm-main{margin-left:248px!important;padding:30px clamp(18px,3vw,48px)!important;max-width:none!important}
+.intro{padding:8px 0 4px;align-items:center}.intro h1{font-size:clamp(25px,2.5vw,34px)!important;letter-spacing:-1.1px;color:#14223b}.intro p{color:var(--nx-muted)!important;font-size:14px!important}.eyebrow{font-size:11px!important;letter-spacing:1.4px!important}
+#new{background:var(--nx-orange)!important;box-shadow:0 5px 14px #e9701833;font-weight:650;padding:12px 18px}
+.bar{border:1px solid var(--nx-line)!important;box-shadow:0 6px 22px #15243a07;padding:16px 20px!important;border-radius:16px!important;gap:16px!important}
+.bar label{font-weight:600;color:#536078!important}.bar input,.bar select{border-radius:10px!important;border:1px solid #dce3ed!important;min-height:42px}
+.crm-view-tabs{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px!important;padding:7px!important;background:#fff!important;border:1px solid var(--nx-line)!important;border-radius:15px!important;box-shadow:0 4px 16px #14243c08;margin:20px 0!important}
+.crm-view-tabs button{border:0!important;border-radius:10px!important;background:transparent!important;color:#56647a!important;padding:14px 9px!important;font-size:14px!important;font-weight:650!important;box-shadow:none!important;min-height:46px}
+.crm-view-tabs button[aria-selected="true"]{background:var(--nx-orange)!important;color:white!important;box-shadow:0 4px 12px #e9701830!important}
+.crm-view-tabs button:hover:not([aria-selected="true"]){background:#f3f6fb!important}
+.metrics{gap:14px!important;margin:18px 0 24px!important}.metrics>div{border:1px solid var(--nx-line)!important;border-radius:16px!important;background:#fff!important;padding:22px!important;box-shadow:0 5px 19px #14243c08!important;position:relative;overflow:hidden}
+.metrics>div:before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:#e97018}.metrics>div:nth-child(2):before{background:#3199c9}.metrics>div:nth-child(3):before{background:#24a87b}.metrics>div:nth-child(4):before{background:#a58ce1}
+.metrics small{font-size:12px!important;color:#69788d!important}.metrics strong{font-size:clamp(24px,2.5vw,34px)!important;letter-spacing:-1px;color:#17243d!important}.metrics span{color:#778398!important}
+.integration{border:1px solid var(--nx-line)!important;border-radius:17px!important;background:#fff!important;padding:clamp(16px,2vw,24px)!important;box-shadow:0 6px 24px #14243c08!important;margin-top:18px!important;min-width:0}
+.integration h2{color:#1b2b44;font-size:19px!important;letter-spacing:-.35px}.integration h3{color:#263650}.integration p{color:#6b778b}
+button{transition:filter .16s,transform .16s}button:hover:not(:disabled){filter:brightness(.97)}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #f3a46a!important;outline-offset:2px}
+input,select,textarea{border-color:#dce3ed!important;border-radius:9px!important;color:#1d2a3d}
+.daily-stats>div,.daily-extra-stats,.followup-summary button,.crm-management-cards>div,.productivity-grid>div,.sales-stats>div{border-radius:12px!important}
+.daily-list,.tasks-list,.recovery-list{gap:9px}.daily-list button,.tasks-row,.recovery-item{border-radius:12px!important}
+.column{background:#f1f4f9!important;border:1px solid #e6ebf2!important;border-radius:14px!important}.card{border-radius:11px!important;border-left:3px solid var(--nx-orange)!important}
+#editor{width:min(760px,calc(100vw - 30px))!important;max-width:760px!important;padding:26px!important;border:1px solid #e2e8f0!important;border-radius:19px!important}
+#editor #form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:18px;align-items:start}
+#editor #form>h2,#editor #form>.crm-optout,#editor #form>.crm-optout-help,#editor #form>.contact-history,#editor #form>.crm-contact-workflow,#editor #form>.buttons,#editor #form>p,#editor #form>label:has(textarea){grid-column:1/-1}
+#editor #form>h2{margin:0 0 9px;font-size:23px;color:#192942}#editor form label{font-size:13px;font-weight:600;color:#45546b;margin:8px 0!important}
+#editor .buttons{border-top:1px solid #e8edf4;padding-top:16px}#save{background:var(--nx-orange)!important;min-width:155px}
+[hidden]{display:none!important}
+@media(max-width:1000px){.crm-sidebar{display:none!important}.crm-main{margin-left:0!important;padding:18px!important}}
+@media(max-width:700px){.crm-view-tabs{gap:3px!important;padding:5px!important}.crm-view-tabs button{font-size:12px!important;padding:11px 4px!important;min-height:44px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important}.metrics>div{padding:15px!important}#editor #form{grid-template-columns:1fr}#editor #form>*{grid-column:1/-1}#editor{padding:16px!important}.bar{padding:12px!important}.bar label{flex:1 1 180px}.bar input,.bar select{width:100%!important}}
+@media(max-width:380px){.crm-view-tabs button{font-size:11px!important}.metrics strong{font-size:23px!important}}
