@@ -41,3 +41,6 @@ body:has(#editor[open]) { overflow: hidden; }
 
 /* CRM prioridade: expandir lista sem afetar outros módulos */
 .priority-toggle{display:block;width:100%;margin-top:10px;padding:10px 14px;background:#fff;color:#dc6200;border:1px solid #f3b887;border-radius:9px;cursor:pointer;font-weight:600}.priority-toggle:hover{background:#fff7f0}
+
+/* CRM 18 — resultados comerciais */
+.sales-header{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}.sales-header label{font-size:13px;color:#667085}.sales-header input{width:175px}.sales-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0}.sales-stats>div{border:1px solid #e7e9ed;border-radius:10px;padding:14px;background:#fff}.sales-stats small{display:block;color:#667085;font-size:12px}.sales-stats strong{display:block;margin-top:7px;font-size:22px;color:#e86b12}.sales-footnote{font-size:12px!important;color:#737b88!important}.sales-rows{display:grid;gap:7px}.sales-row{background:#fff;color:#333;border:1px solid #e7e9ed;text-align:left;padding:10px 12px}.result-help{font-size:12px;margin:6px 0!important}#loss-reason-wrap[hidden]{display:none}@media(max-width:850px){.sales-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
